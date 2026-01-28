@@ -1,1 +1,0 @@
-import { schema, models, model  } from "prisma";
