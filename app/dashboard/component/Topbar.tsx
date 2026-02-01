@@ -1,11 +1,14 @@
 "use client"
+
+import { Container } from "@mantine/core";
+
 const Topbar = () => {
 
     return (
         <>
-            <div className="w-screen h-20 bg-red-500">
-                <h1>Topbar</h1>   
-            </div>
+             <Container bg="blue" style={{ minWidth: "80vw" }}>
+                <h1>Topbar</h1>
+            </Container>
         </>
     );
 };

@@ -1,34 +1,239 @@
-"use client"
-const collection = () => {
+"use client";
 
-    return (
-        <>
-            <div className="w-screen bg-red p-3 grid justify-content-center">
-                <table className="table-auto shadow-md bg-gray-200/20">
-                    <thead className="border-b">
-                        <tr className="p-3 flex gap-5">
-                            <th className="grow">No</th>
-                            <th className="grow text-start">Name Card</th>
-                            <th className="grow text-start">Type</th>
-                            <th className="grow text-start">Price</th>
-                            <th className="grow text-start">Discount</th>
-                            <th className="grow text-start">Stock</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr className="p-3 flex gap-5">
-                            <th className="grow">1</th>
-                            <th className="grow text-start">Yu-gi-oh</th>
-                            <th className="grow text-start">Card Single</th>
-                            <th className="grow text-start">Rp. 1.000.000</th>
-                            <th className="grow text-start">10%</th>
-                            <th className="grow text-start">11</th>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </>
-    );
+import { AppDispatch, RootState } from "@/app/reudux/store";
+import { Container, Table, Pagination, Modal, Stack, TextInput, Combobox, InputBase, useCombobox, Input, FileInput, Button, Flex, Center } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { useEffect, useState } from "react";
+import axios from 'axios'
+import { fetchData } from "next-auth/client/_utils";
+
+const groceries = ['🍎 Apples', '🍌 Bananas', '🥦 Broccoli', '🥕 Carrots', '🍫 Chocolate'];
+
+const Collection = () => {
+  const [activePage, setActivePage] = useState(1);
+  const [opened, { open, close }] = useDisclosure(false);
+  const [elements, setElements] = useState([])
+  const rowsPerPage = 10;
+
+  const startIndex = (activePage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const url = "http://localhost:3000/api/cards?page=1&limit=5";
+      const response = await axios.get(url);
+      setElements(response.data.data);
+    } catch (error) {
+      console.error("Fetch error:", error);
+    }
+  };
+
+  fetchData();
+}, []);
+
+useEffect(() => {
+  console.log(elements);
+}, [elements]);
+const currentRows = elements.slice(startIndex, endIndex);
+
+const handleEdit = ((idCard) => {
+    alert(idCard);
+})
+
+const handleDelete = ((idCard) => {
+    alert(idCard);
+})
+
+const rows = currentRows.map((item) => (
+  <Table.Tr key={item.idCard}>
+    {/* Image */}
+    <Table.Td>
+      <img
+        src={item.detail.image.location}
+        alt={item.detail.name}
+        width={60}
+      />
+    </Table.Td>
+
+    {/* Name (detail) */}
+    <Table.Td>{item.detail.name}</Table.Td>
+
+    {/* Type Card */}
+    <Table.Td>{item.typeCard.name}</Table.Td>
+
+    {/* Price */}
+    <Table.Td>
+      Rp {item.detail.price.toLocaleString("id-ID")}
+    </Table.Td>
+
+    {/* Stock */}
+    <Table.Td>{item.detail.stock}</Table.Td>
+
+    {/* Discount */}
+    <Table.Td>{item.detail.discount.discount}%</Table.Td>
+
+    {/* Action */}
+    <Table.Td>
+        <Flex gap="md">
+            <Button variant="filled" onClick={() => handleEdit(item.idCard)}>
+                Edit
+            </Button>
+            <Button variant="filled" color="red" onClick={() => handleDelete(item.idCard)}>
+                Delete
+            </Button>
+        </Flex>
+    </Table.Td>
+  </Table.Tr>
+));
+
+
+    const combobox = useCombobox({
+        onDropdownClose: () => combobox.resetSelectedOption(),
+    });
+
+    const typeCard = useCombobox({
+        onDropdownClose: () => typeCard.resetSelectedOption(),
+    });
+
+    const [typeVal, setTypeVal] = useState<string | null>(null);
+    const [value, setValue] = useState<string | null>(null);
+
+    const options = groceries.map((item) => (
+        <Combobox.Option value={item} key={item}>
+        {item}
+        </Combobox.Option>
+    ));
+
+    const optionType = groceries.map((item) => (
+        <Combobox.Option value={item} key={item}>
+        {item}
+        </Combobox.Option>
+    ));
+
+  return (
+    <>
+        <Container style={{ minWidth: "80vw", minHeight: "88vh" }}>
+            <Button variant="filled" onClick={open}>Add Card</Button>  
+
+            <Table stickyHeader stickyHeaderOffset={60}>
+                <Table.Thead>
+                <Table.Tr>
+                    <Table.Th>Image</Table.Th>
+                    <Table.Th>Name</Table.Th>
+                    <Table.Th>Type</Table.Th>
+                    <Table.Th>Price</Table.Th>
+                    <Table.Th>Stock</Table.Th>
+                    <Table.Th>Discount</Table.Th>
+                </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>{rows}</Table.Tbody>
+            </Table>
+
+            <Pagination
+                total={Math.ceil(elements.length / rowsPerPage)}
+                page={activePage}
+                onChange={setActivePage}
+                position="center"
+                color="blue"
+                style={{ marginTop: "20px" }}
+            />
+            <Modal opened={opened} onClose={close} title="Add Collection">
+                <form>
+                    <Stack>
+                        <TextInput
+                        label="Name"
+                        placeholder="Yu-Gi oh"
+                        radius="md"
+                        />
+
+                        {/* Type Card */}
+                        <div>
+                            <label>Type Card</label>
+                            <Combobox
+                            store={typeCard}
+                            onOptionSubmit={(val) => {
+                                setTypeVal(val);
+                                typeCard.closeDropdown();
+                            }}
+                            >
+                                <Combobox.Target>
+                                    <InputBase
+                                    component="button"
+                                    type="button"
+                                    pointer
+                                    rightSection={<Combobox.Chevron />}
+                                    rightSectionPointerEvents="none"
+                                    onClick={() => typeCard.toggleDropdown()}
+                                    >
+                                    {typeVal || <Input.Placeholder>Type Card</Input.Placeholder>}
+                                    </InputBase>
+                                </Combobox.Target>
+
+                                <Combobox.Dropdown>
+                                    <Combobox.Options>{optionType}</Combobox.Options>
+                                </Combobox.Dropdown>
+                            </Combobox>
+                        </div>
+
+                        <TextInput
+                        label="Price"
+                        placeholder="Yu-Gi oh"
+                        radius="md"
+                        />
+                        <TextInput
+                        label="Stok"
+                        placeholder="Yu-Gi oh"
+                        radius="md"
+                        />
+
+                        {/* Discount */}
+                        <div>
+                            <label>Discount</label>
+                            <Combobox
+                            store={combobox}
+                            onOptionSubmit={(val) => {
+                                setValue(val);
+                                combobox.closeDropdown();
+                            }}
+                            >
+                                <Combobox.Target>
+                                    <InputBase
+                                    component="button"
+                                    type="button"
+                                    pointer
+                                    rightSection={<Combobox.Chevron />}
+                                    rightSectionPointerEvents="none"
+                                    onClick={() => combobox.toggleDropdown()}
+                                    >
+                                    {value || <Input.Placeholder>Discount</Input.Placeholder>}
+                                    </InputBase>
+                                </Combobox.Target>
+
+                                <Combobox.Dropdown>
+                                    <Combobox.Options>{options}</Combobox.Options>
+                                </Combobox.Dropdown>
+                            </Combobox>
+                        </div>
+
+                         <FileInput label="Image" placeholder="Upload files" multiple />
+
+                    </Stack>
+
+                    <Flex
+                        pt="md"
+                        gap="xl"
+                        align="center"
+                    >
+                        <Button variant="filled" fullWidth>Submit</Button>
+                    </Flex>
+
+                </form>
+            </Modal>
+        </Container>
+
+
+    </>
+  );
 };
 
-export default collection
+export default Collection;
