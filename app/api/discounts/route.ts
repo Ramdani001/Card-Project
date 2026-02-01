@@ -37,7 +37,7 @@ export const GET = async (req: NextRequest) => {
     console.error(err);
     return sendResponse({
       success: false,
-      message: "Failed to fetch discounts",
+      message: err instanceof Error ? err.message : "Failed to fetch discounts",
       status: 500,
     });
   }
@@ -45,7 +45,7 @@ export const GET = async (req: NextRequest) => {
 
 export const POST = async (req: NextRequest) => {
   try {
-    const { discount } = await req.json();
+    const { discount, note } = await req.json();
 
     if (!discount) {
       return sendResponse({
@@ -58,6 +58,7 @@ export const POST = async (req: NextRequest) => {
     const newDiscount = await prisma.discount.create({
       data: {
         discount,
+        note,
       },
     });
 
@@ -71,7 +72,7 @@ export const POST = async (req: NextRequest) => {
     console.error(err);
     return sendResponse({
       success: false,
-      message: "Failed to save Discount",
+      message: err instanceof Error ? err.message : "Failed to save Discount",
       status: 400,
     });
   }

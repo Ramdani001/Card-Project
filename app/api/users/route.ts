@@ -81,7 +81,7 @@ export const POST = async (req: NextRequest) => {
     });
   } catch (err: any) {
     console.error(err);
-    
+
     return sendResponse({
       success: false,
       message: err.code === "P2002" ? "Email already registered" : "Internal server error",

@@ -39,7 +39,7 @@ export const GET = async (_req: NextRequest, { params }: RouteParams) => {
 
     return sendResponse({
       success: false,
-      message: "Internal server error",
+      message: err instanceof Error ? err.message : "Internal server error",
       status: 500,
     });
   }
@@ -196,11 +196,11 @@ export const DELETE = async (_req: NextRequest, { params }: RouteParams) => {
       success: true,
       message: "Card deleted successfully",
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error(err);
     return sendResponse({
       success: false,
-      message: "Failed to delete card",
+      message: err instanceof Error ? err.message : "Failed to delete card",
       status: 500,
     });
   }
