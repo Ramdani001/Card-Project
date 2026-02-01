@@ -37,7 +37,7 @@ export const GET = async (_req: NextRequest, { params }: RouteParams) => {
     console.error(err);
     return sendResponse({
       success: false,
-      message: "Internal server error",
+      message: err instanceof Error ? err.message : "Internal server error",
       status: 500,
     });
   }

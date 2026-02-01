@@ -42,7 +42,7 @@ export const GET = async (req: NextRequest) => {
     console.error(err);
     return sendResponse({
       success: false,
-      message: "Failed to fetch roles",
+      message: err instanceof Error ? err.message : "Failed to fetch roles",
       status: 500,
     });
   }

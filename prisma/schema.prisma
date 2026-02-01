@@ -52,7 +52,8 @@ model DetailCard {
 
 model Discount {
   idDiscount Int          @id @default(autoincrement())
-  discount   Float        @unique
+  discount   Float
+  note       String?
   details    DetailCard[]
 }
 

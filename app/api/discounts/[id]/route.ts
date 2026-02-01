@@ -41,12 +41,13 @@ export const GET = async (_req: NextRequest, { params }: RouteParams) => {
 export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
   try {
     const { id } = await params;
-    const { discount } = await req.json();
+    const { discount, note } = await req.json();
 
     const updated = await prisma.discount.update({
       where: { idDiscount: parseInt(id) },
       data: {
         ...(discount && { discount }),
+        ...(note && { note }),
       },
     });
 
