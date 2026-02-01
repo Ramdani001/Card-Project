@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { sendResponse } from "@/helpers/response.helper";
+import { handleApiError, sendResponse } from "@/helpers/response.helper";
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -62,15 +62,7 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
       data: updated,
     });
   } catch (err: any) {
-    console.error(err);
-    const isNotFound = err.code === "P2025";
-    const isUniqueConstraint = err.code === "P2002";
-
-    return sendResponse({
-      success: false,
-      message: isNotFound ? "Role not found" : isUniqueConstraint ? "Role name already exists" : "Update failed",
-      status: isNotFound ? 404 : 400,
-    });
+    return handleApiError(err);
   }
 };
 
@@ -87,13 +79,6 @@ export const DELETE = async (_req: NextRequest, { params }: RouteParams) => {
       message: "Role deleted successfully",
     });
   } catch (err: any) {
-    console.error(err);
-    const isNotFound = err.code === "P2025";
-
-    return sendResponse({
-      success: false,
-      message: isNotFound ? "Role not found" : "Delete failed",
-      status: isNotFound ? 404 : 500,
-    });
+    return handleApiError(err);
   }
 };

@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
-import { sendResponse } from "@/helpers/response.helper";
+import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import { writeFile, mkdir, unlink } from "fs/promises";
 import { existsSync } from "fs";
 import path from "path";
@@ -47,13 +47,7 @@ export const GET = async (req: NextRequest) => {
       data: allCard,
     });
   } catch (err) {
-    console.error(err);
-
-    return sendResponse({
-      success: false,
-      message: err instanceof Error ? err.message : "Failed to fetch cards",
-      status: 500,
-    });
+    return handleApiError(err);
   }
 };
 
@@ -164,8 +158,6 @@ export const POST = async (req: NextRequest) => {
       status: 201,
     });
   } catch (err) {
-    console.error(err);
-
     if (savedFilePath && existsSync(savedFilePath)) {
       try {
         await unlink(savedFilePath);
@@ -174,10 +166,6 @@ export const POST = async (req: NextRequest) => {
       }
     }
 
-    return sendResponse({
-      success: false,
-      message: err instanceof Error ? err.message : "Failed to save Card",
-      status: 500,
-    });
+    return handleApiError(err);
   }
 };

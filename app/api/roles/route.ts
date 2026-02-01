@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
-import { sendResponse } from "@/helpers/response.helper";
+import { handleApiError, sendResponse } from "@/helpers/response.helper";
 
 export const GET = async (req: NextRequest) => {
   try {
@@ -39,12 +39,7 @@ export const GET = async (req: NextRequest) => {
       data: allRoles,
     });
   } catch (err) {
-    console.error(err);
-    return sendResponse({
-      success: false,
-      message: err instanceof Error ? err.message : "Failed to fetch roles",
-      status: 500,
-    });
+    return handleApiError(err);
   }
 };
 
@@ -71,10 +66,6 @@ export const POST = async (req: NextRequest) => {
       status: 201,
     });
   } catch (err: any) {
-    return sendResponse({
-      success: false,
-      message: err.code === "P2002" ? "Role name already exists" : "Failed to create role",
-      status: 400,
-    });
+    return handleApiError(err);
   }
 };
