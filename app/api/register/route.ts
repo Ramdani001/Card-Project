@@ -47,7 +47,7 @@ export const POST = async (req: NextRequest) => {
 
     return sendResponse({
       success: false,
-      message: "Internal server error during registration",
+      message: err instanceof Error ? err.message : "Internal server error during registration",
       status: 500,
     });
   }

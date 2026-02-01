@@ -51,7 +51,7 @@ export const GET = async (req: NextRequest) => {
 
     return sendResponse({
       success: false,
-      message: "Failed to fetch cards",
+      message: err instanceof Error ? err.message : "Failed to fetch cards",
       status: 500,
     });
   }
@@ -176,7 +176,7 @@ export const POST = async (req: NextRequest) => {
 
     return sendResponse({
       success: false,
-      message: "Failed to save Card",
+      message: err instanceof Error ? err.message : "Failed to save Card",
       status: 500,
     });
   }

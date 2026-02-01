@@ -3,6 +3,8 @@
 import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { TextInput, PasswordInput, Button, Paper, Title, Text, Container, Alert, Stack, Center } from "@mantine/core";
+import { IconAlertCircle } from "@tabler/icons-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -26,7 +28,7 @@ export default function LoginPage() {
       if (res?.error) {
         setError("Email atau password salah!");
       } else {
-        router.push("/test");
+        router.push("/dashboard/main");
         router.refresh();
       }
     } catch {
@@ -37,46 +39,49 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-md">
-        <h2 className="mb-6 text-center text-2xl font-bold text-gray-800">Login Dev-Card</h2>
+    <Center style={{ minHeight: "100vh" }}>
+      <Container size={420} my={40}>
+        <Title ta="center" fw={900} order={2}>
+          Login Dev-Card
+        </Title>
+        <Text c="dimmed" size="sm" ta="center" mt={5}>
+          Selamat datang kembali! Silakan masuk ke akun Anda.
+        </Text>
 
-        {error && <div className="mb-4 rounded bg-red-100 p-3 text-sm text-red-600">{error}</div>}
+        <Paper withBorder shadow="md" p={30} mt={30} radius="md">
+          {error && (
+            <Alert icon={<IconAlertCircle size="1rem" />} title="Gagal Login" color="red" mb="md" radius="md">
+              {error}
+            </Alert>
+          )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
-            <input
-              type="email"
-              className="mt-1 text-black w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:outline-none"
-              placeholder="admin@mail.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
+          <form onSubmit={handleSubmit}>
+            <Stack>
+              <TextInput
+                label="Email"
+                placeholder="admin@mail.com"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.currentTarget.value)}
+                radius="md"
+              />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Password</label>
-            <input
-              type="password"
-              className="mt-1 w-full text-black rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:outline-none"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
+              <PasswordInput
+                label="Password"
+                placeholder="••••••••"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.currentTarget.value)}
+                radius="md"
+              />
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-md bg-blue-600 py-2 text-white hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
-          >
-            {loading ? "Mohon tunggu..." : "Sign In"}
-          </button>
-        </form>
-      </div>
-    </div>
+              <Button type="submit" fullWidth mt="xl" radius="md" size="md" loading={loading} loaderProps={{ type: "dots" }}>
+                Sign In
+              </Button>
+            </Stack>
+          </form>
+        </Paper>
+      </Container>
+    </Center>
   );
 }
