@@ -21,7 +21,7 @@ export const GET = async (req: NextRequest) => {
     };
 
     if (options.take) {
-      const [cards, total] = await Promise.all([prisma.card.findMany(options), prisma.discount.count()]);
+      const [cards, total] = await Promise.all([prisma.card.findMany(options), prisma.card.count()]);
 
       return sendResponse({
         success: true,

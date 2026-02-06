@@ -8,9 +8,12 @@ datasource db {
 }
 
 model Role {
-  idRole Int    @id @default(autoincrement())
-  name   String @unique
-  users  User[]
+  idRole    Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  users User[]
 }
 
 model User {
@@ -19,26 +22,38 @@ model User {
   password  String
   idRole    Int?
   createdAt DateTime @default(now())
-  role      Role?    @relation(fields: [idRole], references: [idRole])
+  updatedAt DateTime @default(now()) @updatedAt
+
+  role         Role?         @relation(fields: [idRole], references: [idRole])
+  cart         Cart?
+  transactions Transaction[]
 }
 
 model TypeCard {
-  idTypeCard Int     @id @default(autoincrement())
+  idTypeCard Int      @id @default(autoincrement())
   name       String
   note       String?
-  cards      Card[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  cards Card[]
 }
 
 model Card {
-  idCard     Int        @id @default(autoincrement())
+  idCard     Int      @id @default(autoincrement())
   idDetail   Int
   idTypeCard Int
-  detail     DetailCard @relation(fields: [idDetail], references: [idDetail])
-  typeCard   TypeCard   @relation(fields: [idTypeCard], references: [idTypeCard])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  detail           DetailCard        @relation(fields: [idDetail], references: [idDetail])
+  typeCard         TypeCard          @relation(fields: [idTypeCard], references: [idTypeCard])
+  cartItems        CartItem[]
+  transactionItems TransactionItem[]
 }
 
 model DetailCard {
-  idDetail   Int       @id @default(autoincrement())
+  idDetail   Int      @id @default(autoincrement())
   name       String
   price      Float
   stock      Int
@@ -46,20 +61,97 @@ model DetailCard {
   note       String?
   idImage    Int?
   cards      Card[]
-  discount   Discount? @relation(fields: [idDiscount], references: [idDiscount])
-  image      Image?    @relation(fields: [idImage], references: [idImage])
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  discount Discount? @relation(fields: [idDiscount], references: [idDiscount])
+  image    Image?    @relation(fields: [idImage], references: [idImage])
 }
 
 model Discount {
-  idDiscount Int          @id @default(autoincrement())
+  idDiscount Int      @id @default(autoincrement())
   discount   Float
   note       String?
-  details    DetailCard[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  details DetailCard[]
 }
 
 model Image {
-  idImage  Int          @id @default(autoincrement())
-  name     String
-  location String
-  details  DetailCard[]
+  idImage   Int      @id @default(autoincrement())
+  name      String
+  location  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  details DetailCard[]
+}
+
+model Cart {
+  idCart    Int      @id @default(autoincrement())
+  idUsr     Int      @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  user  User       @relation(fields: [idUsr], references: [idUsr])
+  items CartItem[]
+}
+
+model CartItem {
+  idCartItem Int      @id @default(autoincrement())
+  idCart     Int
+  idCard     Int
+  quantity   Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  cart Cart @relation(fields: [idCart], references: [idCart])
+  card Card @relation(fields: [idCard], references: [idCard])
+
+  @@unique([idCart, idCard])
+}
+
+model Transaction {
+  idTrx         Int               @id @default(autoincrement())
+  idUsr         Int
+  totalAmount   Float
+  status        TransactionStatus @default(PENDING)
+  paymentMethod String?
+  snapAddress   String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @default(now()) @updatedAt
+
+  user  User              @relation(fields: [idUsr], references: [idUsr])
+  items TransactionItem[]
+}
+
+model TransactionItem {
+  idTrxItem Int      @id @default(autoincrement())
+  idTrx     Int
+  idCard    Int
+  quantity  Int
+  price     Float
+  subtotal  Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  transaction Transaction @relation(fields: [idTrx], references: [idTrx])
+  card        Card        @relation(fields: [idCard], references: [idCard])
+}
+
+model AppConfig {
+  idConfig  Int      @id @default(autoincrement())
+  category  String
+  value     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+enum TransactionStatus {
+  PENDING
+  PAID
+  SENT
+  COMPLETED
+  CANCELLED
 }

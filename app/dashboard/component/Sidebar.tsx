@@ -1,43 +1,51 @@
-"use client"
+"use client";
 
-import { Button, Container, Divider, Flex, Grid } from "@mantine/core";
+import { Button, Divider, Stack, Text, ThemeIcon } from "@mantine/core";
 import { IconLayoutDashboard, IconLibraryPhoto } from "@tabler/icons-react";
 
 type SidebarProps = {
   onMenuClick: (menuName: string) => void;
+  activeMenu: string;
 };
 
-const Sidebar = ({ onMenuClick }: SidebarProps) => {
-    
+const Sidebar = ({ onMenuClick, activeMenu }: SidebarProps) => {
+  const getButtonProps = (menuName: string) => {
+    const isActive = activeMenu === menuName;
+    return {
+      variant: isActive ? "light" : "subtle",
+      color: isActive ? "blue" : "gray",
+      c: isActive ? "blue.2" : "gray.3",
+    };
+  };
+
   return (
     <>
+      <Text size="xl" fw={700} ta="center" mb="md" mt="sm" c="white">
+        Card Royal
+      </Text>
+      <Divider mb="lg" color="gray.8" />
 
-        <h1>Card Royal</h1>
-        <Divider />
+      <Stack gap="sm" px="md">
+        <Button
+          fullWidth
+          justify="flex-start"
+          leftSection={<IconLayoutDashboard size={20} />}
+          onClick={() => onMenuClick("Dashboard")}
+          {...getButtonProps("Dashboard")}
+        >
+          Dashboard
+        </Button>
 
-        <Container>
-            <Grid>
-                <Grid.Col>
-                    <Button bg="transparent" onClick={() => onMenuClick("Dashboard")}>
-                       <Flex gap="md" justify="flex-center" align="flex-center" >
-                        <IconLayoutDashboard />
-                        <span>Dashboard</span>
-                       </Flex>
-                    </Button>
-                </Grid.Col>
-                <Grid.Col>
-                    <Button bg="transparent" onClick={() => onMenuClick("Collection")}>
-
-                        <Flex gap="md" justify="flex-center" align="flex-center" >
-                            <IconLibraryPhoto /> 
-                            <span>Collection</span>
-                        </Flex>
-
-                    </Button>
-                </Grid.Col>
-            </Grid>
-        </Container>
-
+        <Button
+          fullWidth
+          justify="flex-start"
+          leftSection={<IconLibraryPhoto size={20} />}
+          onClick={() => onMenuClick("Collection")}
+          {...getButtonProps("Collection")}
+        >
+          Collection
+        </Button>
+      </Stack>
     </>
   );
 };

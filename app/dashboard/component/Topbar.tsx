@@ -1,16 +1,15 @@
-"use client"
+"use client";
 
-import { Container } from "@mantine/core";
+import { Container, Flex } from "@mantine/core";
 
 const Topbar = () => {
-
-    return (
-        <>
-             <Container bg="blue" style={{ minWidth: "80vw" }}>
-                <h1>Topbar</h1>
-            </Container>
-        </>
-    );
+  return (
+    <Container fluid h="100%">
+      <Flex align="center" h="100%">
+        <h1 style={{ margin: 0 }}>Topbar</h1>
+      </Flex>
+    </Container>
+  );
 };
 
-export default Topbar
+export default Topbar;
