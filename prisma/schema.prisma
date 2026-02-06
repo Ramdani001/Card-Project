@@ -142,8 +142,8 @@ model TransactionItem {
 
 model AppConfig {
   idConfig  Int      @id @default(autoincrement())
-  category  String
-  value     Int
+  code      String @unique
+  value     String
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 }
