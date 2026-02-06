@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
-import { sendResponse } from "@/helpers/response.helper";
+import { handleApiError, sendResponse } from "@/helpers/response.helper";
 
 export const POST = async (req: NextRequest) => {
   try {
@@ -43,12 +43,6 @@ export const POST = async (req: NextRequest) => {
       status: 201,
     });
   } catch (err) {
-    console.error(err);
-
-    return sendResponse({
-      success: false,
-      message: err instanceof Error ? err.message : "Internal server error during registration",
-      status: 500,
-    });
+    return handleApiError(err);
   }
 };

@@ -1,4 +1,4 @@
-import { sendResponse } from "@/helpers/response.helper";
+import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import prisma from "@/lib/prisma";
 import { existsSync } from "fs";
 import { mkdir, unlink, writeFile } from "fs/promises";
@@ -35,13 +35,7 @@ export const GET = async (_req: NextRequest, { params }: RouteParams) => {
       data: card,
     });
   } catch (err) {
-    console.error(err);
-
-    return sendResponse({
-      success: false,
-      message: err instanceof Error ? err.message : "Internal server error",
-      status: 500,
-    });
+    return handleApiError(err);
   }
 };
 
@@ -140,17 +134,11 @@ export const PATCH = async (req: NextRequest, { params }: { params: Promise<{ id
 
     return sendResponse({ success: true, message: "Card updated successfully", data: result });
   } catch (err) {
-    console.error(err);
-
     if (newFilePath && existsSync(newFilePath)) {
       await unlink(newFilePath).catch(console.error);
     }
 
-    return sendResponse({
-      success: false,
-      message: err instanceof Error ? err.message : "Failed to update Card",
-      status: 500,
-    });
+    return handleApiError(err);
   }
 };
 
@@ -197,11 +185,6 @@ export const DELETE = async (_req: NextRequest, { params }: RouteParams) => {
       message: "Card deleted successfully",
     });
   } catch (err) {
-    console.error(err);
-    return sendResponse({
-      success: false,
-      message: err instanceof Error ? err.message : "Failed to delete card",
-      status: 500,
-    });
+    return handleApiError(err);
   }
 };

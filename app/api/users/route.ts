@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
-import { sendResponse } from "@/helpers/response.helper";
+import { handleApiError, sendResponse } from "@/helpers/response.helper";
 
 export const GET = async (req: NextRequest) => {
   try {
@@ -38,13 +38,7 @@ export const GET = async (req: NextRequest) => {
       data: responseData,
     });
   } catch (err) {
-    console.error(err);
-
-    return sendResponse({
-      success: false,
-      message: "Failed to fetch users",
-      status: 500,
-    });
+    return handleApiError(err);
   }
 };
 
@@ -80,12 +74,6 @@ export const POST = async (req: NextRequest) => {
       status: 201,
     });
   } catch (err: any) {
-    console.error(err);
-
-    return sendResponse({
-      success: false,
-      message: err.code === "P2002" ? "Email already registered" : "Internal server error",
-      status: err.code === "P2002" ? 400 : 500,
-    });
+    return handleApiError(err);
   }
 };

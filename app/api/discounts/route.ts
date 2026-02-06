@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
-import { sendResponse } from "@/helpers/response.helper";
+import { handleApiError, sendResponse } from "@/helpers/response.helper";
 
 export const GET = async (req: NextRequest) => {
   try {
@@ -34,12 +34,7 @@ export const GET = async (req: NextRequest) => {
       data: allDiscount,
     });
   } catch (err) {
-    console.error(err);
-    return sendResponse({
-      success: false,
-      message: err instanceof Error ? err.message : "Failed to fetch discounts",
-      status: 500,
-    });
+    return handleApiError(err);
   }
 };
 
@@ -69,11 +64,6 @@ export const POST = async (req: NextRequest) => {
       status: 201,
     });
   } catch (err) {
-    console.error(err);
-    return sendResponse({
-      success: false,
-      message: err instanceof Error ? err.message : "Failed to save Discount",
-      status: 400,
-    });
+    return handleApiError(err);
   }
 };

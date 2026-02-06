@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
-import { sendResponse } from "@/helpers/response.helper";
+import { handleApiError, sendResponse } from "@/helpers/response.helper";
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -28,13 +28,7 @@ export const GET = async (_req: NextRequest, { params }: RouteParams) => {
       data: typeCard,
     });
   } catch (err) {
-    console.error(err);
-
-    return sendResponse({
-      success: false,
-      message: err instanceof Error ? err.message : "Internal server error",
-      status: 500,
-    });
+    return handleApiError(err);
   }
 };
 
@@ -57,14 +51,7 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
       data: updated,
     });
   } catch (err: any) {
-    console.error(err);
-    const isNotFound = err.code === "P2025";
-
-    return sendResponse({
-      success: false,
-      message: isNotFound ? "Type Card not found" : "Failed to update type card",
-      status: isNotFound ? 404 : 400,
-    });
+    return handleApiError(err);
   }
 };
 
@@ -81,13 +68,6 @@ export const DELETE = async (_req: NextRequest, { params }: RouteParams) => {
       message: "Type Card deleted successfully",
     });
   } catch (err: any) {
-    console.error(err);
-    const isNotFound = err.code === "P2025";
-
-    return sendResponse({
-      success: false,
-      message: isNotFound ? "Type Card not found" : "Failed to delete type card",
-      status: isNotFound ? 404 : 500,
-    });
+    return handleApiError(err);
   }
 };
