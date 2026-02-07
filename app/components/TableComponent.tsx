@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { useDebouncedCallback } from "@mantine/hooks";
 
 export interface ColumnDef<T> {
-  key: keyof T;
+  key: string;
   label: string;
   sortable?: boolean;
   filterable?: boolean;
