@@ -36,7 +36,7 @@ export const GET = async (req: NextRequest) => {
       });
     }
 
-    const allCard = await prisma.discount.findMany({
+    const allCard = await prisma.card.findMany({
       ...options,
       orderBy: options.orderBy || { idCard: "desc" },
     });

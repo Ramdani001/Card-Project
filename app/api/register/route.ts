@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { CONSTANT } from "@/app/constants";
+import { CONSTANT } from "@/constants";
 
 export const POST = async (req: NextRequest) => {
   try {

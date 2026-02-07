@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { ActionIcon, Badge, Button, Flex, Group, Paper, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPencil, IconTrash, IconUserPlus } from "@tabler/icons-react";
-import { TableComponent, ColumnDef } from "@/app/components/TableComponent";
+import { TableComponent, ColumnDef } from "@/components/layout/TableComponent";
 import { ListMemberForm } from "./ListMemberForm";
-import { UserData } from "@/app/types/UserData";
-import { PaginationMetaData } from "@/app/types/PaginationMetaData";
-import { Role } from "@/app/types/Role";
+import { UserData } from "@/types/UserData";
+import { PaginationMetaData } from "@/types/PaginationMetaData";
+import { Role } from "@/types/Role";
 
 const ListMember = () => {
   const [users, setUsers] = useState<UserData[]>([]);

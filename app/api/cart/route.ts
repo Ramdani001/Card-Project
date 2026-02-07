@@ -11,7 +11,7 @@ export async function GET() {
       include: {
         items: {
           include: {
-            card: { include: { detail: { include: { image: true } } } },
+            card: { include: { detail: { include: { image: true } }, typeCard: true } },
           },
         },
       },
@@ -24,20 +24,10 @@ export async function GET() {
         data: { items: [] },
       });
 
-    const formattedItems = cart.items.map((item) => ({
-      idCartItem: item.idCartItem,
-      idCard: item.idCard,
-      name: item.card.detail.name,
-      price: item.card.detail.price,
-      quantity: item.quantity,
-      subtotal: item.card.detail.price * item.quantity,
-      image: item.card.detail.image,
-    }));
-
     return sendResponse({
       success: true,
       message: "Cart fetched successfully",
-      data: formattedItems,
+      data: cart,
     });
   } catch (err) {
     return handleApiError(err);
