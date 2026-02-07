@@ -1,9 +1,12 @@
 "use client";
 
+import { formatRupiah } from "@/app/helpers";
+import { Badge, Center, Container, Grid, Group, Loader, Paper, SimpleGrid, Stack, Table, Text } from "@mantine/core";
+import { IconAlertTriangle, IconCoin, IconReceipt2, IconUsers } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { Container, Grid, Paper, Text, Group, SimpleGrid, Stack, ThemeIcon, Table, Badge, Loader, Center, RingProgress } from "@mantine/core";
-import { IconCoin, IconReceipt2, IconUsers, IconAlertTriangle, IconTrendingUp, IconPackage } from "@tabler/icons-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, Legend } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { KPICard } from "./KPICard";
+import { StatusBadge } from "./StatusBadge";
 
 interface SummaryData {
   revenue: number;
@@ -35,14 +38,6 @@ interface RecentTrxData {
   status: string;
   date: string;
 }
-
-const formatRupiah = (number: number) => {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(number);
-};
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
@@ -164,7 +159,12 @@ const Dashboard = () => {
                   <XAxis type="number" hide />
                   <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12 }} />
                   <Tooltip />
-                  <Bar dataKey="sold" fill="#40c057" radius={[0, 4, 4, 0]} />
+
+                  <Bar dataKey="sold" radius={[0, 4, 4, 0]}>
+                    {topProducts.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </Paper>
@@ -204,45 +204,6 @@ const Dashboard = () => {
         </Grid>
       </Stack>
     </Container>
-  );
-};
-
-const KPICard = ({ title, value, icon: Icon, color, diff }: { title: string; value: string; icon: any; color: string; diff: string }) => {
-  return (
-    <Paper withBorder p="md" radius="md" shadow="sm">
-      <Group justify="space-between">
-        <Text size="xs" c="dimmed" fw={700} tt="uppercase">
-          {title}
-        </Text>
-        <ThemeIcon color={color} variant="light" size="lg" radius="md">
-          <Icon size="1.2rem" stroke={1.5} />
-        </ThemeIcon>
-      </Group>
-
-      <Group align="flex-end" gap="xs" mt={25}>
-        <Text fw={700} size="xl" style={{ lineHeight: 1 }}>
-          {value}
-        </Text>
-      </Group>
-
-      <Text c="dimmed" size="xs" mt="sm">
-        {diff}
-      </Text>
-    </Paper>
-  );
-};
-
-const StatusBadge = ({ status }: { status: string }) => {
-  let color = "gray";
-  if (status === "PAID") color = "blue";
-  if (status === "SENT") color = "yellow";
-  if (status === "COMPLETED") color = "green";
-  if (status === "CANCELLED") color = "red";
-
-  return (
-    <Badge color={color} size="sm" variant="light">
-      {status}
-    </Badge>
   );
 };
 

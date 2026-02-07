@@ -31,7 +31,7 @@ model User {
 
 model TypeCard {
   idTypeCard Int      @id @default(autoincrement())
-  name       String
+  name       String   @unique
   note       String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @default(now()) @updatedAt
@@ -142,7 +142,7 @@ model TransactionItem {
 
 model AppConfig {
   idConfig  Int      @id @default(autoincrement())
-  code      String @unique
+  code      String   @unique
   value     String
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt

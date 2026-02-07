@@ -1,6 +1,8 @@
+import { ColorSchemeScript, MantineProvider, createTheme } from "@mantine/core";
+import { Notifications } from "@mantine/notifications";
+import "@mantine/notifications/styles.css";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { ColorSchemeScript, MantineProvider, createTheme } from "@mantine/core";
 
 import "@mantine/core/styles.css";
 import "./globals.css";
@@ -36,6 +38,7 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <MantineProvider theme={theme} defaultColorScheme="auto">
+          <Notifications />
           {children}
         </MantineProvider>
       </body>

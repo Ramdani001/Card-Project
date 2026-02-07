@@ -18,6 +18,7 @@
     "@fortawesome/react-fontawesome": "^3.1.1",
     "@mantine/core": "^8.3.13",
     "@mantine/hooks": "^8.3.13",
+    "@mantine/notifications": "^8.3.14",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
     "@reduxjs/toolkit": "^2.11.2",

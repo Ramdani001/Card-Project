@@ -4,13 +4,15 @@ import { useState } from "react";
 import { AppShell, Burger, Group, ScrollArea, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import Sidebar from "../component/Sidebar";
-import Dashboard from "../component/Dashboard";
+import Dashboard from "../component/Dashboard/Dashboard";
 import Collection from "../component/Collection";
 import Topbar from "../component/Topbar";
+import ListMember from "../component/ListMember/ListMember";
 
 const MENU_COMPONENTS: Record<string, React.ReactNode> = {
   Dashboard: <Dashboard />,
   Collection: <Collection />,
+  ListMember: <ListMember />,
 };
 
 const MainDashboard = () => {

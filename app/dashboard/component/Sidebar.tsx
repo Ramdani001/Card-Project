@@ -1,7 +1,7 @@
 "use client";
 
-import { Button, Divider, Stack, Text, ThemeIcon } from "@mantine/core";
-import { IconLayoutDashboard, IconLibraryPhoto } from "@tabler/icons-react";
+import { Button, Divider, Stack, Text } from "@mantine/core";
+import { IconLayoutDashboard, IconLibraryPhoto, IconUsers } from "@tabler/icons-react";
 
 type SidebarProps = {
   onMenuClick: (menuName: string) => void;
@@ -44,6 +44,16 @@ const Sidebar = ({ onMenuClick, activeMenu }: SidebarProps) => {
           {...getButtonProps("Collection")}
         >
           Collection
+        </Button>
+
+        <Button
+          fullWidth
+          justify="flex-start"
+          leftSection={<IconUsers size={20} />}
+          onClick={() => onMenuClick("ListMember")}
+          {...getButtonProps("ListMember")}
+        >
+          List Member
         </Button>
       </Stack>
     </>
