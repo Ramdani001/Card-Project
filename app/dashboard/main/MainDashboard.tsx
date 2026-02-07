@@ -38,14 +38,13 @@ const MainDashboard = () => {
       layout="alt"
     >
       <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between">
-          <Group>
-            <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" />
-            <Burger opened={desktopOpened} onClick={toggleDesktop} visibleFrom="sm" size="sm" />
-            <div style={{ flex: 1 }}>
-              <Topbar />
-            </div>
-          </Group>
+        <Group h="100%" px="md" wrap="nowrap">
+          <Burger opened={mobileOpened} onClick={toggleMobile} hiddenFrom="sm" size="sm" />
+          <Burger opened={desktopOpened} onClick={toggleDesktop} visibleFrom="sm" size="sm" />
+
+          <div style={{ flex: 1 }}>
+            <Topbar />
+          </div>
         </Group>
       </AppShell.Header>
 
