@@ -1,10 +1,11 @@
+import { getAuthUser } from "@/helpers/auth.server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import prisma from "@/lib/prisma";
 
-const USER_ID = 1;
-
 export async function POST(request: Request) {
   try {
+    const user = await getAuthUser();
+
     const body = await request.json();
     const { paymentMethod, address } = body;
 
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
 
     const result = await prisma.$transaction(async (tx) => {
       const cart = await tx.cart.findUnique({
-        where: { idUsr: USER_ID },
+        where: { idUsr: user.id },
         include: {
           items: {
             include: { card: { include: { detail: true } } },
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
 
       const newTransaction = await tx.transaction.create({
         data: {
-          idUsr: USER_ID,
+          idUsr: user.id,
           totalAmount: totalAmount,
           status: "PAID",
           paymentMethod: paymentMethod,

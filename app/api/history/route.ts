@@ -1,12 +1,13 @@
+import { getAuthUser } from "@/helpers/auth.server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import prisma from "@/lib/prisma";
 
-const USER_ID = 1;
-
 export async function GET() {
   try {
+    const user = await getAuthUser();
+
     const history = await prisma.transaction.findMany({
-      where: { idUsr: USER_ID },
+      where: { idUsr: user.id },
       orderBy: { createdAt: "desc" },
       include: {
         items: {

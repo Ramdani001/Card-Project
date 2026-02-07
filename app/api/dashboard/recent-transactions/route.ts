@@ -1,6 +1,5 @@
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
+import prisma from "@/lib/prisma";
 
 export async function GET() {
   try {

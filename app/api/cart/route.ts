@@ -1,13 +1,13 @@
+import { getAuthUser } from "@/helpers/auth.server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import prisma from "@/lib/prisma";
-import { NextResponse } from "next/server";
-
-const USER_ID = 1;
 
 export async function GET() {
   try {
+    const user = await getAuthUser();
+
     const cart = await prisma.cart.findUnique({
-      where: { idUsr: USER_ID },
+      where: { idUsr: user.id },
       include: {
         items: {
           include: {
@@ -46,6 +46,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const user = await getAuthUser();
+
     const body = await request.json();
     const { idCard, quantity } = body;
     const cardIdNum = Number(idCard);
@@ -65,9 +67,9 @@ export async function POST(request: Request) {
       throw new Error("Card not found");
     }
 
-    let cart = await prisma.cart.findUnique({ where: { idUsr: USER_ID } });
+    let cart = await prisma.cart.findUnique({ where: { idUsr: user.id } });
     if (!cart) {
-      cart = await prisma.cart.create({ data: { idUsr: USER_ID } });
+      cart = await prisma.cart.create({ data: { idUsr: user.id } });
     }
 
     const existingItem = await prisma.cartItem.findUnique({

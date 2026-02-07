@@ -1,11 +1,8 @@
-import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
+import prisma from "@/lib/prisma";
 
 export async function GET() {
   try {
-    const validStatuses = ["PAID", "SENT", "COMPLETED"];
-
     const [totalRevenue, totalTransactions, lowStockCount, activeUserCount] = await Promise.all([
       prisma.transaction.aggregate({
         _sum: { totalAmount: true },
