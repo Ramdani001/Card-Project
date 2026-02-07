@@ -1,17 +1,34 @@
 "use client";
 
-import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { TextInput, PasswordInput, Button, Paper, Title, Text, Container, Alert, Stack, Center } from "@mantine/core";
+import { TextInput, PasswordInput, Button, Paper, Title, Text, Container, Alert, Stack, Center, Loader, Anchor } from "@mantine/core";
 import { IconAlertCircle } from "@tabler/icons-react";
+import Link from "next/link";
 
 export default function LoginPage() {
+  const { status } = useSession();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/");
+    }
+  }, [status, router]);
+
+  if (status === "loading" || status === "authenticated") {
+    return (
+      <Center style={{ minHeight: "100vh" }}>
+        <Loader size="lg" />
+      </Center>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +97,13 @@ export default function LoginPage() {
               </Button>
             </Stack>
           </form>
+
+          <Text ta="center" mt="md" size="sm">
+            Belum punya akun?{" "}
+            <Anchor component={Link} href="/register" fw={700}>
+              Daftar sekarang
+            </Anchor>
+          </Text>
         </Paper>
       </Container>
     </Center>

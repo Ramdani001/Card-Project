@@ -2,17 +2,19 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
+import { CONSTANT } from "@/app/constants";
 
 export const POST = async (req: NextRequest) => {
   try {
     const { email, password } = await req.json();
 
     if (!email || !password) {
-      return sendResponse({
-        success: false,
-        message: "Email and password are required",
-        status: 400,
-      });
+      throw new Error("Email and password are required");
+    }
+
+    const defaultIdRole = await prisma.appConfig.findFirst({ where: { code: CONSTANT.APP_CONFIG.DEFAULT_ID_ROLE_CODE } });
+    if (!defaultIdRole) {
+      throw new Error(`Missing required AppConfig: ${CONSTANT.APP_CONFIG.DEFAULT_ID_ROLE_CODE}`);
     }
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -30,7 +32,7 @@ export const POST = async (req: NextRequest) => {
       data: {
         email,
         password: hashedPassword,
-        idRole: 2,
+        idRole: Number(defaultIdRole.value),
       },
     });
 
