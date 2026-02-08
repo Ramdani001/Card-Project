@@ -3,7 +3,7 @@ import { ActionIcon, Box, Burger, Button, Container, Divider, Group, Indicator, 
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconLayoutDashboard, IconLogin, IconLogout, IconSearch, IconShoppingCart, IconUser } from "@tabler/icons-react";
 import { signOut, useSession } from "next-auth/react";
-import router from "next/router";
+import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
 
 interface HeaderSectionProps {
@@ -16,6 +16,7 @@ interface HeaderSectionProps {
 export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen }: HeaderSectionProps) => {
   const [opened, { toggle }] = useDisclosure(false);
   const { data: session, status } = useSession();
+  const router = useRouter();
 
   return (
     <>
