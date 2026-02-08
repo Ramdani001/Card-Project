@@ -75,9 +75,9 @@ export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen }:
               {status === "authenticated" ? (
                 <Menu shadow="md" width={200} trigger="hover" openDelay={100} closeDelay={400}>
                   <Menu.Target>
-                    <Group gap={8} style={{ cursor: "pointer", lineHeight: 1 }} visibleFrom="xs">
+                    <Group gap={8} style={{ cursor: "pointer", lineHeight: 1 }}>
                       <IconUser size={20} />
-                      <Box>
+                      <Box visibleFrom="xs">
                         <Text size="xs" c="dimmed">
                           Account
                         </Text>

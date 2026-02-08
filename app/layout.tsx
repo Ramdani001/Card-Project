@@ -1,6 +1,8 @@
 import { ColorSchemeScript, MantineProvider, createTheme } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
+import { ModalsProvider } from "@mantine/modals";
 import "@mantine/notifications/styles.css";
+import "@mantine/dates/styles.css";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
@@ -41,7 +43,7 @@ export default function RootLayout({
         <NextAuthProvider>
           <MantineProvider theme={theme} defaultColorScheme="auto">
             <Notifications />
-            {children}
+            <ModalsProvider>{children}</ModalsProvider>
           </MantineProvider>
         </NextAuthProvider>
       </body>

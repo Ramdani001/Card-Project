@@ -148,6 +148,48 @@ model AppConfig {
   updatedAt DateTime @default(now()) @updatedAt
 }
 
+model Menu {
+  idMenu Int    @id @default(autoincrement())
+  code   String @unique
+  label  String
+
+  url   String?
+  icon  String?
+  order Int     @default(0)
+
+  parentCode String?
+  parent     Menu?   @relation("MenuToSubMenu", fields: [parentCode], references: [code])
+  subMenus   Menu[]  @relation("MenuToSubMenu")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Event {
+  idEvent   Int      @id @default(autoincrement())
+  title     String
+  content   String   @db.Text
+  startDate DateTime
+  endDate   DateTime
+
+  images EventImage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EventImage {
+  idImage  Int    @id @default(autoincrement())
+  name     String
+  location String
+
+  idEvent Int
+  event   Event @relation(fields: [idEvent], references: [idEvent], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 enum TransactionStatus {
   PENDING
   PAID

@@ -1,16 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ActionIcon, Badge, Button, Flex, Group, Paper, Title, Text } from "@mantine/core";
+import { ActionIcon, Badge, Button, Flex, Group, Paper, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconCheck, IconPencil, IconTrash, IconUserPlus, IconX } from "@tabler/icons-react";
+import { IconPencil, IconTrash, IconUserPlus, IconX } from "@tabler/icons-react";
 import { TableComponent, ColumnDef } from "@/components/layout/TableComponent";
 import { ListMemberForm } from "./ListMemberForm";
 import { UserData } from "@/types/UserData";
 import { PaginationMetaData } from "@/types/PaginationMetaData";
 import { Role } from "@/types/Role";
 import { notifications } from "@mantine/notifications";
-import { openConfirmModal } from "@mantine/modals";
 
 const ListMember = () => {
   const [users, setUsers] = useState<UserData[]>([]);
@@ -92,40 +91,16 @@ const ListMember = () => {
     }));
   };
 
-  const handleDelete = (id: number) => {
-    openConfirmModal({
-      title: "Delete Confirmation",
-      centered: true,
-      children: <Text size="sm">Are you sure you want to delete this user? This action cannot be undone.</Text>,
-      labels: { confirm: "Delete User", cancel: "Cancel" },
-      confirmProps: { color: "red" },
-      onConfirm: async () => {
-        try {
-          const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
-          const json = await res.json();
-
-          if (json.success) {
-            notifications.show({
-              title: "Success",
-              message: "User deleted successfully",
-              color: "teal",
-              icon: <IconCheck size={16} />,
-            });
-            fetchUsers();
-          } else {
-            notifications.show({
-              title: "Error",
-              message: json.message,
-              color: "red",
-              icon: <IconX size={16} />,
-            });
-          }
-        } catch (error) {
-          console.error("Delete error:", error);
-          notifications.show({ title: "Error", message: "Network error", color: "red" });
-        }
-      },
-    });
+  const handleDelete = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this user?")) return;
+    try {
+      const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (json.success) fetchUsers();
+      else notifications.show({ title: "Error", message: json.message, color: "red", icon: <IconX size={16} /> });
+    } catch (error) {
+      console.error("Delete error:", error);
+    }
   };
 
   const handleOpenAdd = () => {

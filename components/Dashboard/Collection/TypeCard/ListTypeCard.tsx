@@ -1,19 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ActionIcon, Badge, Button, Flex, Group, Paper, Title, Text } from "@mantine/core";
+import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconCheck, IconPencil, IconTrash, IconUserPlus, IconX } from "@tabler/icons-react";
+import { IconPencil, IconPlus, IconTrash, IconId, IconX, IconCheck } from "@tabler/icons-react";
 import { TableComponent, ColumnDef } from "@/components/layout/TableComponent";
-import { ListMemberForm } from "./ListMemberForm";
-import { UserData } from "@/types/UserData";
 import { PaginationMetaData } from "@/types/PaginationMetaData";
-import { Role } from "@/types/Role";
+import { TypeCard } from "@/types/TypeCard";
+import { TypeCardForm } from "./TypeCardForm";
 import { notifications } from "@mantine/notifications";
 import { openConfirmModal } from "@mantine/modals";
 
-const ListMember = () => {
-  const [users, setUsers] = useState<UserData[]>([]);
+const ListTypeCard = () => {
+  const [typeCards, setTypeCards] = useState<TypeCard[]>([]);
   const [metadata, setMetadata] = useState<PaginationMetaData>({
     total: 0,
     page: 1,
@@ -21,20 +20,19 @@ const ListMember = () => {
     totalPages: 0,
   });
   const [loading, setLoading] = useState(false);
-  const [rolesList, setRolesList] = useState<Role[]>([]);
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [selectedTypeCard, setSelectedTypeCard] = useState<TypeCard | null>(null);
 
   const [queryParams, setQueryParams] = useState({
     page: 1,
     limit: 10,
-    sortBy: "createdAt",
-    sortOrder: "desc" as "asc" | "desc",
+    sortBy: "name",
+    sortOrder: "asc" as "asc" | "desc",
     filters: {} as Record<string, string>,
   });
 
-  const fetchUsers = async () => {
+  const fetchTypeCards = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -48,38 +46,24 @@ const ListMember = () => {
         if (value) params.append(key, value);
       });
 
-      const res = await fetch(`/api/users?${params.toString()}`);
+      const res = await fetch(`/api/type-cards?${params.toString()}`);
       const json = await res.json();
 
       if (json.success) {
-        setUsers(json.data);
+        setTypeCards(json.data);
         setMetadata(json.metadata);
       }
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error("Error fetching type cards:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchRoles = async () => {
-    try {
-      const res = await fetch("/api/roles");
-      const json = await res.json();
-      if (json.success) setRolesList(json.data);
-    } catch (error) {
-      console.error("Error fetching roles:", error);
-    }
-  };
-
   useEffect(() => {
-    fetchUsers();
+    fetchTypeCards();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryParams]);
-
-  useEffect(() => {
-    fetchRoles();
-  }, []);
 
   const handlePageChange = (page: number) => setQueryParams((p) => ({ ...p, page }));
   const handleLimitChange = (limit: number) => setQueryParams((p) => ({ ...p, limit, page: 1 }));
@@ -94,24 +78,24 @@ const ListMember = () => {
 
   const handleDelete = (id: number) => {
     openConfirmModal({
-      title: "Delete Confirmation",
+      title: "Delete Type Card",
       centered: true,
-      children: <Text size="sm">Are you sure you want to delete this user? This action cannot be undone.</Text>,
-      labels: { confirm: "Delete User", cancel: "Cancel" },
+      children: <Text size="sm">Are you sure you want to delete this Type Card? This action cannot be undone.</Text>,
+      labels: { confirm: "Delete Type", cancel: "Cancel" },
       confirmProps: { color: "red" },
       onConfirm: async () => {
         try {
-          const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
+          const res = await fetch(`/api/type-cards/${id}`, { method: "DELETE" });
           const json = await res.json();
 
           if (json.success) {
             notifications.show({
               title: "Success",
-              message: "User deleted successfully",
+              message: "Type Card deleted successfully",
               color: "teal",
               icon: <IconCheck size={16} />,
             });
-            fetchUsers();
+            fetchTypeCards();
           } else {
             notifications.show({
               title: "Error",
@@ -122,66 +106,55 @@ const ListMember = () => {
           }
         } catch (error) {
           console.error("Delete error:", error);
-          notifications.show({ title: "Error", message: "Network error", color: "red" });
+          notifications.show({
+            title: "Error",
+            message: "Network error occurred",
+            color: "red",
+            icon: <IconX size={16} />,
+          });
         }
       },
     });
   };
 
   const handleOpenAdd = () => {
-    setSelectedUser(null);
+    setSelectedTypeCard(null);
     open();
   };
 
-  const handleOpenEdit = (user: UserData) => {
-    setSelectedUser(user);
+  const handleOpenEdit = (item: TypeCard) => {
+    setSelectedTypeCard(item);
     open();
   };
 
-  const columns: ColumnDef<UserData>[] = [
+  const columns: ColumnDef<TypeCard>[] = [
     {
-      key: "",
+      key: "no",
       label: "No",
       sortable: false,
       width: 60,
       render: (_, index) => (metadata.page - 1) * metadata.limit + index + 1,
     },
     {
-      key: "email",
-      label: "Email",
+      key: "name",
+      label: "Name",
       sortable: true,
       filterable: true,
-    },
-    {
-      key: "role",
-      label: "Role",
-      sortable: true,
-      filterable: true,
-      render: (item) =>
-        item.role ? (
-          <Badge color="blue" variant="light">
-            {item.role.name}
-          </Badge>
-        ) : (
-          <Badge color="gray">No Role</Badge>
-        ),
-    },
-    {
-      key: "createdAt",
-      label: "Joined Date",
-      sortable: true,
       render: (item) => (
-        <span suppressHydrationWarning>
-          {new Date(item.createdAt).toLocaleDateString("id-ID", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          })}
-        </span>
+        <Badge size="md" variant="light" color="indigo" leftSection={<IconId size={12} />}>
+          {item.name}
+        </Badge>
       ),
     },
     {
-      key: "idUsr",
+      key: "note",
+      label: "Note",
+      sortable: true,
+      filterable: true,
+      render: (item) => <Text size="sm">{item.note || "-"}</Text>,
+    },
+    {
+      key: "actions",
       label: "Actions",
       width: 100,
       render: (item) => (
@@ -189,7 +162,7 @@ const ListMember = () => {
           <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenEdit(item)}>
             <IconPencil size={16} />
           </ActionIcon>
-          <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(item.idUsr)}>
+          <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(item.idTypeCard)}>
             <IconTrash size={16} />
           </ActionIcon>
         </Group>
@@ -200,14 +173,14 @@ const ListMember = () => {
   return (
     <Paper shadow="xs" p="md" radius="md">
       <Flex justify="space-between" align="center" mb="lg">
-        <Title order={3}>List Member</Title>
-        <Button leftSection={<IconUserPlus size={18} />} onClick={handleOpenAdd}>
-          Add User
+        <Title order={3}>Type Cards</Title>
+        <Button leftSection={<IconPlus size={18} />} onClick={handleOpenAdd}>
+          Add Type
         </Button>
       </Flex>
 
       <TableComponent
-        data={users}
+        data={typeCards}
         columns={columns}
         metadata={metadata}
         loading={loading}
@@ -220,17 +193,16 @@ const ListMember = () => {
         onFilterChange={handleFilterChange}
       />
 
-      <ListMemberForm
+      <TypeCardForm
         opened={opened}
         onClose={close}
-        rolesList={rolesList}
-        userToEdit={selectedUser}
+        typeCardToEdit={selectedTypeCard}
         onSuccess={() => {
-          fetchUsers();
+          fetchTypeCards();
         }}
       />
     </Paper>
   );
 };
 
-export default ListMember;
+export default ListTypeCard;

@@ -1,19 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ActionIcon, Badge, Button, Flex, Group, Paper, Title, Text } from "@mantine/core";
+import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconCheck, IconPencil, IconTrash, IconUserPlus, IconX } from "@tabler/icons-react";
+import { IconCalendarEvent, IconCheck, IconPencil, IconTrash, IconX } from "@tabler/icons-react";
 import { TableComponent, ColumnDef } from "@/components/layout/TableComponent";
-import { ListMemberForm } from "./ListMemberForm";
-import { UserData } from "@/types/UserData";
 import { PaginationMetaData } from "@/types/PaginationMetaData";
-import { Role } from "@/types/Role";
+import { Event } from "@/types/Event";
+import { EventForm } from "./EventForm";
 import { notifications } from "@mantine/notifications";
 import { openConfirmModal } from "@mantine/modals";
 
-const ListMember = () => {
-  const [users, setUsers] = useState<UserData[]>([]);
+const ListEvent = () => {
+  const [events, setEvents] = useState<Event[]>([]);
   const [metadata, setMetadata] = useState<PaginationMetaData>({
     total: 0,
     page: 1,
@@ -21,20 +20,19 @@ const ListMember = () => {
     totalPages: 0,
   });
   const [loading, setLoading] = useState(false);
-  const [rolesList, setRolesList] = useState<Role[]>([]);
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
 
   const [queryParams, setQueryParams] = useState({
     page: 1,
     limit: 10,
-    sortBy: "createdAt",
+    sortBy: "startDate",
     sortOrder: "desc" as "asc" | "desc",
     filters: {} as Record<string, string>,
   });
 
-  const fetchUsers = async () => {
+  const fetchEvents = async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -48,38 +46,24 @@ const ListMember = () => {
         if (value) params.append(key, value);
       });
 
-      const res = await fetch(`/api/users?${params.toString()}`);
+      const res = await fetch(`/api/events?${params.toString()}`);
       const json = await res.json();
 
       if (json.success) {
-        setUsers(json.data);
+        setEvents(json.data);
         setMetadata(json.metadata);
       }
     } catch (error) {
-      console.error("Error fetching users:", error);
+      console.error("Error fetching events:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchRoles = async () => {
-    try {
-      const res = await fetch("/api/roles");
-      const json = await res.json();
-      if (json.success) setRolesList(json.data);
-    } catch (error) {
-      console.error("Error fetching roles:", error);
-    }
-  };
-
   useEffect(() => {
-    fetchUsers();
+    fetchEvents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryParams]);
-
-  useEffect(() => {
-    fetchRoles();
-  }, []);
 
   const handlePageChange = (page: number) => setQueryParams((p) => ({ ...p, page }));
   const handleLimitChange = (limit: number) => setQueryParams((p) => ({ ...p, limit, page: 1 }));
@@ -94,24 +78,24 @@ const ListMember = () => {
 
   const handleDelete = (id: number) => {
     openConfirmModal({
-      title: "Delete Confirmation",
+      title: "Delete Event",
       centered: true,
-      children: <Text size="sm">Are you sure you want to delete this user? This action cannot be undone.</Text>,
-      labels: { confirm: "Delete User", cancel: "Cancel" },
+      children: <Text size="sm">Are you sure you want to delete this event? This action cannot be undone.</Text>,
+      labels: { confirm: "Delete Event", cancel: "Cancel" },
       confirmProps: { color: "red" },
       onConfirm: async () => {
         try {
-          const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
+          const res = await fetch(`/api/events/${id}`, { method: "DELETE" });
           const json = await res.json();
 
           if (json.success) {
             notifications.show({
               title: "Success",
-              message: "User deleted successfully",
+              message: "Event deleted successfully",
               color: "teal",
               icon: <IconCheck size={16} />,
             });
-            fetchUsers();
+            fetchEvents();
           } else {
             notifications.show({
               title: "Error",
@@ -122,66 +106,98 @@ const ListMember = () => {
           }
         } catch (error) {
           console.error("Delete error:", error);
-          notifications.show({ title: "Error", message: "Network error", color: "red" });
+          notifications.show({
+            title: "Error",
+            message: "Network error occurred",
+            color: "red",
+            icon: <IconX size={16} />,
+          });
         }
       },
     });
   };
 
   const handleOpenAdd = () => {
-    setSelectedUser(null);
+    setSelectedEvent(null);
     open();
   };
 
-  const handleOpenEdit = (user: UserData) => {
-    setSelectedUser(user);
+  const handleOpenEdit = (event: Event) => {
+    setSelectedEvent(event);
     open();
   };
 
-  const columns: ColumnDef<UserData>[] = [
+  // Definisi Kolom
+  const columns: ColumnDef<Event>[] = [
     {
-      key: "",
+      key: "no",
       label: "No",
       sortable: false,
       width: 60,
       render: (_, index) => (metadata.page - 1) * metadata.limit + index + 1,
     },
     {
-      key: "email",
-      label: "Email",
+      key: "title",
+      label: "Title",
       sortable: true,
       filterable: true,
-    },
-    {
-      key: "role",
-      label: "Role",
-      sortable: true,
-      filterable: true,
-      render: (item) =>
-        item.role ? (
-          <Badge color="blue" variant="light">
-            {item.role.name}
-          </Badge>
-        ) : (
-          <Badge color="gray">No Role</Badge>
-        ),
-    },
-    {
-      key: "createdAt",
-      label: "Joined Date",
-      sortable: true,
       render: (item) => (
-        <span suppressHydrationWarning>
-          {new Date(item.createdAt).toLocaleDateString("id-ID", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          })}
-        </span>
+        <Text fw={500} size="sm">
+          {item.title}
+        </Text>
       ),
     },
     {
-      key: "idUsr",
+      key: "startDate",
+      label: "Start Date",
+      sortable: true,
+      render: (item) => (
+        <Text size="sm">
+          {new Date(item.startDate).toLocaleString("id-ID", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </Text>
+      ),
+    },
+    {
+      key: "endDate",
+      label: "End Date",
+      sortable: true,
+      render: (item) => (
+        <Text size="sm">
+          {new Date(item.endDate).toLocaleString("id-ID", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          })}
+        </Text>
+      ),
+    },
+    {
+      key: "images",
+      label: "Images",
+      sortable: false,
+      render: (item) => {
+        const count = item.images?.length || 0;
+        return count > 0 ? (
+          <Badge color="grape" variant="light">
+            {count} Images
+          </Badge>
+        ) : (
+          <Text size="xs" c="dimmed">
+            No Images
+          </Text>
+        );
+      },
+    },
+    {
+      key: "actions",
       label: "Actions",
       width: 100,
       render: (item) => (
@@ -189,7 +205,7 @@ const ListMember = () => {
           <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenEdit(item)}>
             <IconPencil size={16} />
           </ActionIcon>
-          <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(item.idUsr)}>
+          <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(item.idEvent)}>
             <IconTrash size={16} />
           </ActionIcon>
         </Group>
@@ -200,14 +216,14 @@ const ListMember = () => {
   return (
     <Paper shadow="xs" p="md" radius="md">
       <Flex justify="space-between" align="center" mb="lg">
-        <Title order={3}>List Member</Title>
-        <Button leftSection={<IconUserPlus size={18} />} onClick={handleOpenAdd}>
-          Add User
+        <Title order={3}>List Event</Title>
+        <Button leftSection={<IconCalendarEvent size={18} />} onClick={handleOpenAdd}>
+          Add Event
         </Button>
       </Flex>
 
       <TableComponent
-        data={users}
+        data={events}
         columns={columns}
         metadata={metadata}
         loading={loading}
@@ -220,17 +236,16 @@ const ListMember = () => {
         onFilterChange={handleFilterChange}
       />
 
-      <ListMemberForm
+      <EventForm
         opened={opened}
         onClose={close}
-        rolesList={rolesList}
-        userToEdit={selectedUser}
+        eventToEdit={selectedEvent}
         onSuccess={() => {
-          fetchUsers();
+          fetchEvents();
         }}
       />
     </Paper>
   );
 };
 
-export default ListMember;
+export default ListEvent;
