@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Button, Flex, Modal, PasswordInput, Select, TextInput } from "@mantine/core";
-import { Role } from "@/app/types/Role";
-import { UserData } from "@/app/types/UserData";
 import { notifications } from "@mantine/notifications";
 import { IconX, IconCheck } from "@tabler/icons-react";
+import { Role } from "@/types/Role";
+import { UserData } from "@/types/UserData";
 
 interface ListMemberFormProps {
   opened: boolean;

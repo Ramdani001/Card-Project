@@ -46,9 +46,9 @@ const Type = () => {
 
       <Pagination
         total={Math.ceil(elements.length / rowsPerPage)}
-        page={activePage}
+        // page={activePage}
         onChange={setActivePage}
-        position="center"
+        // position="center"
         color="blue"
         style={{ marginTop: "20px" }}
       />

@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Flex, Grid } from "@mantine/core";
+import { Grid } from "@mantine/core";
 import Card from "./Card";
 import Type from "./Type";
 import Discount from "./Discount";
