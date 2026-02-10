@@ -17,12 +17,12 @@ export const POST = async (req: NextRequest) => {
     }
 
     const body = await req.json();
-    const { customerName, customerEmail, address, paymentMethod, voucherCode } = body;
+    const { address, paymentMethod, voucherCode, customerEmailGuest, customerNameGuest } = body;
 
     const transaction = await checkout({
       userId,
-      customerName,
-      customerEmail,
+      customerName: session.user.name || customerNameGuest,
+      customerEmail: session.user.email || customerEmailGuest,
       address,
       paymentMethod,
       voucherCode,

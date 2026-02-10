@@ -15,6 +15,7 @@ interface Transaction {
   invoice: string;
   user: { name: string; email: string } | null;
   customerName: string | null;
+  customerEmail: string | null;
   totalPrice: number;
   status: string;
   snapRedirect: string;
@@ -102,7 +103,7 @@ const ListTransaction = () => {
             {item.customerName || item.user?.name || "Guest"}
           </Text>
           <Text size="xs" c="dimmed">
-            {item.user?.email || "-"}
+            {item.customerEmail || "-"}
           </Text>
         </Flex>
       ),
@@ -141,13 +142,7 @@ const ListTransaction = () => {
           </ActionIcon>
 
           {item.status === "PENDING" && item.snapRedirect && (
-            <Button
-              size="xs"
-              variant="filled"
-              color="orange"
-              radius="xs"
-              onClick={() => window.open(item.snapRedirect, "_blank")}
-            >
+            <Button size="xs" variant="filled" color="orange" radius="xs" onClick={() => window.open(item.snapRedirect, "_blank")}>
               Pay Now
             </Button>
           )}
