@@ -1,37 +1,35 @@
 import { NextRequest } from "next/server";
-import prisma from "@/lib/prisma";
-import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
+import { getAllConfigs, setConfig } from "@/services/config.service";
 
-export const GET = async (req: NextRequest) => {
+export const GET = async (_req: NextRequest) => {
   try {
-    const { options, page, limit } = getQueryPaginationOptions(req);
+    const configs = await getAllConfigs();
+    return sendResponse({
+      success: true,
+      message: "All configs fetched",
+      data: configs,
+    });
+  } catch (err) {
+    return handleApiError(err);
+  }
+};
 
-    if (options.take) {
-      const [discounts, total] = await Promise.all([prisma.appConfig.findMany(options), prisma.appConfig.count()]);
+export const POST = async (req: NextRequest) => {
+  try {
+    const { key, value } = await req.json();
 
-      return sendResponse({
-        success: true,
-        message: "Configs fetched successfully",
-        data: discounts,
-        metadata: {
-          total,
-          page: page || 1,
-          limit: limit || 10,
-          totalPages: Math.ceil(total / (limit || 10)),
-        },
-      });
+    if (!key || !value) {
+      return sendResponse({ success: false, message: "Key and Value are required", status: 400 });
     }
 
-    const allDiscount = await prisma.appConfig.findMany({
-      ...options,
-      orderBy: options.orderBy || { createdAt: "asc" },
-    });
+    const newConfig = await setConfig(key, String(value));
 
     return sendResponse({
       success: true,
-      message: "Configs fetched successfully",
-      data: allDiscount,
+      message: "Config created successfully",
+      data: newConfig,
+      status: 201,
     });
   } catch (err) {
     return handleApiError(err);

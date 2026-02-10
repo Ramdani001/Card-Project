@@ -1,0 +1,118 @@
+model Category {
+    id        String   @id @default(uuid())
+    name      String
+    slug      String   @unique
+    note      String?
+    isActive  Boolean  @default(true)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    cards CategoriesOnCards[]
+}
+
+model Card {
+    id          String   @id @default(uuid())
+    name        String
+    slug        String   @unique
+    price       Decimal  @db.Decimal(15, 2)
+    stock       Int
+    description String?  @db.Text
+    sku         String?  @unique
+    discountId  String?
+    isActive    Boolean  @default(true)
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    discount         Discount?           @relation(fields: [discountId], references: [id])
+    categories       CategoriesOnCards[]
+    images           ImageCard[]
+    cartItems        CartItem[]
+    transactionItems TransactionItem[]
+    histories        CardHistory[]
+}
+
+model CardHistory {
+    id          String   @id @default(uuid())
+    cardId      String
+    name        String
+    price       Decimal  @db.Decimal(15, 2)
+    stock       Int
+    sku         String?
+    description String?  @db.Text
+    discountId  String?
+    changedBy   String?
+    changeType  String?
+    createdAt   DateTime @default(now())
+
+    card     Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
+    user     User?     @relation(fields: [changedBy], references: [id])
+    discount Discount? @relation(fields: [discountId], references: [id])
+}
+
+model CategoriesOnCards {
+    cardId     String
+    categoryId String
+    assignedAt DateTime @default(now())
+
+    card     Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+    category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+    @@id([cardId, categoryId])
+}
+
+model ImageCard {
+    id        String   @id @default(uuid())
+    cardId    String
+    url       String
+    isPrimary Boolean  @default(false)
+    isActive  Boolean  @default(true)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+}
+
+model Discount {
+    id        String       @id @default(uuid())
+    name      String
+    value     Decimal      @db.Decimal(10, 2)
+    type      DiscountType
+    startDate DateTime?
+    endDate   DateTime?
+    isActive  Boolean      @default(true)
+    createdAt DateTime     @default(now())
+    updatedAt DateTime     @updatedAt
+
+    cards         Card[]
+    cardHistories CardHistory[]
+}
+
+model Voucher {
+    id          String  @id @default(uuid())
+    code        String  @unique
+    name        String
+    description String? @db.Text
+
+    type  DiscountType
+    value Decimal      @db.Decimal(10, 2)
+
+    minPurchase Decimal? @db.Decimal(15, 2)
+    maxDiscount Decimal? @db.Decimal(15, 2)
+
+    stock     Int?
+    usedCount Int  @default(0)
+
+    startDate DateTime
+    endDate   DateTime
+
+    isActive  Boolean  @default(true)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    transactions Transaction[]
+}
+
+enum DiscountType {
+    NOMINAL
+    PERCENTAGE
+}

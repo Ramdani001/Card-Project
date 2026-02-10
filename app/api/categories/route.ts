@@ -1,18 +1,18 @@
 import { NextRequest } from "next/server";
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { createRole, getRoles } from "@/services/role.service";
+import { createCategory, getCategories } from "@/services/category.service";
 
 export const GET = async (req: NextRequest) => {
   try {
     const { options, page, limit } = getQueryPaginationOptions(req);
 
-    const { roles, total } = await getRoles(options);
+    const { categories, total } = await getCategories(options);
 
     return sendResponse({
       success: true,
-      message: "Roles fetched successfully",
-      data: roles,
+      message: "Categories fetched successfully",
+      data: categories,
       metadata: {
         total,
         page,
@@ -28,27 +28,24 @@ export const GET = async (req: NextRequest) => {
 export const POST = async (req: NextRequest) => {
   try {
     const body = await req.json();
+    const { name, note } = body;
 
-    if (!body.name || typeof body.name !== "string") {
-      return sendResponse({
-        success: false,
-        message: "Valid Role name is required",
-        status: 400,
-      });
+    if (!name || typeof name !== "string" || name.trim() === "") {
+      return sendResponse({ success: false, message: "Category Name is required", status: 400 });
     }
 
-    const newRole = await createRole(body.name);
+    const newCategory = await createCategory({
+      name,
+      note,
+    });
 
     return sendResponse({
       success: true,
-      message: "Role created successfully",
-      data: newRole,
+      message: "Category created successfully",
+      data: newCategory,
       status: 201,
     });
   } catch (err: any) {
-    if (err.message === "Role name already exists") {
-      return sendResponse({ success: false, message: err.message, status: 409 });
-    }
     return handleApiError(err);
   }
 };

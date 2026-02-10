@@ -1,4 +1,4 @@
-import { Prisma } from "@/app/generated/prisma/client";
+import { Prisma } from "@/prisma/generated/prisma/client";
 import { NextResponse } from "next/server";
 
 export type BaseResponse<T> = {

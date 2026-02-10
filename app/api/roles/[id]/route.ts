@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
-import prisma from "@/lib/prisma";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
+import { deleteRole, getRoleById, updateRole } from "@/services/role.service";
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -9,32 +9,17 @@ type RouteParams = {
 export const GET = async (_req: NextRequest, { params }: RouteParams) => {
   try {
     const { id } = await params;
+    const role = await getRoleById(id);
 
-    const role = await prisma.role.findUnique({
-      where: { idRole: parseInt(id) },
-    });
-
-    if (!role) {
-      return sendResponse({
-        success: false,
-        message: "Role not found",
-        status: 404,
-      });
-    }
+    if (!role) return sendResponse({ success: false, message: "Role not found", status: 404 });
 
     return sendResponse({
       success: true,
-      message: "Role detail fetched successfully",
+      message: "Role fetched successfully",
       data: role,
     });
   } catch (err) {
-    console.error(err);
-
-    return sendResponse({
-      success: false,
-      message: err instanceof Error ? err.message : "Internal server error",
-      status: 500,
-    });
+    return handleApiError(err);
   }
 };
 
@@ -43,25 +28,16 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
     const { id } = await params;
     const body = await req.json();
 
-    if (!body.name) {
-      return sendResponse({
-        success: false,
-        message: "Role name is required",
-        status: 400,
-      });
-    }
-
-    const updated = await prisma.role.update({
-      where: { idRole: parseInt(id) },
-      data: { name: body.name },
-    });
+    const updatedRole = await updateRole(id, body.name, body.isActive);
 
     return sendResponse({
       success: true,
       message: "Role updated successfully",
-      data: updated,
+      data: updatedRole,
     });
   } catch (err: any) {
+    if (err.message === "Role not found") return sendResponse({ success: false, message: err.message, status: 404 });
+    if (err.message === "Role name already exists") return sendResponse({ success: false, message: err.message, status: 409 });
     return handleApiError(err);
   }
 };
@@ -69,16 +45,11 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
 export const DELETE = async (_req: NextRequest, { params }: RouteParams) => {
   try {
     const { id } = await params;
-
-    await prisma.role.delete({
-      where: { idRole: parseInt(id) },
-    });
-
-    return sendResponse({
-      success: true,
-      message: "Role deleted successfully",
-    });
+    await deleteRole(id);
+    return sendResponse({ success: true, message: "Role deleted successfully" });
   } catch (err: any) {
+    if (err.message === "Role not found") return sendResponse({ success: false, message: err.message, status: 404 });
+    if (err.message.includes("Cannot delete role")) return sendResponse({ success: false, message: err.message, status: 400 });
     return handleApiError(err);
   }
 };

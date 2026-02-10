@@ -1,0 +1,64 @@
+model Transaction {
+    id      String @id @default(uuid())
+    invoice String @unique
+    userId  String
+
+    subTotal      Decimal           @db.Decimal(15, 2)
+    voucherAmount Decimal           @default(0) @db.Decimal(15, 2)
+    totalPrice    Decimal           @db.Decimal(15, 2)
+    status        TransactionStatus @default(PENDING)
+    paymentMethod String?
+    snapToken     String?
+    snapRedirect  String?
+    customerName  String?
+    customerEmail String?
+    isActive      Boolean           @default(true)
+    createdAt     DateTime          @default(now())
+    updatedAt     DateTime          @updatedAt
+
+    user       User                   @relation(fields: [userId], references: [id], onDelete: Restrict)
+    items      TransactionItem[]
+    statusLogs TransactionStatusLog[]
+
+    voucherId String?
+    voucher   Voucher? @relation(fields: [voucherId], references: [id])
+}
+
+model TransactionItem {
+    id            String   @id @default(uuid())
+    transactionId String
+    cardId        String?
+    productName   String
+    productPrice  Decimal  @db.Decimal(15, 2)
+    quantity      Int
+    subTotal      Decimal  @db.Decimal(15, 2)
+    skuSnapshot   String?
+    createdAt     DateTime @default(now())
+    updatedAt     DateTime @updatedAt
+
+    transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+    card        Card?       @relation(fields: [cardId], references: [id], onDelete: SetNull)
+}
+
+model TransactionStatusLog {
+    id             String             @id @default(uuid())
+    transactionId  String
+    status         TransactionStatus
+    previousStatus TransactionStatus?
+    note           String?
+    createdBy      String?
+    createdAt      DateTime           @default(now())
+
+    transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+}
+
+enum TransactionStatus {
+    PENDING
+    PAID
+    PROCESSED
+    SHIPPED
+    COMPLETED
+    CANCELLED
+    FAILED
+    REFUNDED
+}

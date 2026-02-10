@@ -1,41 +1,24 @@
 import { NextRequest } from "next/server";
-import prisma from "@/lib/prisma";
-import bcrypt from "bcrypt";
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
+import { createUser, getUsers } from "@/services/user.service";
 
 export const GET = async (req: NextRequest) => {
   try {
     const { options, page, limit } = getQueryPaginationOptions(req);
 
-    const queryOptions = {
-      ...options,
-      include: { role: true },
-    };
-
-    const users = await prisma.user.findMany(queryOptions);
-
-    const responseData = users.map(({ password: _, ...u }) => u);
-
-    if (options.take) {
-      const total = await prisma.user.count();
-      return sendResponse({
-        success: true,
-        message: "All users fetched successfully",
-        data: responseData,
-        metadata: {
-          total,
-          page: page || 1,
-          limit: limit || 10,
-          totalPages: Math.ceil(total / (limit || 10)),
-        },
-      });
-    }
+    const { users, total } = await getUsers(options);
 
     return sendResponse({
       success: true,
       message: "All users fetched successfully",
-      data: responseData,
+      data: users,
+      metadata: {
+        total,
+        page: page || 1,
+        limit: limit || 10,
+        totalPages: Math.ceil(total / (limit || 10)),
+      },
     });
   } catch (err) {
     return handleApiError(err);
@@ -44,7 +27,8 @@ export const GET = async (req: NextRequest) => {
 
 export const POST = async (req: NextRequest) => {
   try {
-    const { email, password, idRole } = await req.json();
+    const body = await req.json();
+    const { email, password, name, phone, roleId } = body;
 
     if (!email || !password) {
       return sendResponse({
@@ -54,26 +38,24 @@ export const POST = async (req: NextRequest) => {
       });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        idRole: idRole ? parseInt(idRole) : null,
-      },
-      include: { role: true },
+    const newUser = await createUser({
+      email,
+      password,
+      name,
+      phone,
+      roleId,
     });
-
-    const { password: _, ...userWithoutPassword } = newUser;
 
     return sendResponse({
       success: true,
       message: "User created successfully",
-      data: userWithoutPassword,
+      data: newUser,
       status: 201,
     });
   } catch (err: any) {
+    if (err.message === "Email already registered") {
+      return sendResponse({ success: false, message: err.message, status: 409 });
+    }
     return handleApiError(err);
   }
 };

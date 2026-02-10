@@ -1,0 +1,29 @@
+model Role {
+    id        String   @id @default(uuid())
+    name      String   @unique
+    isActive  Boolean  @default(true)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    users User[]
+}
+
+model User {
+    id        String   @id @default(uuid())
+    email     String   @unique
+    password  String
+    name      String?
+    phone     String?
+    avatar    String?
+    roleId    String?
+    isActive  Boolean  @default(true)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    role Role? @relation(fields: [roleId], references: [id], onDelete: SetNull)
+
+    // Relasi ke module lain
+    carts         Cart[]
+    transactions  Transaction[]
+    cardHistories CardHistory[]
+}
