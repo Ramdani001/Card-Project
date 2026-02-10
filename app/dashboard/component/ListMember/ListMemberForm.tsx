@@ -4,7 +4,7 @@ import { Button, Flex, Modal, PasswordInput, Select, TextInput } from "@mantine/
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { Role, User } from "./ListMember"; // Import tipe dari ListMember
+import { Role, User } from "./ListMember";
 
 interface ListMemberFormProps {
   opened: boolean;
@@ -33,7 +33,6 @@ export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSucce
       setIsActive(userToEdit.isActive);
       setPassword("");
     } else {
-      // Reset
       setName("");
       setEmail("");
       setPassword("");

@@ -36,7 +36,6 @@ export default function TcgCornerClone() {
 
   const getCardName = (item: CardData) => item?.name || "Unknown Item";
   const getCardPrice = (item: CardData) => Number(item?.price || 0);
-  // const getCardStock = (item: CardData) => Number(item?.stock || 0);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -85,7 +84,6 @@ export default function TcgCornerClone() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
-  // --- FILTERS & SORTING ---
   const availableCategories = useMemo(() => {
     const categoriesMap = new Map<string, string>();
     products.forEach((p) => {
@@ -209,7 +207,6 @@ export default function TcgCornerClone() {
         setCartItems([]);
         setIsDrawerOpen(false);
 
-        // Redirect Logic
         if (json.data?.snapRedirect) {
           window.location.href = json.data.snapRedirect;
         } else {
@@ -249,7 +246,6 @@ export default function TcgCornerClone() {
             />
           </Grid.Col>
 
-          {/* Product Grid */}
           <Grid.Col span={{ base: 12, md: 9 }}>
             <Group justify="flex-end" mb="lg" align="center">
               <Select
@@ -272,7 +268,6 @@ export default function TcgCornerClone() {
                 products={filteredProducts}
                 handleAddToCart={handleAddToCart}
                 loadingAction={loadingAction}
-                // Props di bawah ini tidak wajib jika ListCardSection sudah pakai helper internal
                 setSearch={setSearch}
                 loadingProducts={loadingProducts}
               />

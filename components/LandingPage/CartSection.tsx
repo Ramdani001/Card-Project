@@ -25,7 +25,6 @@ const getCardType = (item: CartItem) => item.card?.categories?.[0]?.category?.na
 const getCardImage = (item: CartItem) => item.card?.images?.[0]?.url || "https://placehold.co/60?text=No+Img";
 const getCardPrice = (item: CartItem) => Number(item.card?.price || 0);
 
-// --- COMPONENT: ROW ITEM ---
 const CartItemRow = memo(
   ({
     item,

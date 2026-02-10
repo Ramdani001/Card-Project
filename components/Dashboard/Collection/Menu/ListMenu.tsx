@@ -73,7 +73,6 @@ const ListMenu = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryParams]);
 
-  // --- Handlers ---
   const handlePageChange = (page: number) => setQueryParams((p) => ({ ...p, page }));
   const handleLimitChange = (limit: number) => setQueryParams((p) => ({ ...p, limit, page: 1 }));
   const handleSortChange = (key: string, order: "asc" | "desc") => setQueryParams((p) => ({ ...p, sortBy: key, sortOrder: order }));

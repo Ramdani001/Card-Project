@@ -222,26 +222,24 @@ interface GetTransactionParams {
   skip?: number;
   take?: number;
   orderBy?: Prisma.TransactionOrderByWithRelationInput;
-  where?: Prisma.TransactionWhereInput; // Kita butuh ini buat filter tambahan
+  where?: Prisma.TransactionWhereInput;
 }
 
 export const getTransactions = async (userId: string, params: GetTransactionParams) => {
   const { skip, take, orderBy, where } = params;
 
-  // Gabungkan filter wajib (userId) dengan filter opsional (status/invoice)
   const whereClause: Prisma.TransactionWhereInput = {
-    userId, // Wajib lock ke user yg login
+    userId,
     ...where,
   };
 
-  // Gunakan transaction untuk ambil total data + data page ini
   const [total, transactions] = await prisma.$transaction([
     prisma.transaction.count({ where: whereClause }),
     prisma.transaction.findMany({
       where: whereClause,
       skip,
       take,
-      orderBy: orderBy || { createdAt: "desc" }, // Default sort
+      orderBy: orderBy || { createdAt: "desc" },
       include: {
         items: true,
         voucher: true,

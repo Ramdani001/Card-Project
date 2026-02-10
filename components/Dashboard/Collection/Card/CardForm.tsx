@@ -125,7 +125,7 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
       if (discountId) formData.append("discountId", discountId);
 
       if (file) {
-        formData.append("image", file); // Backend V2 handle "image" atau "images"
+        formData.append("image", file);
       }
 
       const url = isEditMode ? `/api/cards/${cardToEdit.id}` : "/api/cards";

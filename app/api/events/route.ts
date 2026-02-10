@@ -34,10 +34,8 @@ export const POST = async (req: NextRequest) => {
     const startDateStr = formData.get("startDate") as string;
     const endDateStr = formData.get("endDate") as string;
 
-    // Ambil semua file image
     const files = formData.getAll("images") as File[];
 
-    // Validasi Dasar
     if (!title || !content || !startDateStr || !endDateStr) {
       return sendResponse({ success: false, message: "Title, Content, Start Date, and End Date are required", status: 400 });
     }
@@ -49,7 +47,6 @@ export const POST = async (req: NextRequest) => {
       return sendResponse({ success: false, message: "Invalid date format", status: 400 });
     }
 
-    // Validasi File (bisa juga dipindah ke service atau helper, tapi di controller oke utk early reject)
     if (files.length > 0) {
       const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
       for (const file of files) {
@@ -57,7 +54,6 @@ export const POST = async (req: NextRequest) => {
           return sendResponse({ success: false, message: `Invalid file type: ${file.name}`, status: 400 });
         }
         if (file.size > 5 * 1024 * 1024) {
-          // 5MB
           return sendResponse({ success: false, message: `File too large: ${file.name}`, status: 400 });
         }
       }

@@ -13,7 +13,6 @@ interface ListCardSectionProps {
 }
 
 export const ListCardSection = ({ loadingProducts, products, setSearch, handleAddToCart, loadingAction }: ListCardSectionProps) => {
-  // Helper Functions (Internal component helpers)
   const getCardImage = (item: CardData) => item.images?.[0]?.url || "https://placehold.co/400x560?text=No+Image";
 
   return (
@@ -32,7 +31,7 @@ export const ListCardSection = ({ loadingProducts, products, setSearch, handleAd
             variant="outline"
             onClick={() => {
               setSearch("");
-              // setSelectedCategoryIds([]); // Jika ada akses ke state filter
+              // setSelectedCategoryIds([]);
             }}
           >
             Clear Search
@@ -42,7 +41,7 @@ export const ListCardSection = ({ loadingProducts, products, setSearch, handleAd
         <SimpleGrid cols={{ base: 2, sm: 3, lg: 4 }} spacing="md" verticalSpacing="lg">
           {products.map((item) => (
             <Card
-              key={item.id} // UUID
+              key={item.id}
               padding="0"
               radius="xs"
               withBorder
@@ -69,13 +68,6 @@ export const ListCardSection = ({ loadingProducts, products, setSearch, handleAd
                     Sold Out
                   </Badge>
                 )}
-
-                {/* Sale Badge (Logic diskon opsional) */}
-                {/* {hasDiscount(item) && (
-                    <Badge color="red" radius="xs" variant="filled" style={{ position: "absolute", top: 8, left: 8, zIndex: 10 }}>
-                      Sale
-                    </Badge>
-                )} */}
 
                 <Box p="md" bg="white" h={240} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Image

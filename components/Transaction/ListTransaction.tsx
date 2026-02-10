@@ -146,7 +146,7 @@ const ListTransaction = () => {
               variant="filled"
               color="orange"
               radius="xs"
-              onClick={() => window.open(item.snapRedirect, "_blank")} // Buka link midtrans lagi
+              onClick={() => window.open(item.snapRedirect, "_blank")}
             >
               Pay Now
             </Button>

@@ -5,6 +5,7 @@ export interface CardData {
   price: number;
   stock: number;
   sku?: string;
+  discountId?: string;
   description?: string;
   isActive: boolean;
   images: { id: string; url: string; isPrimary: boolean }[];

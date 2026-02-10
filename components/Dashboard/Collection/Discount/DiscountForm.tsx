@@ -2,7 +2,7 @@
 
 import { Discount } from "@/types/Discount";
 import { Button, Flex, Modal, NumberInput, SegmentedControl, TextInput, Text } from "@mantine/core";
-import { DateInput } from "@mantine/dates"; // Butuh @mantine/dates
+import { DateInput } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX, IconCalendar } from "@tabler/icons-react";
 import { useEffect, useState } from "react";

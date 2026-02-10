@@ -16,11 +16,9 @@ interface CategoryFormProps {
 export const CategoryForm = ({ opened, onClose, categoryToEdit, onSuccess }: CategoryFormProps) => {
   const [loading, setLoading] = useState(false);
 
-  // State
   const [name, setName] = useState("");
   const [note, setNote] = useState("");
 
-  // Populate Form
   useEffect(() => {
     if (categoryToEdit) {
       setName(categoryToEdit.name);
