@@ -1,9 +1,18 @@
-import { CardDetail } from "./CardDetail";
-import { TypeCard } from "./TypeCard";
-
 export interface CardData {
-  idCard: number;
-  idDetail?: number;
-  typeCard?: TypeCard;
-  detail?: CardDetail;
+  id: string;
+  name: string;
+  slug?: string;
+  price: number;
+  stock: number;
+  sku?: string;
+  description?: string;
+  isActive: boolean;
+  images: { id: string; url: string; isPrimary: boolean }[];
+  categories: {
+    category: {
+      id: string;
+      name: string;
+      slug: string;
+    };
+  }[];
 }

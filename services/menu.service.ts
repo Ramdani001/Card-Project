@@ -21,7 +21,10 @@ interface UpdateMenuParams {
 
 export const getMenus = async (options: Prisma.MenuFindManyArgs) => {
   const finalOptions: Prisma.MenuFindManyArgs = {
-    ...options,
+    where: {
+      ...options.where,
+      isActive: true,
+    },
     include: {
       subMenus: {
         orderBy: { order: "asc" },

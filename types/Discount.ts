@@ -1,7 +1,9 @@
 export interface Discount {
-  idDiscount: number;
-  discount: number;
-  note?: string;
-  createdAt: string;
-  updatedAt: string;
+  id: string;
+  name: string;
+  value: number;
+  type: "NOMINAL" | "PERCENTAGE";
+  startDate: string | null;
+  endDate: string | null;
+  isActive: boolean;
 }

@@ -30,7 +30,10 @@ const generateSlug = (title: string) => {
 
 export const getEvents = async (options: Prisma.EventFindManyArgs) => {
   const finalOptions: Prisma.EventFindManyArgs = {
-    ...options,
+    where: {
+      ...options.where,
+      isActive: true,
+    },
     include: {
       images: true,
     },

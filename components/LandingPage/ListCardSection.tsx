@@ -6,37 +6,21 @@ import { Dispatch, SetStateAction } from "react";
 interface ListCardSectionProps {
   loadingProducts: boolean;
   setSearch: Dispatch<SetStateAction<string>>;
-  setSelectedTypes: Dispatch<SetStateAction<string[]>>;
-  filteredProducts: CardData[];
-  getCardName: (item: CardData) => string;
-  getCardPrice: (item: CardData) => number;
-  getCardStock: (item: CardData) => number;
-  getCardType: (item: CardData) => string;
+  setSelectedCategoryIds?: Dispatch<SetStateAction<string[]>>;
+  products: CardData[];
   handleAddToCart: (product: CardData) => Promise<void>;
-  loadingAction: number | null;
+  loadingAction: string | null;
 }
 
-export const ListCardSection = ({
-  loadingProducts,
-  setSelectedTypes,
-  filteredProducts,
-  setSearch,
-  getCardName,
-  getCardPrice,
-  getCardStock,
-  getCardType,
-  handleAddToCart,
-  loadingAction,
-}: ListCardSectionProps) => {
-  const getCardImage = (item: CardData) => item?.detail?.image?.location || "https://placehold.co/400x560?text=No+Image";
-  const getDiscountValue = (item: CardData) => Number(item?.detail?.discount?.discount || 0);
-  const hasDiscount = (item: CardData) => getDiscountValue(item) > 0;
+export const ListCardSection = ({ loadingProducts, products, setSearch, handleAddToCart, loadingAction }: ListCardSectionProps) => {
+  // Helper Functions (Internal component helpers)
+  const getCardImage = (item: CardData) => item.images?.[0]?.url || "https://placehold.co/400x560?text=No+Image";
 
   return (
-    <Box style={{ minHeight: 400 }}>
+    <Box style={{ minHeight: 400, position: "relative" }}>
       <LoadingOverlay visible={loadingProducts} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
 
-      {filteredProducts.length === 0 && !loadingProducts ? (
+      {products.length === 0 && !loadingProducts ? (
         <Paper p="xl" ta="center" withBorder bg="white" radius="xs">
           <IconSearch size={40} color="gray" style={{ marginBottom: 10 }} />
           <Text fw={500}>No products found.</Text>
@@ -48,17 +32,17 @@ export const ListCardSection = ({
             variant="outline"
             onClick={() => {
               setSearch("");
-              setSelectedTypes([]);
+              // setSelectedCategoryIds([]); // Jika ada akses ke state filter
             }}
           >
-            Clear Filters
+            Clear Search
           </Button>
         </Paper>
       ) : (
         <SimpleGrid cols={{ base: 2, sm: 3, lg: 4 }} spacing="md" verticalSpacing="lg">
-          {filteredProducts.map((item) => (
+          {products.map((item) => (
             <Card
-              key={item.idCard}
+              key={item.id} // UUID
               padding="0"
               radius="xs"
               withBorder
@@ -80,22 +64,23 @@ export const ListCardSection = ({
               }}
             >
               <Card.Section style={{ position: "relative", borderBottom: "1px solid #f1f3f5" }}>
-                {getCardStock(item) === 0 ? (
+                {item.stock === 0 && (
                   <Badge color="gray" radius="xs" variant="filled" style={{ position: "absolute", top: 8, right: 8, zIndex: 10 }}>
                     Sold Out
                   </Badge>
-                ) : (
-                  hasDiscount(item) && (
+                )}
+
+                {/* Sale Badge (Logic diskon opsional) */}
+                {/* {hasDiscount(item) && (
                     <Badge color="red" radius="xs" variant="filled" style={{ position: "absolute", top: 8, left: 8, zIndex: 10 }}>
                       Sale
                     </Badge>
-                  )
-                )}
+                )} */}
 
                 <Box p="md" bg="white" h={240} style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
                   <Image
                     src={getCardImage(item)}
-                    alt={getCardName(item)}
+                    alt={item.name}
                     fit="contain"
                     h="100%"
                     w="auto"
@@ -107,38 +92,33 @@ export const ListCardSection = ({
               <Stack gap={6} p="sm" h={160} justify="space-between" bg="white">
                 <Box>
                   <Text size="10px" c="dimmed" tt="uppercase" fw={700} style={{ letterSpacing: 0.5 }}>
-                    {getCardType(item)}
+                    {item.categories?.[0]?.category?.name || "General"}
                   </Text>
-                  <Text size="sm" fw={700} lineClamp={2} style={{ lineHeight: 1.3, minHeight: 38 }} title={getCardName(item)}>
-                    {getCardName(item)}
+                  <Text size="sm" fw={700} lineClamp={2} style={{ lineHeight: 1.3, minHeight: 38 }} title={item.name}>
+                    {item.name}
                   </Text>
                   <Text size="xs" c="dimmed" lineClamp={1}>
-                    {item?.detail?.note || " "}
+                    {item.sku || " "}
                   </Text>
                 </Box>
 
                 <Box>
                   <Group gap={5} align="flex-end" mb={8}>
                     <Text fw={800} size="md" c="blue">
-                      Rp {getCardPrice(item).toLocaleString("id-ID")}
+                      Rp {Number(item.price).toLocaleString("id-ID")}
                     </Text>
-                    {hasDiscount(item) && (
-                      <Text size="xs" td="line-through" c="dimmed" mb={2}>
-                        Rp {(getCardPrice(item) + getDiscountValue(item)).toLocaleString("id-ID")}
-                      </Text>
-                    )}
                   </Group>
                   <Button
                     fullWidth
                     radius="xs"
                     size="xs"
                     color="dark"
-                    disabled={getCardStock(item) === 0}
+                    disabled={item.stock === 0}
                     onClick={() => handleAddToCart(item)}
-                    loading={loadingAction === item.idCard}
-                    leftSection={getCardStock(item) > 0 && <IconShoppingCart size={14} />}
+                    loading={loadingAction === item.id}
+                    leftSection={item.stock > 0 && <IconShoppingCart size={14} />}
                   >
-                    {getCardStock(item) === 0 ? "Out of Stock" : "Add to Cart"}
+                    {item.stock === 0 ? "Out of Stock" : "Add to Cart"}
                   </Button>
                 </Box>
               </Stack>

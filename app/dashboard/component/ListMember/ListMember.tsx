@@ -1,19 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ActionIcon, Badge, Button, Flex, Group, Paper, Title, Text } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { IconCheck, IconPencil, IconTrash, IconUserPlus, IconX } from "@tabler/icons-react";
-import { TableComponent, ColumnDef } from "@/components/layout/TableComponent";
-import { ListMemberForm } from "./ListMemberForm";
-import { UserData } from "@/types/UserData";
+import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
 import { PaginationMetaData } from "@/types/PaginationMetaData";
-import { Role } from "@/types/Role";
-import { notifications } from "@mantine/notifications";
+import { ActionIcon, Avatar, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
+import { notifications } from "@mantine/notifications";
+import { IconCheck, IconPencil, IconPhone, IconTrash, IconUserPlus, IconX } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import { ListMemberForm } from "./ListMemberForm";
+
+export interface User {
+  id: string;
+  name: string | null;
+  email: string;
+  phone: string | null;
+  image: string | null;
+  isActive: boolean;
+  roleId: string | null;
+  role: {
+    id: string;
+    name: string;
+  } | null;
+  createdAt: string;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+}
 
 const ListMember = () => {
-  const [users, setUsers] = useState<UserData[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [metadata, setMetadata] = useState<PaginationMetaData>({
     total: 0,
     page: 1,
@@ -24,7 +42,7 @@ const ListMember = () => {
   const [rolesList, setRolesList] = useState<Role[]>([]);
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const [queryParams, setQueryParams] = useState({
     page: 1,
@@ -57,6 +75,7 @@ const ListMember = () => {
       }
     } catch (error) {
       console.error("Error fetching users:", error);
+      notifications.show({ title: "Error", message: "Failed to fetch users", color: "red" });
     } finally {
       setLoading(false);
     }
@@ -92,7 +111,7 @@ const ListMember = () => {
     }));
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     openConfirmModal({
       title: "Delete Confirmation",
       centered: true,
@@ -113,12 +132,7 @@ const ListMember = () => {
             });
             fetchUsers();
           } else {
-            notifications.show({
-              title: "Error",
-              message: json.message,
-              color: "red",
-              icon: <IconX size={16} />,
-            });
+            notifications.show({ title: "Error", message: json.message, color: "red", icon: <IconX size={16} /> });
           }
         } catch (error) {
           console.error("Delete error:", error);
@@ -133,65 +147,93 @@ const ListMember = () => {
     open();
   };
 
-  const handleOpenEdit = (user: UserData) => {
+  const handleOpenEdit = (user: User) => {
     setSelectedUser(user);
     open();
   };
 
-  const columns: ColumnDef<UserData>[] = [
+  const columns: ColumnDef<User>[] = [
     {
-      key: "",
+      key: "no",
       label: "No",
       sortable: false,
       width: 60,
       render: (_, index) => (metadata.page - 1) * metadata.limit + index + 1,
     },
     {
-      key: "email",
-      label: "Email",
+      key: "name",
+      label: "User",
       sortable: true,
-      filterable: true,
+      render: (item) => (
+        <Group gap="sm">
+          <Avatar src={item.image} radius="xl" color="blue" />
+          <Flex direction="column">
+            <Text size="sm" fw={500}>
+              {item.name || "No Name"}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {item.email}
+            </Text>
+          </Flex>
+        </Group>
+      ),
+    },
+    {
+      key: "phone",
+      label: "Phone",
+      sortable: true,
+      render: (item) => (
+        <Group gap={4}>
+          <IconPhone size={14} style={{ opacity: 0.5 }} />
+          <Text size="sm">{item.phone || "-"}</Text>
+        </Group>
+      ),
     },
     {
       key: "role",
       label: "Role",
-      sortable: true,
-      filterable: true,
+      sortable: false,
       render: (item) =>
         item.role ? (
           <Badge color="blue" variant="light">
             {item.role.name}
           </Badge>
         ) : (
-          <Badge color="gray">No Role</Badge>
+          <Badge color="gray" variant="outline">
+            Guest
+          </Badge>
         ),
     },
     {
       key: "createdAt",
-      label: "Joined Date",
+      label: "Joined",
       sortable: true,
       render: (item) => (
-        <span suppressHydrationWarning>
+        <Text size="xs" c="dimmed">
           {new Date(item.createdAt).toLocaleDateString("id-ID", {
             day: "numeric",
             month: "short",
             year: "numeric",
           })}
-        </span>
+        </Text>
       ),
     },
     {
-      key: "idUsr",
+      key: "actions",
       label: "Actions",
       width: 100,
       render: (item) => (
         <Group gap={4} justify="center">
-          <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenEdit(item)}>
-            <IconPencil size={16} />
-          </ActionIcon>
-          <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(item.idUsr)}>
-            <IconTrash size={16} />
-          </ActionIcon>
+          <Tooltip label="Edit">
+            <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenEdit(item)}>
+              <IconPencil size={16} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Delete">
+            <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(item.id)}>
+              <IconTrash size={16} />
+            </ActionIcon>
+          </Tooltip>
         </Group>
       ),
     },

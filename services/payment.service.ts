@@ -11,20 +11,11 @@ const snap = new midtransClient.Snap({
 
 export const createPaymentToken = async (transaction: any) => {
   const itemDetails = transaction.items.map((item: any) => ({
-    id: item.cardId || "ITEM",
-    price: Number(item.productPrice),
+    id: item.id || "ITEM",
+    price: Number(item.price),
     quantity: item.quantity,
-    name: item.productName.substring(0, 50),
+    name: item.name ? item.name.substring(0, 50) : "Unknown Item",
   }));
-
-  if (transaction.voucherAmount && Number(transaction.voucherAmount) > 0) {
-    itemDetails.push({
-      id: "VOUCHER-DISC",
-      price: -Number(transaction.voucherAmount),
-      quantity: 1,
-      name: "Voucher Discount",
-    });
-  }
 
   const parameter = {
     transaction_details: {

@@ -1,154 +1,125 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Button, Flex, Modal, PasswordInput, Select, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconX, IconCheck } from "@tabler/icons-react";
-import { Role } from "@/types/Role";
-import { UserData } from "@/types/UserData";
+import { IconCheck, IconX } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import { Role, User } from "./ListMember"; // Import tipe dari ListMember
 
 interface ListMemberFormProps {
   opened: boolean;
   onClose: () => void;
   rolesList: Role[];
-  userToEdit: UserData | null;
+  userToEdit: User | null;
   onSuccess: () => void;
 }
 
 export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSuccess }: ListMemberFormProps) => {
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-    idRole: "",
-  });
 
-  const showError = (message: string) => {
-    notifications.show({
-      title: "Error",
-      message: message,
-      color: "red",
-      icon: <IconX size={16} />,
-    });
-  };
-
-  const showSuccess = (message: string) => {
-    notifications.show({
-      title: "Success",
-      message: message,
-      color: "teal",
-      icon: <IconCheck size={16} />,
-    });
-  };
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [roleId, setRoleId] = useState<string | null>(null);
+  const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
     if (userToEdit) {
-      setForm({
-        email: userToEdit.email,
-        password: "",
-        idRole: userToEdit.role?.idRole.toString() || "",
-      });
+      setName(userToEdit.name || "");
+      setEmail(userToEdit.email);
+      setPhone(userToEdit.phone || "");
+      setRoleId(userToEdit.roleId || null);
+      setIsActive(userToEdit.isActive);
+      setPassword("");
     } else {
-      setForm({
-        email: "",
-        password: "",
-        idRole: "",
-      });
+      // Reset
+      setName("");
+      setEmail("");
+      setPassword("");
+      setPhone("");
+      setRoleId(null);
+      setIsActive(true);
     }
   }, [userToEdit, opened]);
 
   const handleSubmit = async () => {
-    if (!form.email) {
-      notifications.show({ title: "Error", message: "Email Required", color: "red", icon: <IconX size={16} /> });
-      return;
-    }
-
-    if (!userToEdit && !form.password) {
-      notifications.show({ title: "Error", message: "Password Required", color: "red", icon: <IconX size={16} /> });
-      return;
-    }
-
-    if (!form.idRole) {
-      notifications.show({ title: "Error", message: "Role Required", color: "red", icon: <IconX size={16} /> });
-      return;
-    }
+    if (!email) return notifications.show({ message: "Email is required", color: "red" });
+    if (!userToEdit && !password) return notifications.show({ message: "Password is required for new user", color: "red" });
 
     setLoading(true);
     try {
-      const isEditing = !!userToEdit;
-      const url = isEditing ? `/api/users/${userToEdit.idUsr}` : "/api/users";
-      const method = isEditing ? "PATCH" : "POST";
-
-      const bodyData: any = {
-        email: form.email,
-        idRole: Number(form.idRole),
+      const payload: any = {
+        name,
+        email,
+        phone,
+        roleId,
+        isActive,
       };
 
-      if (form.password) bodyData.password = form.password;
+      if (password) {
+        payload.password = password;
+      }
+
+      const isEditMode = !!userToEdit;
+      const url = isEditMode ? `/api/users/${userToEdit.id}` : "/api/users";
+      const method = isEditMode ? "PATCH" : "POST";
 
       const res = await fetch(url, {
         method: method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyData),
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();
 
       if (json.success) {
-        showSuccess(json.message);
+        notifications.show({ title: "Success", message: json.message, color: "teal", icon: <IconCheck size={16} /> });
         onClose();
         onSuccess();
       } else {
-        showError(json.message || "Something went wrong with the server");
+        notifications.show({ title: "Error", message: json.message, color: "red", icon: <IconX size={16} /> });
       }
     } catch (error) {
-      console.error("Submit error:", error);
-      showError("An unexpected error occurred");
+      console.error(error);
+      notifications.show({ title: "Error", message: "Network error", color: "red" });
     } finally {
       setLoading(false);
     }
   };
 
+  const roleOptions = rolesList.map((r) => ({
+    value: r.id,
+    label: r.name,
+  }));
+
   return (
-    <Modal opened={opened} onClose={onClose} title={userToEdit ? "Edit User" : "Add New User"} centered>
-      <TextInput
-        label="Email"
-        placeholder="user@example.com"
-        value={form.email}
-        type="email"
-        onChange={(e) => setForm({ ...form, email: e.target.value })}
-        mb="md"
-      />
+    <Modal opened={opened} onClose={onClose} title={userToEdit ? "Edit User" : "Create New User"} centered>
+      <Flex direction="column" gap="md">
+        <TextInput label="Full Name" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} />
 
-      <PasswordInput
-        label="Password"
-        placeholder={userToEdit ? "Leave blank to keep current" : "Enter password"}
-        value={form.password}
-        onChange={(e) => setForm({ ...form, password: e.target.value })}
-        mb="md"
-      />
+        <TextInput label="Email" placeholder="john@example.com" value={email} onChange={(e) => setEmail(e.target.value)} withAsterisk type="email" />
 
-      <Select
-        label="Role"
-        placeholder="Select Role"
-        data={rolesList.map((role) => ({
-          value: role.idRole.toString(),
-          label: role.name,
-        }))}
-        value={form.idRole}
-        onChange={(val) => setForm({ ...form, idRole: val || "" })}
-        mb="lg"
-        searchable
-        nothingFoundMessage="Role not found"
-      />
+        <PasswordInput
+          label={userToEdit ? "New Password" : "Password"}
+          placeholder={userToEdit ? "Leave blank to keep current password" : "********"}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          withAsterisk={!userToEdit}
+        />
 
-      <Flex justify="flex-end" gap="sm">
-        <Button variant="default" onClick={onClose} disabled={loading}>
-          Cancel
-        </Button>
-        <Button onClick={handleSubmit} loading={loading}>
-          {userToEdit ? "Save Changes" : "Create User"}
-        </Button>
+        <TextInput label="Phone Number" placeholder="0812..." value={phone} onChange={(e) => setPhone(e.target.value)} />
+
+        <Select label="Role" placeholder="Select Role" data={roleOptions} value={roleId} onChange={setRoleId} clearable />
+
+        <Flex justify="flex-end" gap="sm" mt="lg">
+          <Button variant="default" onClick={onClose} disabled={loading}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit} loading={loading}>
+            {userToEdit ? "Update User" : "Create User"}
+          </Button>
+        </Flex>
       </Flex>
     </Modal>
   );

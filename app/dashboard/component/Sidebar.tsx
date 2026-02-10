@@ -1,7 +1,7 @@
 "use client";
 
 import { ActionIcon, Box, Code, Divider, Group, NavLink, Stack, Text, ThemeIcon, useMantineTheme } from "@mantine/core";
-import { IconLayoutDashboard, IconLibraryPhoto, IconUsers, IconX } from "@tabler/icons-react";
+import { IconLayoutDashboard, IconLibraryPhoto, IconReceipt2, IconUsers, IconX } from "@tabler/icons-react";
 
 type SidebarProps = {
   onMenuClick: (menuName: string) => void;
@@ -11,6 +11,7 @@ type SidebarProps = {
 
 const data = [
   { label: "Dashboard", icon: IconLayoutDashboard, id: "Dashboard" },
+  { label: "Transactions", icon: IconReceipt2, id: "Transactions" },
   { label: "Collection", icon: IconLibraryPhoto, id: "Collection" },
   { label: "List Member", icon: IconUsers, id: "ListMember" },
 ];

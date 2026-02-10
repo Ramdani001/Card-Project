@@ -1,21 +1,31 @@
 import { NextRequest } from "next/server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import { checkout } from "@/services/transaction.service";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export const POST = async (req: NextRequest) => {
   try {
-    const userId = req.headers.get("x-user-id");
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return sendResponse({ success: false, message: "Unauthorized", status: 401 });
+    }
+
+    const userId = session.user.id;
     if (!userId) {
       return sendResponse({ success: false, message: "Unauthorized", status: 401 });
     }
 
     const body = await req.json();
-    const { customerName, customerEmail } = body;
+    const { customerName, customerEmail, address, paymentMethod, voucherCode } = body;
 
     const transaction = await checkout({
       userId,
       customerName,
       customerEmail,
+      address,
+      paymentMethod,
+      voucherCode,
     });
 
     return sendResponse({

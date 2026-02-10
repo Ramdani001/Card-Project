@@ -7,10 +7,12 @@ interface CreateTransactionParams {
   customerName?: string;
   customerEmail?: string;
   voucherCode?: string;
+  address: string;
+  paymentMethod?: string;
 }
 
 export const checkout = async (params: CreateTransactionParams) => {
-  const { userId, customerName, customerEmail, voucherCode } = params;
+  const { userId, customerName, customerEmail, voucherCode, address, paymentMethod } = params;
 
   const cart = await prisma.cart.findFirst({
     where: { userId, isActive: true },
@@ -108,6 +110,7 @@ export const checkout = async (params: CreateTransactionParams) => {
         status: "PENDING",
         customerName,
         customerEmail,
+        address: address,
         voucherId,
         statusLogs: {
           create: { status: "PENDING", note: "Checkout initiated", createdBy: "SYSTEM" },
@@ -115,6 +118,7 @@ export const checkout = async (params: CreateTransactionParams) => {
         items: {
           create: prismaItemsPayload,
         },
+        paymentMethod: paymentMethod,
       },
     });
 
@@ -214,16 +218,39 @@ export const updateTransactionStatus = async (transactionId: string, status: Tra
   });
 };
 
-export const getTransactions = async (userId: string, options?: any) => {
-  return await prisma.transaction.findMany({
-    where: { userId, ...options },
-    orderBy: { createdAt: "desc" },
-    include: {
-      items: true,
-      voucher: true,
-      statusLogs: { orderBy: { createdAt: "desc" }, take: 1 },
-    },
-  });
+interface GetTransactionParams {
+  skip?: number;
+  take?: number;
+  orderBy?: Prisma.TransactionOrderByWithRelationInput;
+  where?: Prisma.TransactionWhereInput; // Kita butuh ini buat filter tambahan
+}
+
+export const getTransactions = async (userId: string, params: GetTransactionParams) => {
+  const { skip, take, orderBy, where } = params;
+
+  // Gabungkan filter wajib (userId) dengan filter opsional (status/invoice)
+  const whereClause: Prisma.TransactionWhereInput = {
+    userId, // Wajib lock ke user yg login
+    ...where,
+  };
+
+  // Gunakan transaction untuk ambil total data + data page ini
+  const [total, transactions] = await prisma.$transaction([
+    prisma.transaction.count({ where: whereClause }),
+    prisma.transaction.findMany({
+      where: whereClause,
+      skip,
+      take,
+      orderBy: orderBy || { createdAt: "desc" }, // Default sort
+      include: {
+        items: true,
+        voucher: true,
+        statusLogs: { orderBy: { createdAt: "desc" }, take: 1 },
+      },
+    }),
+  ]);
+
+  return { transactions, total };
 };
 
 export const getTransactionById = async (id: string, userId: string) => {

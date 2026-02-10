@@ -4,7 +4,7 @@ import ListCard from "@/components/Dashboard/Collection/Card/ListCard";
 import ListDiscount from "@/components/Dashboard/Collection/Discount/ListDiscount";
 import ListEvent from "@/components/Dashboard/Collection/Event/ListEvent";
 import ListMenu from "@/components/Dashboard/Collection/Menu/ListMenu";
-import ListTypeCard from "@/components/Dashboard/Collection/TypeCard/ListTypeCard";
+import ListTypeCard from "@/components/Dashboard/Collection/Category/ListCategory";
 import { Paper, Tabs, rem, Text } from "@mantine/core";
 import { IconCalendarEvent, IconCardboards, IconCards, IconDiscount, IconList } from "@tabler/icons-react";
 
@@ -31,7 +31,7 @@ const Collection = () => {
 
           <Tabs.Tab value="type-card" leftSection={<IconCardboards style={iconStyle} />}>
             <Text span visibleFrom="sm">
-              Type Card
+              Category Card
             </Text>
           </Tabs.Tab>
 

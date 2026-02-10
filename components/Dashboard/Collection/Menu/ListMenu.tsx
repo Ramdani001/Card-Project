@@ -7,9 +7,9 @@ import { useDisclosure } from "@mantine/hooks";
 import { IconCheck, IconPencil, IconPlus, IconRefresh, IconTrash, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { MenuForm } from "./MenuForm";
-import { Menu } from "@/types/Menu";
 import { notifications } from "@mantine/notifications";
 import { openConfirmModal } from "@mantine/modals";
+import { Menu } from "@/types/Menu";
 
 const ListMenu = () => {
   const [menus, setMenus] = useState<Menu[]>([]);
@@ -24,11 +24,10 @@ const ListMenu = () => {
   const [opened, { open, close }] = useDisclosure(false);
   const [selectedMenu, setSelectedMenu] = useState<Menu | null>(null);
 
-  // State Query Parameters
   const [queryParams, setQueryParams] = useState({
     page: 1,
     limit: 10,
-    sortBy: "order", // Default sort by Order biar rapi
+    sortBy: "order",
     sortOrder: "asc" as "asc" | "desc",
     filters: {} as Record<string, string>,
   });
@@ -63,11 +62,7 @@ const ListMenu = () => {
       }
     } catch (error) {
       console.error("Error fetching menus:", error);
-      notifications.show({
-        title: "Error",
-        message: "Failed to fetch data",
-        color: "red",
-      });
+      notifications.show({ title: "Error", message: "Failed to fetch data", color: "red" });
     } finally {
       setLoading(false);
     }
@@ -90,7 +85,7 @@ const ListMenu = () => {
     }));
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     openConfirmModal({
       title: "Delete Menu",
       centered: true,
@@ -111,21 +106,11 @@ const ListMenu = () => {
             });
             fetchMenus();
           } else {
-            notifications.show({
-              title: "Error",
-              message: json.message,
-              color: "red",
-              icon: <IconX size={16} />,
-            });
+            notifications.show({ title: "Error", message: json.message, color: "red", icon: <IconX size={16} /> });
           }
         } catch (error) {
           console.error("Delete error:", error);
-          notifications.show({
-            title: "Error",
-            message: "Network error occurred",
-            color: "red",
-            icon: <IconX size={16} />,
-          });
+          notifications.show({ title: "Error", message: "Network error", color: "red", icon: <IconX size={16} /> });
         }
       },
     });
@@ -141,7 +126,6 @@ const ListMenu = () => {
     open();
   };
 
-  // --- Columns Definition ---
   const columns: ColumnDef<Menu>[] = [
     {
       key: "no",
@@ -151,21 +135,11 @@ const ListMenu = () => {
       render: (_, index) => (metadata.page - 1) * metadata.limit + index + 1,
     },
     {
-      key: "code",
-      label: "Code",
-      sortable: true,
-      filterable: true,
-      render: (item) => (
-        <Text fw={600} size="sm" c="blue">
-          {item.code}
-        </Text>
-      ),
-    },
-    {
       key: "label",
       label: "Label",
       sortable: true,
       filterable: true,
+      render: (item) => <Text fw={500}>{item.label}</Text>,
     },
     {
       key: "icon",
@@ -189,7 +163,9 @@ const ListMenu = () => {
       label: "URL Path",
       render: (item) =>
         item.url ? (
-          <Text size="sm">{item.url}</Text>
+          <Text size="sm" c="blue">
+            {item.url}
+          </Text>
         ) : (
           <Text size="sm" c="dimmed" fs="italic">
             No Link
@@ -197,13 +173,13 @@ const ListMenu = () => {
         ),
     },
     {
-      key: "parentCode",
+      key: "parentId",
       label: "Parent",
-      sortable: true,
+      sortable: false,
       render: (item) =>
-        item.parentCode ? (
+        item.parent ? (
           <Badge color="cyan" variant="light">
-            {item.parentCode}
+            {item.parent.label}
           </Badge>
         ) : (
           <Badge color="gray" variant="dot">
@@ -241,7 +217,7 @@ const ListMenu = () => {
             </ActionIcon>
           </Tooltip>
           <Tooltip label="Delete">
-            <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(item.idMenu)}>
+            <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(item.id)}>
               <IconTrash size={16} />
             </ActionIcon>
           </Tooltip>

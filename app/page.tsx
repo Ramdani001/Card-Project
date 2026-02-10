@@ -5,14 +5,14 @@ import { FilterSection } from "@/components/LandingPage/FilterSection";
 import { FooterSection } from "@/components/LandingPage/FooterSection";
 import { HeaderSection } from "@/components/LandingPage/HeaderSection";
 import { ListCardSection } from "@/components/LandingPage/ListCardSection";
-import { Box, Container, Grid, Group, Select } from "@mantine/core";
+import { Box, Center, Container, Grid, Group, Loader, Select, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconShoppingCart } from "@tabler/icons-react";
+import { IconCheck } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { CardData } from "../types/CardData";
-import { CartItem } from "../types/CartItem";
+import { CartItem } from "@/types/CartItem";
+import { CardData } from "@/types/CardData";
 
 export default function TcgCornerClone() {
   const router = useRouter();
@@ -20,25 +20,23 @@ export default function TcgCornerClone() {
 
   const [products, setProducts] = useState<CardData[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [search, setSearch] = useState("");
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<string | null>("Newest");
 
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [loadingCart, setLoadingCart] = useState(false);
-  const [loadingAction, setLoadingAction] = useState<number | null>(null);
-  const [processingId, setProcessingId] = useState<number | null>(null);
-
-  const [search, setSearch] = useState("");
-  const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<string | null>("Newest");
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   const [address, setAddress] = useState("");
   const [paymentMethod, setPaymentMethod] = useState<string | null>("TRANSFER");
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
 
-  const getCardName = (item: CardData) => item?.detail?.name || "Unknown Item";
-  const getCardPrice = (item: CardData) => Number(item?.detail?.price || 0);
-  const getCardStock = (item: CardData) => Number(item?.detail?.stock || 0);
-  const getCardType = (item: CardData) => item?.typeCard?.name || "General";
+  const getCardName = (item: CardData) => item?.name || "Unknown Item";
+  const getCardPrice = (item: CardData) => Number(item?.price || 0);
+  // const getCardStock = (item: CardData) => Number(item?.stock || 0);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -48,7 +46,6 @@ export default function TcgCornerClone() {
         if (json.success && Array.isArray(json.data)) {
           setProducts(json.data);
         } else {
-          console.error("Format API salah", json);
           setProducts([]);
         }
       } catch (error) {
@@ -68,10 +65,10 @@ export default function TcgCornerClone() {
       const res = await fetch("/api/cart");
       const json = await res.json();
       if (res.ok) {
-        if (json.data && Array.isArray(json.data.items)) {
-          setCartItems(json.data.items);
-        } else if (Array.isArray(json.data)) {
+        if (Array.isArray(json.data)) {
           setCartItems(json.data);
+        } else if (json.data?.items) {
+          setCartItems(json.data.items);
         } else {
           setCartItems([]);
         }
@@ -88,17 +85,25 @@ export default function TcgCornerClone() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
-  const availableTypes = useMemo(() => {
-    const types = products.map((p) => getCardType(p));
-    return Array.from(new Set(types)).filter((t) => t);
+  // --- FILTERS & SORTING ---
+  const availableCategories = useMemo(() => {
+    const categoriesMap = new Map<string, string>();
+    products.forEach((p) => {
+      p.categories.forEach((c) => {
+        categoriesMap.set(c.category.id, c.category.name);
+      });
+    });
+    return Array.from(categoriesMap.entries()).map(([id, name]) => ({ id, name }));
   }, [products]);
 
   const filteredProducts = useMemo(() => {
     const result = products.filter((item) => {
       const matchSearch =
-        getCardName(item).toLowerCase().includes(search.toLowerCase()) || getCardType(item).toLowerCase().includes(search.toLowerCase());
-      const matchType = selectedTypes.length === 0 || selectedTypes.includes(getCardType(item));
-      return matchSearch && matchType;
+        getCardName(item).toLowerCase().includes(search.toLowerCase()) || (item.sku && item.sku.toLowerCase().includes(search.toLowerCase()));
+
+      const matchCategory = selectedCategoryIds.length === 0 || item.categories.some((c) => selectedCategoryIds.includes(c.category.id));
+
+      return matchSearch && matchCategory;
     });
 
     if (sortBy === "Price: Low to High") {
@@ -108,49 +113,7 @@ export default function TcgCornerClone() {
     }
 
     return result;
-  }, [products, search, selectedTypes, sortBy]);
-
-  const handleRemoveItem = async (idCartItem: number) => {
-    setProcessingId(idCartItem);
-    try {
-      const res = await fetch(`/api/cart/${idCartItem}`, {
-        method: "DELETE",
-      });
-
-      if (res.ok) {
-        setCartItems((prev) => prev.filter((item) => item.idCartItem !== idCartItem));
-        notifications.show({ message: "Item dihapus dari keranjang", color: "gray" });
-      } else {
-        throw new Error("Gagal hapus");
-      }
-    } catch (error) {
-      console.error(error);
-      notifications.show({ message: "Gagal menghapus item", color: "red" });
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  const handleUpdateQuantity = async (idCartItem: number, newQty: number) => {
-    if (newQty < 1) return;
-
-    setProcessingId(idCartItem);
-    try {
-      const res = await fetch(`/api/cart/${idCartItem}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quantity: newQty }),
-      });
-
-      if (res.ok) {
-        setCartItems((prev) => prev.map((item) => (item.idCartItem === idCartItem ? { ...item, quantity: newQty } : item)));
-      }
-    } catch (error) {
-      console.error("Update qty error", error);
-    } finally {
-      setProcessingId(null);
-    }
-  };
+  }, [products, search, selectedCategoryIds, sortBy]);
 
   const handleAddToCart = async (product: CardData) => {
     if (status !== "authenticated") {
@@ -158,31 +121,70 @@ export default function TcgCornerClone() {
       return router.push("/login");
     }
 
-    setLoadingAction(product.idCard);
+    setLoadingAction(product.id);
     try {
       const res = await fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idCard: product.idCard, quantity: 1 }),
+        body: JSON.stringify({ cardId: product.id, quantity: 1 }),
       });
 
       if (res.ok) {
-        notifications.show({ title: "Berhasil", message: "Item ditambahkan ke keranjang.", color: "green", icon: <IconShoppingCart size={16} /> });
+        notifications.show({
+          title: "Berhasil",
+          message: "Item ditambahkan ke keranjang.",
+          color: "teal",
+          icon: <IconCheck size={16} />,
+        });
         fetchCart();
-        // setIsDrawerOpen(true);
+        setIsDrawerOpen(true);
       } else {
-        throw new Error("Gagal menambahkan ke keranjang");
+        const json = await res.json();
+        throw new Error(json.message || "Gagal menambahkan ke keranjang");
       }
-    } catch (error) {
-      console.error(error);
-
-      notifications.show({ title: "Error", message: "Terjadi kesalahan sistem.", color: "red" });
+    } catch (error: any) {
+      notifications.show({ title: "Error", message: error.message, color: "red" });
     } finally {
       setLoadingAction(null);
     }
   };
 
-  const handleCheckout = async () => {
+  const handleRemoveItem = async (id: string) => {
+    setProcessingId(id);
+    try {
+      const res = await fetch(`/api/cart/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setCartItems((prev) => prev.filter((item) => item.id !== id));
+        notifications.show({ message: "Item dihapus", color: "gray" });
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleUpdateQuantity = async (id: string, newQty: number) => {
+    if (newQty < 1) return;
+    setProcessingId(id);
+    try {
+      const res = await fetch(`/api/cart/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantity: newQty }),
+      });
+
+      if (res.ok) {
+        setCartItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: newQty } : item)));
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleCheckout = async (voucherCodeFromCart?: string) => {
     if (!address) {
       notifications.show({ message: "Alamat pengiriman wajib diisi.", color: "red" });
       return;
@@ -190,21 +192,31 @@ export default function TcgCornerClone() {
 
     setIsCheckoutLoading(true);
     try {
-      const res = await fetch("/api/checkout", {
+      const res = await fetch("/api/transactions/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paymentMethod, address }),
+        body: JSON.stringify({
+          address,
+          paymentMethod,
+          voucherCode: voucherCodeFromCart,
+        }),
       });
 
       const json = await res.json();
 
       if (res.ok) {
-        notifications.show({ title: "Order Berhasil!", message: "Terima kasih, pesanan Anda sedang diproses.", color: "blue" });
+        notifications.show({ title: "Order Berhasil!", message: "Silakan selesaikan pembayaran.", color: "blue" });
         setCartItems([]);
         setIsDrawerOpen(false);
-        router.push("/");
+
+        // Redirect Logic
+        if (json.data?.snapRedirect) {
+          window.location.href = json.data.snapRedirect;
+        } else {
+          router.push("/transactions");
+        }
       } else {
-        throw new Error(json.message || "Gagal melakukan transaksi");
+        throw new Error(json.message || "Gagal checkout");
       }
     } catch (err: any) {
       notifications.show({ title: "Gagal Checkout", message: err.message, color: "red" });
@@ -217,42 +229,58 @@ export default function TcgCornerClone() {
 
   return (
     <Box style={{ backgroundColor: "#f4f6f8", minHeight: "100vh", color: "#212529", fontFamily: "Arial, sans-serif" }}>
-      <HeaderSection search={search} setSearch={setSearch} cartItems={cartItems} setIsDrawerOpen={setIsDrawerOpen} />
+      <HeaderSection
+        search={search}
+        setSearch={setSearch}
+        cartItems={cartItems}
+        setIsDrawerOpen={setIsDrawerOpen}
+        cartItemCount={cartItems.length}
+        onOpenCart={() => setIsDrawerOpen(true)}
+      />
 
       <Container size="xl" py="xl">
         <Grid gutter="xl">
+          {/* Sidebar Filter */}
           <Grid.Col span={{ base: 12, md: 3 }} visibleFrom="md">
-            <FilterSection availableTypes={availableTypes} selectedTypes={selectedTypes} setSelectedTypes={setSelectedTypes} />
+            <FilterSection
+              categories={availableCategories}
+              selectedCategoryIds={selectedCategoryIds}
+              setSelectedCategoryIds={setSelectedCategoryIds}
+            />
           </Grid.Col>
 
+          {/* Product Grid */}
           <Grid.Col span={{ base: 12, md: 9 }}>
             <Group justify="flex-end" mb="lg" align="center">
               <Select
-                label="Sort By"
                 placeholder="Sort by"
                 data={["Newest", "Price: Low to High", "Price: High to Low"]}
                 value={sortBy}
                 onChange={setSortBy}
                 size="xs"
-                w={300}
+                w={200}
                 allowDeselect={false}
-                variant="filled"
-                styles={{ label: { marginBottom: 0, marginRight: 10, display: "inline-block" }, root: { display: "flex", alignItems: "center" } }}
               />
             </Group>
 
-            <ListCardSection
-              filteredProducts={filteredProducts}
-              loadingProducts={loadingProducts}
-              setSearch={setSearch}
-              setSelectedTypes={setSelectedTypes}
-              getCardName={getCardName}
-              getCardPrice={getCardPrice}
-              getCardStock={getCardStock}
-              getCardType={getCardType}
-              handleAddToCart={handleAddToCart}
-              loadingAction={loadingAction}
-            />
+            {loadingProducts ? (
+              <Center h={300}>
+                <Loader />
+              </Center>
+            ) : filteredProducts.length > 0 ? (
+              <ListCardSection
+                products={filteredProducts}
+                handleAddToCart={handleAddToCart}
+                loadingAction={loadingAction}
+                // Props di bawah ini tidak wajib jika ListCardSection sudah pakai helper internal
+                setSearch={setSearch}
+                loadingProducts={loadingProducts}
+              />
+            ) : (
+              <Center h={300}>
+                <Text c="dimmed">No products found.</Text>
+              </Center>
+            )}
           </Grid.Col>
         </Grid>
       </Container>
@@ -260,18 +288,18 @@ export default function TcgCornerClone() {
       <CartSection
         cartItems={cartItems}
         isDrawerOpen={isDrawerOpen}
-        loadingCart={loadingCart}
         setIsDrawerOpen={setIsDrawerOpen}
+        loadingCart={loadingCart}
         handleRemoveItem={handleRemoveItem}
         handleUpdateQuantity={handleUpdateQuantity}
         processingId={processingId}
         handleCheckout={handleCheckout}
+        isCheckoutLoading={isCheckoutLoading}
+        totalAmount={totalAmount}
+        address={address}
+        setAddress={setAddress}
         paymentMethod={paymentMethod}
         setPaymentMethod={setPaymentMethod}
-        address={address}
-        isCheckoutLoading={isCheckoutLoading}
-        setAddress={setAddress}
-        totalAmount={totalAmount}
       />
 
       <FooterSection />

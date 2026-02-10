@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title } from "@mantine/core";
+import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip, Avatar, Box } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconCalendarEvent, IconCheck, IconPencil, IconTrash, IconX } from "@tabler/icons-react";
+import { IconCalendarEvent, IconCheck, IconPencil, IconTrash, IconX, IconPhoto } from "@tabler/icons-react";
 import { TableComponent, ColumnDef } from "@/components/layout/TableComponent";
 import { PaginationMetaData } from "@/types/PaginationMetaData";
-import { Event } from "@/types/Event";
 import { EventForm } from "./EventForm";
 import { notifications } from "@mantine/notifications";
 import { openConfirmModal } from "@mantine/modals";
+import { Event } from "@/types/Event";
 
 const ListEvent = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -55,6 +55,7 @@ const ListEvent = () => {
       }
     } catch (error) {
       console.error("Error fetching events:", error);
+      notifications.show({ title: "Error", message: "Failed to fetch events", color: "red" });
     } finally {
       setLoading(false);
     }
@@ -76,12 +77,12 @@ const ListEvent = () => {
     }));
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     openConfirmModal({
       title: "Delete Event",
       centered: true,
-      children: <Text size="sm">Are you sure you want to delete this event? This action cannot be undone.</Text>,
-      labels: { confirm: "Delete Event", cancel: "Cancel" },
+      children: <Text size="sm">Are you sure you want to delete this event?</Text>,
+      labels: { confirm: "Delete", cancel: "Cancel" },
       confirmProps: { color: "red" },
       onConfirm: async () => {
         try {
@@ -97,21 +98,11 @@ const ListEvent = () => {
             });
             fetchEvents();
           } else {
-            notifications.show({
-              title: "Error",
-              message: json.message,
-              color: "red",
-              icon: <IconX size={16} />,
-            });
+            notifications.show({ title: "Error", message: json.message, color: "red", icon: <IconX size={16} /> });
           }
         } catch (error) {
           console.error("Delete error:", error);
-          notifications.show({
-            title: "Error",
-            message: "Network error occurred",
-            color: "red",
-            icon: <IconX size={16} />,
-          });
+          notifications.show({ title: "Error", message: "Network error", color: "red", icon: <IconX size={16} /> });
         }
       },
     });
@@ -127,7 +118,16 @@ const ListEvent = () => {
     open();
   };
 
-  // Definisi Kolom
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   const columns: ColumnDef<Event>[] = [
     {
       key: "no",
@@ -138,60 +138,58 @@ const ListEvent = () => {
     },
     {
       key: "title",
-      label: "Title",
+      label: "Event Info",
       sortable: true,
-      filterable: true,
       render: (item) => (
-        <Text fw={500} size="sm">
-          {item.title}
-        </Text>
+        <Group gap="sm">
+          <Avatar src={item.images[0]?.url || null} radius="sm" size="md" color="blue">
+            <IconCalendarEvent size={20} />
+          </Avatar>
+          <Box>
+            <Text fw={500} size="sm">
+              {item.title}
+            </Text>
+            <Text size="xs" c="dimmed" lineClamp={1}>
+              {item.slug}
+            </Text>
+          </Box>
+        </Group>
       ),
     },
     {
       key: "startDate",
-      label: "Start Date",
+      label: "Schedule",
       sortable: true,
       render: (item) => (
-        <Text size="sm">
-          {new Date(item.startDate).toLocaleString("id-ID", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </Text>
-      ),
-    },
-    {
-      key: "endDate",
-      label: "End Date",
-      sortable: true,
-      render: (item) => (
-        <Text size="sm">
-          {new Date(item.endDate).toLocaleString("id-ID", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}
-        </Text>
+        <Flex direction="column">
+          <Text size="xs" c="dimmed">
+            Start:{" "}
+            <Text span c="dark" fw={500}>
+              {formatDate(item.startDate)}
+            </Text>
+          </Text>
+          <Text size="xs" c="dimmed">
+            End:{" "}
+            <Text span c="dark" fw={500}>
+              {formatDate(item.endDate)}
+            </Text>
+          </Text>
+        </Flex>
       ),
     },
     {
       key: "images",
-      label: "Images",
+      label: "Gallery",
       sortable: false,
       render: (item) => {
         const count = item.images?.length || 0;
         return count > 0 ? (
-          <Badge color="grape" variant="light">
-            {count} Images
+          <Badge color="grape" variant="light" leftSection={<IconPhoto size={12} />}>
+            {count} Pics
           </Badge>
         ) : (
           <Text size="xs" c="dimmed">
-            No Images
+            -
           </Text>
         );
       },
@@ -202,12 +200,16 @@ const ListEvent = () => {
       width: 100,
       render: (item) => (
         <Group gap={4} justify="center">
-          <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenEdit(item)}>
-            <IconPencil size={16} />
-          </ActionIcon>
-          <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(item.idEvent)}>
-            <IconTrash size={16} />
-          </ActionIcon>
+          <Tooltip label="Edit">
+            <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenEdit(item)}>
+              <IconPencil size={16} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Delete">
+            <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(item.id)}>
+              <IconTrash size={16} />
+            </ActionIcon>
+          </Tooltip>
         </Group>
       ),
     },

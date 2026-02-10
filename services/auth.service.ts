@@ -22,7 +22,7 @@ export const register = async (params: RegisterParams) => {
   const hashedPassword = await hashPassword(password);
 
   let defaultRole = await prisma.role.findUnique({
-    where: { name: "USER" },
+    where: { name: "B2C" },
   });
 
   if (!defaultRole) {

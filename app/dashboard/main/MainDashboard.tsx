@@ -8,9 +8,11 @@ import Dashboard from "../component/Dashboard/Dashboard";
 import Collection from "../component/Collection";
 import Topbar from "../component/Topbar";
 import ListMember from "../component/ListMember/ListMember";
+import ListTransaction from "@/components/Transaction/ListTransaction";
 
 const MENU_COMPONENTS: Record<string, React.ReactNode> = {
   Dashboard: <Dashboard />,
+  Transactions: <ListTransaction />,
   Collection: <Collection />,
   ListMember: <ListMember />,
 };
