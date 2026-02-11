@@ -1,7 +1,19 @@
+
+"use client";
+
 import { CartItem } from "@/types/CartItem";
-import { ActionIcon, Box, Burger, Button, Container, Divider, Group, Indicator, Menu, Text, TextInput, Title } from "@mantine/core";
+import { ActionIcon, Box, Burger, Button, Container, Divider, Group, Indicator, Menu, Text, TextInput, Title, Avatar } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconChevronDown, IconLayoutDashboard, IconLogin, IconLogout, IconSearch, IconShoppingCart, IconUser } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconLayoutDashboard,
+  IconLogin,
+  IconLogout,
+  IconSearch,
+  IconShoppingCart,
+  IconUser,
+  IconReceipt2,
+} from "@tabler/icons-react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
@@ -11,16 +23,25 @@ interface HeaderSectionProps {
   setSearch: Dispatch<SetStateAction<string>>;
   cartItems: CartItem[];
   setIsDrawerOpen: Dispatch<SetStateAction<boolean>>;
+  cartItemCount?: number;
+  onOpenCart?: () => void;
 }
 
-export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen }: HeaderSectionProps) => {
+export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen, cartItemCount, onOpenCart }: HeaderSectionProps) => {
   const [opened, { toggle }] = useDisclosure(false);
   const { data: session, status } = useSession();
   const router = useRouter();
 
+  const totalItems = cartItemCount !== undefined ? cartItemCount : cartItems.length;
+
+  const handleOpenCart = () => {
+    if (onOpenCart) onOpenCart();
+    else setIsDrawerOpen(true);
+  };
+
   return (
     <>
-      {/* <Box bg="#212529" c="gray.4" py={8} style={{ fontSize: 12 }}>
+      <Box bg="#212529" c="gray.4" py={8} style={{ fontSize: 12 }}>
         <Container size="xl">
           <Group justify="space-between">
             <Text size="xs">Indonesia&apos;s Premier TCG Store | 100% Authentic Cards</Text>
@@ -29,13 +50,13 @@ export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen }:
                 Help Center
               </Text>
               <Divider orientation="vertical" color="gray.7" />
-              <Text size="xs" style={{ cursor: "pointer" }} c="dimmed">
+              <Text size="xs" style={{ cursor: "pointer" }} c="dimmed" onClick={() => router.push("/transactions")}>
                 Track Order
               </Text>
             </Group>
           </Group>
         </Container>
-      </Box> */}
+      </Box>
 
       <Box
         component="header"
@@ -47,12 +68,16 @@ export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen }:
           <Group justify="space-between">
             <Group>
               <Burger opened={opened} onClick={toggle} hiddenFrom="md" size="sm" />
-                <Title order={3} style={{ fontFamily: "Impact, sans-serif", letterSpacing: 1, color: "#212529" }}>
-                  DEV
-                  <Text span c="blue" inherit>
-                    CARD
-                  </Text>
-                </Title>
+              <Title
+                order={3}
+                style={{ fontFamily: "Impact, sans-serif", letterSpacing: 1, color: "#212529", cursor: "pointer" }}
+                onClick={() => router.push("/")}
+              >
+                DEV
+                <Text span c="blue" inherit>
+                  CARD
+                </Text>
+              </Title>
             </Group>
 
             <Box w={500} visibleFrom="md">
@@ -73,27 +98,38 @@ export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen }:
 
             <Group gap="lg">
               {status === "authenticated" ? (
-                <Menu shadow="md" width={200} trigger="hover" openDelay={100} closeDelay={400}>
+                <Menu shadow="md" width={220} trigger="hover" openDelay={100} closeDelay={400} position="bottom-end">
                   <Menu.Target>
                     <Group gap={8} style={{ cursor: "pointer", lineHeight: 1 }}>
-                      <IconUser size={20} />
+                      <Avatar color="blue" radius="xl" size="sm">
+                        {(session?.user?.name?.[0] || "U").toUpperCase()}
+                      </Avatar>
                       <Box visibleFrom="xs">
                         <Text size="xs" c="dimmed">
-                          Account
+                          Hello,
                         </Text>
-                        <Text size="sm" fw={700} c="dark">
-                          {session?.user?.name?.split(" ")[0]}
+                        <Text size="sm" fw={700} c="dark" lineClamp={1} w={80}>
+                          {session?.user?.name?.split(" ")[0] || "User"}
                         </Text>
                       </Box>
                     </Group>
                   </Menu.Target>
 
                   <Menu.Dropdown>
-                    <Menu.Label>Application</Menu.Label>
-                    {session?.user?.role == "Administrator" && (
-                      <Menu.Item leftSection={<IconLayoutDashboard size={14} />} onClick={() => router.push("/dashboard/main")}>
-                        Dashboard
-                      </Menu.Item>
+                    <Menu.Label>My Account</Menu.Label>
+                    <Menu.Item leftSection={<IconUser size={14} />}>Profile</Menu.Item>
+                    <Menu.Item leftSection={<IconReceipt2 size={14} />} onClick={() => router.push("/transactions")}>
+                      My Transactions
+                    </Menu.Item>
+
+                    {(session?.user as any)?.role === "Administrator" && (
+                      <>
+                        <Menu.Divider />
+                        <Menu.Label>Admin Area</Menu.Label>
+                        <Menu.Item leftSection={<IconLayoutDashboard size={14} />} onClick={() => router.push("/dashboard/main")} color="blue">
+                          Dashboard
+                        </Menu.Item>
+                      </>
                     )}
 
                     <Menu.Divider />
@@ -109,8 +145,8 @@ export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen }:
                 </Button>
               )}
 
-              <Indicator label={cartItems.length} size={16} color="red" offset={4} disabled={cartItems.length === 0}>
-                <ActionIcon variant="transparent" color="dark" size="xl" onClick={() => setIsDrawerOpen(true)}>
+              <Indicator label={totalItems} size={16} color="red" offset={4} disabled={totalItems === 0}>
+                <ActionIcon variant="transparent" color="dark" size="xl" onClick={handleOpenCart}>
                   <IconShoppingCart size={26} stroke={1.5} />
                 </ActionIcon>
               </Indicator>
