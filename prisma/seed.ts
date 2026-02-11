@@ -30,11 +30,15 @@ export async function main() {
   console.warn("Start seeding...");
 
   for (const r of roleData) {
-    await prisma.role.upsert({
+    const existingRole = await prisma.role.findUnique({
       where: { name: r.name },
-      update: {},
-      create: { name: r.name },
     });
+
+    if (!existingRole) {
+      await prisma.role.create({
+        data: { name: r.name },
+      });
+    }
   }
   console.warn("Roles seeded.");
 
@@ -50,20 +54,29 @@ export async function main() {
 
     const hashedPassword = await bcrypt.hash(u.password, saltRounds);
 
-    await prisma.user.upsert({
+    const existingUser = await prisma.user.findUnique({
       where: { email: u.email },
-      update: {
-        password: hashedPassword,
-        roleId: role.id,
-      },
-      create: {
-        email: u.email,
-        password: hashedPassword,
-        name: u.name,
-        roleId: role.id,
-        isActive: true,
-      },
     });
+
+    if (!existingUser) {
+      await prisma.user.create({
+        data: {
+          email: u.email,
+          password: hashedPassword,
+          name: u.name,
+          roleId: role.id,
+          isActive: true,
+        },
+      });
+    } else {
+      await prisma.user.update({
+        where: { email: u.email },
+        data: {
+          password: hashedPassword,
+          roleId: role.id,
+        },
+      });
+    }
   }
 
   console.warn("Users seeded.");

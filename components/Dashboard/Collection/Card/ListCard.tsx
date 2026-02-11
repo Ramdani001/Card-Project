@@ -153,6 +153,7 @@ const ListCard = () => {
       key: "name",
       label: "Card Name",
       sortable: true,
+      filterable: true,
       render: (item) => (
         <Flex direction="column" gap={2}>
           <Text fw={500}>{item.name}</Text>
@@ -167,7 +168,8 @@ const ListCard = () => {
     {
       key: "categories",
       label: "Categories",
-      sortable: false,
+      sortable: true,
+      filterable: true,
       render: (item) => (
         <Group gap={4}>
           {item.categories.length > 0 ? (
@@ -188,6 +190,7 @@ const ListCard = () => {
       key: "price",
       label: "Price",
       sortable: true,
+      filterable: true,
       render: (item) => (
         <Text size="sm">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(Number(item.price) || 0)}</Text>
       ),
@@ -196,6 +199,7 @@ const ListCard = () => {
       key: "stock",
       label: "Stock",
       sortable: true,
+      filterable: true,
       render: (item) => (
         <Badge color={item.stock > 5 ? "teal" : item.stock > 0 ? "yellow" : "red"} variant="dot">
           {item.stock} Left

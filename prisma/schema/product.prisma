@@ -1,23 +1,24 @@
 model Category {
     id        String   @id @default(uuid())
     name      String
-    slug      String   @unique
+    slug      String
     note      String?
     isActive  Boolean  @default(true)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    cards CategoriesOnCards[]
+    cards                    CategoriesOnCards[]
+    cardCategoryRoleAccesses CardCategoryRoleAccess[]
 }
 
 model Card {
     id          String   @id @default(uuid())
     name        String
-    slug        String   @unique
+    slug        String
     price       Decimal  @db.Decimal(15, 2)
     stock       Int
     description String?  @db.Text
-    sku         String?  @unique
+    sku         String?
     discountId  String?
     isActive    Boolean  @default(true)
     createdAt   DateTime @default(now())
@@ -89,7 +90,7 @@ model Discount {
 
 model Voucher {
     id          String  @id @default(uuid())
-    code        String  @unique
+    code        String
     name        String
     description String? @db.Text
 

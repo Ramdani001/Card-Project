@@ -86,6 +86,13 @@ const ListTransaction = () => {
 
   const columns: ColumnDef<Transaction>[] = [
     {
+      key: "no",
+      label: "No",
+      sortable: false,
+      width: 60,
+      render: (_, index) => (metadata.page - 1) * metadata.limit + index + 1,
+    },
+    {
       key: "invoice",
       label: "Invoice",
       render: (item) => (

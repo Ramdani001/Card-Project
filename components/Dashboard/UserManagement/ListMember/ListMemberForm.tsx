@@ -29,7 +29,7 @@ export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSucce
       setName(userToEdit.name || "");
       setEmail(userToEdit.email);
       setPhone(userToEdit.phone || "");
-      setRoleId(userToEdit.roleId || null);
+      setRoleId(userToEdit.role?.id || null);
       setIsActive(userToEdit.isActive);
       setPassword("");
     } else {

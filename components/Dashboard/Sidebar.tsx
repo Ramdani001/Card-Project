@@ -13,7 +13,7 @@ const data = [
   { label: "Dashboard", icon: IconLayoutDashboard, id: "Dashboard" },
   { label: "Transactions", icon: IconReceipt2, id: "Transactions" },
   { label: "Collection", icon: IconLibraryPhoto, id: "Collection" },
-  { label: "List Member", icon: IconUsers, id: "ListMember" },
+  { label: "User Management", icon: IconUsers, id: "UserManagement" },
 ];
 
 const Sidebar = ({ onMenuClick, activeMenu, onClose }: SidebarProps) => {

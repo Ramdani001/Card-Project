@@ -1,6 +1,6 @@
 model Transaction {
     id      String @id @default(uuid())
-    invoice String @unique
+    invoice String
     userId  String
 
     subTotal      Decimal           @db.Decimal(15, 2)
