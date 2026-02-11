@@ -17,12 +17,13 @@ import {
   TextInput,
 } from "@mantine/core";
 import { IconShoppingCart, IconTrash } from "@tabler/icons-react";
-import { Dispatch, SetStateAction, memo } from "react";
+import { Dispatch, SetStateAction, memo, useState } from "react";
 
-const getCardName = (item: CartItem) => item.card?.detail?.name || "Unknown Item";
-const getCardStock = (item: CartItem) => Number(item.card?.detail?.stock || 0);
-const getCardType = (item: CartItem) => item.card?.typeCard?.name || "General";
-const getCardImage = (item: CartItem) => item.card.detail?.image?.location || "https://placehold.co/60";
+const getCardName = (item: CartItem) => item.card?.name || "Unknown Item";
+const getCardStock = (item: CartItem) => Number(item.card?.stock || 0);
+const getCardType = (item: CartItem) => item.card?.categories?.[0]?.category?.name || "General";
+const getCardImage = (item: CartItem) => item.card?.images?.[0]?.url || "https://placehold.co/60?text=No+Img";
+const getCardPrice = (item: CartItem) => Number(item.card?.price || 0);
 
 const CartItemRow = memo(
   ({
@@ -32,12 +33,13 @@ const CartItemRow = memo(
     onUpdate,
   }: {
     item: CartItem;
-    processingId: number | null;
-    onRemove: (id: number) => void;
-    onUpdate: (id: number, qty: number) => void;
+    processingId: string | null;
+    onRemove: (id: string) => void;
+    onUpdate: (id: string, qty: number) => void;
   }) => {
     const stock = getCardStock(item);
-    const isProcessing = processingId === item.idCartItem;
+    const price = getCardPrice(item);
+    const isProcessing = processingId === item.id;
 
     return (
       <Paper
@@ -67,7 +69,7 @@ const CartItemRow = memo(
               flexShrink: 0,
             }}
           >
-            <Image src={getCardImage(item)} w="100%" h="100%" fit="contain" alt="Product" />
+            <Image src={getCardImage(item)} w="100%" h="100%" fit="contain" alt={getCardName(item)} />
           </Box>
 
           <Box style={{ flex: 1, minWidth: 0 }}>
@@ -81,7 +83,7 @@ const CartItemRow = memo(
                 </Text>
               </Box>
 
-              <ActionIcon variant="subtle" color="red" size="xs" onClick={() => onRemove(item.idCartItem)} loading={isProcessing}>
+              <ActionIcon variant="subtle" color="red" size="xs" onClick={() => onRemove(item.id)} loading={isProcessing}>
                 <IconTrash size={14} />
               </ActionIcon>
             </Group>
@@ -92,7 +94,7 @@ const CartItemRow = memo(
                   Subtotal:
                 </Text>
                 <Text fw={800} size="md" c="blue.7">
-                  Rp {((item.card.detail?.price || 0) * item.quantity).toLocaleString("id-ID")}
+                  Rp {(price * item.quantity).toLocaleString("id-ID")}
                 </Text>
               </Stack>
 
@@ -101,7 +103,7 @@ const CartItemRow = memo(
                   value={item.quantity}
                   onChange={(val) => {
                     if (val && Number(val) > 0) {
-                      onUpdate(item.idCartItem, Number(val));
+                      onUpdate(item.id, Number(val));
                     }
                   }}
                   min={1}
@@ -137,10 +139,12 @@ interface CartSectionProps {
   loadingCart: boolean;
   cartItems: CartItem[];
   setIsDrawerOpen: Dispatch<SetStateAction<boolean>>;
-  handleRemoveItem: (idCartItem: number) => Promise<void>;
-  handleUpdateQuantity: (idCartItem: number, newQty: number) => Promise<void>;
-  processingId: number | null;
-  handleCheckout: () => Promise<void>;
+
+  handleRemoveItem: (id: string) => Promise<void>;
+  handleUpdateQuantity: (id: string, newQty: number) => Promise<void>;
+  processingId: string | null;
+  handleCheckout: (voucherCode: string) => Promise<void>;
+
   setPaymentMethod: Dispatch<SetStateAction<string | null>>;
   paymentMethod: string | null;
   totalAmount: number;
@@ -165,6 +169,7 @@ export const CartSection = ({
   setPaymentMethod,
   isCheckoutLoading,
 }: CartSectionProps) => {
+  const [voucherCode, setVoucherCode] = useState("");
   return (
     <Drawer
       opened={isDrawerOpen}
@@ -182,12 +187,14 @@ export const CartSection = ({
       size="md"
       overlayProps={{ backgroundOpacity: 0.5, blur: 4 }}
     >
-      <Stack h="calc(100vh - 100px)">
-        <ScrollArea style={{ flex: 1 }} scrollbarSize={6}>
+      <Stack h="calc(100vh - 100px)" justify="space-between">
+        <ScrollArea style={{ flex: 1, height: "100%" }} scrollbarSize={6}>
           {loadingCart ? (
             <Center mt="xl">
               <Box>
-                <Text>Loading cart...</Text>
+                <Text size="sm" c="dimmed">
+                  Loading cart...
+                </Text>
               </Box>
             </Center>
           ) : cartItems.length === 0 ? (
@@ -201,21 +208,16 @@ export const CartSection = ({
               </Button>
             </Stack>
           ) : (
-            cartItems.map((item) => (
-              <CartItemRow
-                key={item.idCartItem}
-                item={item}
-                processingId={processingId}
-                onRemove={handleRemoveItem}
-                onUpdate={handleUpdateQuantity}
-              />
-            ))
+            <Stack gap="sm">
+              {cartItems.map((item) => (
+                <CartItemRow key={item.id} item={item} processingId={processingId} onRemove={handleRemoveItem} onUpdate={handleUpdateQuantity} />
+              ))}
+            </Stack>
           )}
         </ScrollArea>
 
         {cartItems.length > 0 && (
-          <Box>
-            <Divider mb="sm" />
+          <Box pt="md" style={{ borderTop: "1px solid #eee" }}>
             <Group justify="space-between" mb="xs">
               <Text size="sm" c="dimmed">
                 Subtotal
@@ -225,19 +227,38 @@ export const CartSection = ({
               </Text>
             </Group>
 
+            <Divider mb="sm" variant="dashed" />
+
+            <Group align="flex-end" mb="sm">
+              <TextInput
+                label="Voucher Code"
+                placeholder="EX: DISKON10"
+                value={voucherCode}
+                onChange={(e) => setVoucherCode(e.currentTarget.value)}
+                style={{ flex: 1 }}
+                radius="xs"
+              />
+            </Group>
+
             <TextInput
               label="Shipping Address"
-              placeholder="Enter full address"
+              placeholder="Enter full address..."
               radius="xs"
               mb="sm"
               value={address}
               onChange={(e) => setAddress(e.currentTarget.value)}
               required
+              data-autofocus
             />
 
             <Select
               label="Payment Method"
-              data={["TRANSFER", "CREDIT_CARD", "CASH"]}
+              placeholder="Select payment"
+              data={[
+                { value: "TRANSFER", label: "Bank Transfer" },
+                { value: "CREDIT_CARD", label: "Credit Card" },
+                { value: "CASH", label: "Cash on Delivery" },
+              ]}
               value={paymentMethod}
               onChange={setPaymentMethod}
               radius="xs"
@@ -245,7 +266,15 @@ export const CartSection = ({
               allowDeselect={false}
             />
 
-            <Button fullWidth color="blue" radius="xs" size="md" onClick={handleCheckout} loading={isCheckoutLoading}>
+            <Button
+              fullWidth
+              color="blue"
+              radius="xs"
+              size="md"
+              onClick={() => handleCheckout(voucherCode)}
+              loading={isCheckoutLoading}
+              disabled={!address || !paymentMethod}
+            >
               CHECKOUT NOW
             </Button>
           </Box>

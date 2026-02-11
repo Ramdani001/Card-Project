@@ -1,18 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import UserManagement from "@/components/Dashboard/UserManagement";
+import ListTransaction from "@/components/Transaction/ListTransaction";
 import { AppShell, Burger, Drawer, Group, ScrollArea, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import Sidebar from "../component/Sidebar";
-import Dashboard from "../component/Dashboard/Dashboard";
-import Collection from "../component/Collection";
-import Topbar from "../component/Topbar";
-import ListMember from "../component/ListMember/ListMember";
+import { useState } from "react";
+import Collection from "../../../components/Dashboard/Collection";
+import Dashboard from "../../../components/Dashboard/Dashboard/Dashboard";
+import Sidebar from "../../../components/Dashboard/Sidebar";
+import Topbar from "../../../components/Dashboard/Topbar";
 
 const MENU_COMPONENTS: Record<string, React.ReactNode> = {
   Dashboard: <Dashboard />,
+  Transactions: <ListTransaction />,
   Collection: <Collection />,
-  ListMember: <ListMember />,
+  UserManagement: <UserManagement />,
 };
 
 const MainDashboard = () => {

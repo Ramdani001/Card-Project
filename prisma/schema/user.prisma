@@ -1,0 +1,43 @@
+model Role {
+    id        String   @id @default(uuid())
+    name      String
+    isActive  Boolean  @default(true)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    users                    User[]
+    cardCategoryRoleAccesses CardCategoryRoleAccess[]
+}
+
+model CardCategoryRoleAccess {
+    id String @id @default(uuid())
+
+    roleId String
+    role   Role   @relation(fields: [roleId], references: [id])
+
+    categoryId String
+    category   Category @relation(fields: [categoryId], references: [id])
+
+    isActive  Boolean  @default(true)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model User {
+    id        String   @id @default(uuid())
+    email     String
+    password  String
+    name      String?
+    phone     String?
+    avatar    String?
+    roleId    String?
+    isActive  Boolean  @default(true)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    role Role? @relation(fields: [roleId], references: [id], onDelete: SetNull)
+
+    carts         Cart[]
+    transactions  Transaction[]
+    cardHistories CardHistory[]
+}

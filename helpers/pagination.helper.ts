@@ -38,23 +38,14 @@ export const getQueryPaginationOptions = (req: NextRequest) => {
 
   searchParams.forEach((value, key) => {
     if (!reservedParams.includes(key) && value) {
-      if (key === "role") {
-        options.where.role = {
-          name: {
-            contains: value,
-            mode: "insensitive",
-          },
-        };
+      const isNumber = !isNaN(Number(value)) && value.trim() !== "";
+      if (isNumber) {
+        options.where[key] = Number(value);
       } else {
-        const isNumber = !isNaN(Number(value)) && value.trim() !== "";
-        if (isNumber) {
-          options.where[key] = Number(value);
-        } else {
-          options.where[key] = {
-            contains: value,
-            mode: "insensitive",
-          };
-        }
+        options.where[key] = {
+          contains: value,
+          mode: "insensitive",
+        };
       }
     }
   });

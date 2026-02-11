@@ -2,14 +2,14 @@
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
 import { PaginationMetaData } from "@/types/PaginationMetaData";
-import { ActionIcon, Avatar, Badge, Button, Flex, Group, Paper, Text, Title } from "@mantine/core";
+import { ActionIcon, Avatar, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconCheck, IconCreditCard, IconPencil, IconTrash, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { CardData } from "@/types/CardData";
 import { CardForm } from "./CardForm";
 import { notifications } from "@mantine/notifications";
 import { openConfirmModal } from "@mantine/modals";
+import { CardData } from "@/types/CardData";
 
 const ListCard = () => {
   const [cards, setCards] = useState<CardData[]>([]);
@@ -27,8 +27,8 @@ const ListCard = () => {
   const [queryParams, setQueryParams] = useState({
     page: 1,
     limit: 10,
-    sortBy: "name",
-    sortOrder: "asc" as "asc" | "desc",
+    sortBy: "createdAt",
+    sortOrder: "desc" as "asc" | "desc",
     filters: {} as Record<string, string>,
   });
 
@@ -55,6 +55,11 @@ const ListCard = () => {
       }
     } catch (error) {
       console.error("Error fetching cards:", error);
+      notifications.show({
+        title: "Error",
+        message: "Failed to fetch cards data",
+        color: "red",
+      });
     } finally {
       setLoading(false);
     }
@@ -76,7 +81,7 @@ const ListCard = () => {
     }));
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     openConfirmModal({
       title: "Delete Card",
       centered: true,
@@ -135,43 +140,69 @@ const ListCard = () => {
       label: "Image",
       sortable: false,
       width: 80,
-      render: (item) => (
-        <Avatar src={item.detail?.image?.location || null} radius="sm" size="md" color="blue">
-          <IconCreditCard size={20} />
-        </Avatar>
-      ),
+      render: (item) => {
+        const displayImage = item.images.find((img) => img.isPrimary) || item.images[0];
+        return (
+          <Avatar src={displayImage?.url || null} radius="sm" size="md" color="blue">
+            <IconCreditCard size={20} />
+          </Avatar>
+        );
+      },
     },
     {
       key: "name",
       label: "Card Name",
       sortable: true,
-      render: (item) => <Text fw={500}>{item.detail?.name}</Text>,
+      filterable: true,
+      render: (item) => (
+        <Flex direction="column" gap={2}>
+          <Text fw={500}>{item.name}</Text>
+          {item.sku && (
+            <Text size="xs" c="dimmed">
+              SKU: {item.sku}
+            </Text>
+          )}
+        </Flex>
+      ),
     },
     {
-      key: "typeCard",
-      label: "Type",
+      key: "categories",
+      label: "Categories",
       sortable: true,
+      filterable: true,
       render: (item) => (
-        <Badge color="cyan" variant="light">
-          {item.typeCard?.name || "Unknown"}
-        </Badge>
+        <Group gap={4}>
+          {item.categories.length > 0 ? (
+            item.categories.map((c) => (
+              <Badge key={c.category.id} color="cyan" variant="light" size="sm">
+                {c.category.name}
+              </Badge>
+            ))
+          ) : (
+            <Text size="xs" c="dimmed">
+              -
+            </Text>
+          )}
+        </Group>
       ),
     },
     {
       key: "price",
       label: "Price",
       sortable: true,
+      filterable: true,
       render: (item) => (
-        <Text size="sm">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(item.detail?.price || 0)}</Text>
+        <Text size="sm">{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(Number(item.price) || 0)}</Text>
       ),
     },
     {
       key: "stock",
       label: "Stock",
       sortable: true,
+      filterable: true,
       render: (item) => (
-        <Badge color={(item.detail?.stock || 0) > 0 ? "teal" : "red"} variant="dot">
-          {item.detail?.stock || 0} Left
+        <Badge color={item.stock > 5 ? "teal" : item.stock > 0 ? "yellow" : "red"} variant="dot">
+          {item.stock} Left
         </Badge>
       ),
     },
@@ -181,12 +212,17 @@ const ListCard = () => {
       width: 100,
       render: (item) => (
         <Group gap={4} justify="center">
-          <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenEdit(item)}>
-            <IconPencil size={16} />
-          </ActionIcon>
-          <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(item.idCard)}>
-            <IconTrash size={16} />
-          </ActionIcon>
+          <Tooltip label="Edit">
+            <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenEdit(item)}>
+              <IconPencil size={16} />
+            </ActionIcon>
+          </Tooltip>
+
+          <Tooltip label="Delete">
+            <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(item.id)}>
+              <IconTrash size={16} />
+            </ActionIcon>
+          </Tooltip>
         </Group>
       ),
     },
@@ -195,9 +231,9 @@ const ListCard = () => {
   return (
     <Paper shadow="xs" p="md" radius="md">
       <Flex justify="space-between" align="center" mb="lg">
-        <Title order={3}>List Cards</Title>
+        <Title order={3}>Product Cards</Title>
         <Button leftSection={<IconCreditCard size={18} />} onClick={handleOpenAdd}>
-          Add Card
+          Add Product
         </Button>
       </Flex>
 

@@ -1,28 +1,17 @@
-import { getAuthUser } from "@/helpers/auth.server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import prisma from "@/lib/prisma";
+import { authOptions } from "@/lib/auth";
+import { addToCart, clearCart, getCartByUserId } from "@/services/cart.service";
+import { getServerSession } from "next-auth";
+import { NextRequest } from "next/server";
 
-export async function GET() {
+export const GET = async () => {
   try {
-    const user = await getAuthUser();
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return sendResponse({ success: false, message: "Unauthorized", status: 401 });
+    }
 
-    const cart = await prisma.cart.findUnique({
-      where: { idUsr: user.id },
-      include: {
-        items: {
-          include: {
-            card: { include: { detail: { include: { image: true } }, typeCard: true } },
-          },
-        },
-      },
-    });
-
-    if (!cart)
-      return sendResponse({
-        success: true,
-        message: "Cart fetched successfully",
-        data: { items: [] },
-      });
+    const cart = await getCartByUserId(session.user.id);
 
     return sendResponse({
       success: true,
@@ -32,65 +21,53 @@ export async function GET() {
   } catch (err) {
     return handleApiError(err);
   }
-}
+};
 
-export async function POST(request: Request) {
+export const POST = async (req: NextRequest) => {
   try {
-    const user = await getAuthUser();
-
-    const body = await request.json();
-    const { idCard, quantity } = body;
-    const cardIdNum = Number(idCard);
-
-    if (!quantity || quantity < 1) {
-      throw new Error("Quantity must be at least 1");
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return sendResponse({ success: false, message: "Unauthorized", status: 401 });
     }
 
-    const productExists = await prisma.card.findUnique({
-      where: { idCard: cardIdNum },
-      select: {
-        detail: true,
-      },
+    const body = await req.json();
+    const { cardId, quantity } = body;
+
+    if (!cardId || !quantity) {
+      return sendResponse({ success: false, message: "Card ID and Quantity are required", status: 400 });
+    }
+
+    const result = await addToCart({
+      userId: session.user.id,
+      cardId: cardId,
+      quantity: Number(quantity),
     });
-
-    if (!productExists) {
-      throw new Error("Card not found");
-    }
-
-    let cart = await prisma.cart.findUnique({ where: { idUsr: user.id } });
-    if (!cart) {
-      cart = await prisma.cart.create({ data: { idUsr: user.id } });
-    }
-
-    const existingItem = await prisma.cartItem.findUnique({
-      where: {
-        idCart_idCard: {
-          idCart: cart.idCart,
-          idCard: cardIdNum,
-        },
-      },
-    });
-
-    if (existingItem) {
-      await prisma.cartItem.update({
-        where: { idCartItem: existingItem.idCartItem },
-        data: { quantity: existingItem.quantity + quantity },
-      });
-    } else {
-      await prisma.cartItem.create({
-        data: {
-          idCart: cart.idCart,
-          idCard: cardIdNum,
-          quantity: quantity,
-        },
-      });
-    }
 
     return sendResponse({
       success: true,
-      message: "Successfully added to cart",
+      message: "Item added to cart",
+      data: result,
+      status: 201,
     });
   } catch (err) {
     return handleApiError(err);
   }
-}
+};
+
+export const DELETE = async () => {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return sendResponse({ success: false, message: "Unauthorized", status: 401 });
+    }
+
+    await clearCart(session.user.id);
+
+    return sendResponse({
+      success: true,
+      message: "Cart cleared successfully",
+    });
+  } catch (err) {
+    return handleApiError(err);
+  }
+};

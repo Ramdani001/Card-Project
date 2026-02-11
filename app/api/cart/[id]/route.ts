@@ -1,62 +1,59 @@
-import prisma from "@/lib/prisma";
-import { sendResponse, handleApiError } from "@/helpers/response.helper";
+import { NextRequest } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { handleApiError, sendResponse } from "@/helpers/response.helper";
+import { removeCartItem, updateCartItem } from "@/services/cart.service";
 
-export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+type RouteParams = {
+  params: Promise<{ id: string }>;
+};
+
+export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
   try {
-    const { id } = await params;
-    const idCartItem = Number(id);
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return sendResponse({ success: false, message: "Unauthorized", status: 401 });
+    }
 
-    const body = await request.json();
+    const { id } = await params;
+    const body = await req.json();
     const { quantity } = body;
 
-    if (!quantity || quantity < 1) {
-      throw new Error("Quantity must be at least 1");
+    if (quantity === undefined) {
+      return sendResponse({ success: false, message: "Quantity is required", status: 400 });
     }
 
-    const currentItem = await prisma.cartItem.findUnique({
-      where: { idCartItem: idCartItem },
-      include: {
-        card: {
-          include: { detail: true },
-        },
-      },
-    });
-
-    if (!currentItem) {
-      throw new Error("Item not found");
-    }
-
-    const updatedItem = await prisma.cartItem.update({
-      where: { idCartItem: idCartItem },
-      data: {
-        quantity: quantity,
-      },
+    const updatedItem = await updateCartItem({
+      itemId: id,
+      quantity: Number(quantity),
     });
 
     return sendResponse({
       success: true,
-      message: "Cart updated successfully",
+      message: "Cart item updated",
       data: updatedItem,
     });
   } catch (err) {
     return handleApiError(err);
   }
-}
+};
 
-export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+export const DELETE = async (req: NextRequest, { params }: RouteParams) => {
   try {
-    const { id } = await params;
-    const idCartItem = Number(id);
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return sendResponse({ success: false, message: "Unauthorized", status: 401 });
+    }
 
-    await prisma.cartItem.delete({
-      where: { idCartItem },
-    });
+    const { id } = await params;
+
+    await removeCartItem(id);
 
     return sendResponse({
       success: true,
-      message: "Item removed successfully",
+      message: "Item removed from cart",
     });
   } catch (err) {
     return handleApiError(err);
   }
-}
+};

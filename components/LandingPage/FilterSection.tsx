@@ -1,21 +1,30 @@
 import { Checkbox, Divider, Group, Paper, Stack, Text, Title } from "@mantine/core";
 import { Dispatch, SetStateAction } from "react";
 
-interface FilterSectionProps {
-  selectedTypes: string[];
-  setSelectedTypes: Dispatch<SetStateAction<string[]>>;
-  availableTypes: string[];
+export interface FilterCategory {
+  id: string;
+  name: string;
 }
 
-export const FilterSection = ({ selectedTypes, setSelectedTypes, availableTypes }: FilterSectionProps) => {
+interface FilterSectionProps {
+  categories: FilterCategory[];
+  selectedCategoryIds: string[];
+  setSelectedCategoryIds: Dispatch<SetStateAction<string[]>>;
+}
+
+export const FilterSection = ({ categories, selectedCategoryIds, setSelectedCategoryIds }: FilterSectionProps) => {
+  const handleToggle = (id: string) => {
+    setSelectedCategoryIds((prev) => (prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]));
+  };
+
   return (
     <Paper p="md" radius="xs" bg="white" withBorder style={{ borderColor: "#dee2e6" }}>
       <Group justify="space-between" mb="md">
         <Title order={6} tt="uppercase" style={{ letterSpacing: 0.5 }}>
           Filter Products
         </Title>
-        {selectedTypes.length > 0 && (
-          <Text size="xs" c="red" style={{ cursor: "pointer" }} onClick={() => setSelectedTypes([])}>
+        {selectedCategoryIds.length > 0 && (
+          <Text size="xs" c="red" style={{ cursor: "pointer" }} onClick={() => setSelectedCategoryIds([])}>
             Clear All
           </Text>
         )}
@@ -23,23 +32,25 @@ export const FilterSection = ({ selectedTypes, setSelectedTypes, availableTypes 
 
       <Stack gap="xs">
         <Text size="sm" fw={700} mb={4}>
-          Product Type
+          Categories
         </Text>
-        {availableTypes.length > 0 ? (
-          availableTypes.map((type) => (
+
+        {categories.length > 0 ? (
+          categories.map((cat) => (
             <Checkbox
-              key={type}
-              label={type}
-              checked={selectedTypes.includes(type)}
-              onChange={() => {
-                setSelectedTypes((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]));
+              key={cat.id}
+              label={cat.name}
+              checked={selectedCategoryIds.includes(cat.id)}
+              onChange={() => handleToggle(cat.id)}
+              styles={{
+                label: { fontSize: 14, color: "#495057", cursor: "pointer" },
+                input: { cursor: "pointer" },
               }}
-              styles={{ label: { fontSize: 14, color: "#495057", cursor: "pointer" }, input: { cursor: "pointer" } }}
             />
           ))
         ) : (
           <Text size="xs" c="dimmed">
-            No filters available
+            No categories available
           </Text>
         )}
       </Stack>

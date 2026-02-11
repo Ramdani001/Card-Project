@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title } from "@mantine/core";
+import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconPencil, IconPlus, IconTrash, IconPercentage, IconX, IconCheck } from "@tabler/icons-react";
+import { IconPencil, IconPlus, IconTrash, IconPercentage, IconCoin, IconCalendar, IconCheck, IconX } from "@tabler/icons-react";
 import { TableComponent, ColumnDef } from "@/components/layout/TableComponent";
 import { PaginationMetaData } from "@/types/PaginationMetaData";
-import { Discount } from "@/types/Discount";
 import { DiscountForm } from "./DiscountForm";
 import { notifications } from "@mantine/notifications";
 import { openConfirmModal } from "@mantine/modals";
+import { Discount } from "@/types/Discount";
 
 const ListDiscount = () => {
   const [discounts, setDiscounts] = useState<Discount[]>([]);
@@ -27,8 +27,8 @@ const ListDiscount = () => {
   const [queryParams, setQueryParams] = useState({
     page: 1,
     limit: 10,
-    sortBy: "discount",
-    sortOrder: "asc" as "asc" | "desc",
+    sortBy: "createdAt",
+    sortOrder: "desc" as "asc" | "desc",
     filters: {} as Record<string, string>,
   });
 
@@ -55,6 +55,7 @@ const ListDiscount = () => {
       }
     } catch (error) {
       console.error("Error fetching discounts:", error);
+      notifications.show({ title: "Error", message: "Failed to fetch data", color: "red" });
     } finally {
       setLoading(false);
     }
@@ -76,12 +77,12 @@ const ListDiscount = () => {
     }));
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     openConfirmModal({
       title: "Delete Discount",
       centered: true,
-      children: <Text size="sm">Are you sure you want to delete this discount? This action cannot be undone.</Text>,
-      labels: { confirm: "Delete Discount", cancel: "Cancel" },
+      children: <Text size="sm">Are you sure you want to delete this discount?</Text>,
+      labels: { confirm: "Delete", cancel: "Cancel" },
       confirmProps: { color: "red" },
       onConfirm: async () => {
         try {
@@ -97,21 +98,11 @@ const ListDiscount = () => {
             });
             fetchDiscounts();
           } else {
-            notifications.show({
-              title: "Error",
-              message: json.message,
-              color: "red",
-              icon: <IconX size={16} />,
-            });
+            notifications.show({ title: "Error", message: json.message, color: "red", icon: <IconX size={16} /> });
           }
         } catch (error) {
           console.error("Delete error:", error);
-          notifications.show({
-            title: "Error",
-            message: "Network error occurred",
-            color: "red",
-            icon: <IconX size={16} />,
-          });
+          notifications.show({ title: "Error", message: "Network error", color: "red", icon: <IconX size={16} /> });
         }
       },
     });
@@ -127,6 +118,11 @@ const ListDiscount = () => {
     open();
   };
 
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return "-";
+    return new Date(dateStr).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
+  };
+
   const columns: ColumnDef<Discount>[] = [
     {
       key: "no",
@@ -136,30 +132,37 @@ const ListDiscount = () => {
       render: (_, index) => (metadata.page - 1) * metadata.limit + index + 1,
     },
     {
-      key: "discount",
-      label: "Value",
+      key: "name",
+      label: "Name",
+      sortable: true,
+      render: (item) => <Text fw={500}>{item.name}</Text>,
+    },
+    {
+      key: "value",
+      label: "Amount",
       sortable: true,
       render: (item) => (
-        <Badge size="lg" color="orange" variant="light" leftSection={<IconPercentage size={12} />}>
-          {item.discount}%
+        <Badge
+          size="lg"
+          variant="light"
+          color={item.type === "PERCENTAGE" ? "orange" : "green"}
+          leftSection={item.type === "PERCENTAGE" ? <IconPercentage size={14} /> : <IconCoin size={14} />}
+        >
+          {item.type === "PERCENTAGE" ? `${Number(item.value)}%` : `Rp ${Number(item.value).toLocaleString("id-ID")}`}
         </Badge>
       ),
     },
     {
-      key: "note",
-      label: "Note",
-      sortable: true,
-      filterable: true,
-      render: (item) => <Text size="sm">{item.note || "-"}</Text>,
-    },
-    {
-      key: "createdAt",
-      label: "Created At",
+      key: "startDate",
+      label: "Active Period",
       sortable: true,
       render: (item) => (
-        <Text size="xs" c="dimmed">
-          {new Date(item.createdAt).toLocaleDateString("id-ID")}
-        </Text>
+        <Group gap={4}>
+          <IconCalendar size={14} style={{ opacity: 0.5 }} />
+          <Text size="xs">
+            {formatDate(item.startDate)} - {formatDate(item.endDate)}
+          </Text>
+        </Group>
       ),
     },
     {
@@ -168,12 +171,16 @@ const ListDiscount = () => {
       width: 100,
       render: (item) => (
         <Group gap={4} justify="center">
-          <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenEdit(item)}>
-            <IconPencil size={16} />
-          </ActionIcon>
-          <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(item.idDiscount)}>
-            <IconTrash size={16} />
-          </ActionIcon>
+          <Tooltip label="Edit">
+            <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenEdit(item)}>
+              <IconPencil size={16} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="Delete">
+            <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(item.id)}>
+              <IconTrash size={16} />
+            </ActionIcon>
+          </Tooltip>
         </Group>
       ),
     },

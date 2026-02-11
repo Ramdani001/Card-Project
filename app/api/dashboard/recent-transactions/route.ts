@@ -1,32 +1,11 @@
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import prisma from "@/lib/prisma";
+import { getRecentTransactions } from "@/services/dashboard.service";
 
-export async function GET() {
+export const GET = async () => {
   try {
-    const recentTrx = await prisma.transaction.findMany({
-      take: 5,
-      orderBy: { createdAt: "desc" },
-      include: {
-        user: {
-          select: { email: true },
-        },
-      },
-    });
-
-    const formatted = recentTrx.map((trx) => ({
-      id: trx.idTrx,
-      user: trx.user.email,
-      total: trx.totalAmount,
-      status: trx.status,
-      date: trx.createdAt,
-    }));
-
-    return sendResponse({
-      success: true,
-      message: "Success",
-      data: formatted,
-    });
+    const data = await getRecentTransactions();
+    return sendResponse({ success: true, message: "Recent transactions fetched", data });
   } catch (err) {
     return handleApiError(err);
   }
-}
+};

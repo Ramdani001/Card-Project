@@ -1,32 +1,11 @@
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import prisma from "@/lib/prisma";
+import { getCategoryStats } from "@/services/dashboard.service";
 
-export async function GET() {
+export const GET = async () => {
   try {
-    const result = await prisma.$queryRaw`
-      SELECT 
-        tc.name as category,
-        COUNT(ti."idTrxItem") as count,
-        SUM(ti.subtotal) as total_revenue
-      FROM "TransactionItem" ti
-      JOIN "Transaction" t ON ti."idTrx" = t."idTrx"
-      JOIN "Card" c ON ti."idCard" = c."idCard"
-      JOIN "TypeCard" tc ON c."idTypeCard" = tc."idTypeCard"
-      WHERE t.status IN ('PAID', 'SENT', 'COMPLETED')
-      GROUP BY tc.name
-    `;
-
-    const formatted = (result as any[]).map((item) => ({
-      name: item.category,
-      value: Number(item.total_revenue),
-    }));
-
-    return sendResponse({
-      success: true,
-      message: "Success",
-      data: formatted,
-    });
+    const data = await getCategoryStats();
+    return sendResponse({ success: true, message: "Category stats fetched", data });
   } catch (err) {
     return handleApiError(err);
   }
-}
+};

@@ -1,76 +1,73 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Button, Group, Modal, NumberInput, Select, Stack, TextInput } from "@mantine/core";
-import { notifications } from "@mantine/notifications";
-import { IconX, IconCheck } from "@tabler/icons-react";
 import { Menu } from "@/types/Menu";
+import { Button, Flex, Modal, NumberInput, Select, TextInput } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { IconCheck, IconX } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 
 interface MenuFormProps {
   opened: boolean;
   onClose: () => void;
-  allMenus: Menu[];
   menuToEdit: Menu | null;
+  allMenus: Menu[];
   onSuccess: () => void;
 }
 
-export const MenuForm = ({ opened, onClose, allMenus, menuToEdit, onSuccess }: MenuFormProps) => {
+export const MenuForm = ({ opened, onClose, menuToEdit, allMenus, onSuccess }: MenuFormProps) => {
   const [loading, setLoading] = useState(false);
 
-  const [form, setForm] = useState({
-    code: "",
-    label: "",
-    url: "",
-    icon: "",
-    order: 0,
-    parentCode: null as string | null,
-  });
+  const [label, setLabel] = useState("");
+  const [url, setUrl] = useState("");
+  const [icon, setIcon] = useState("");
+  const [order, setOrder] = useState<number | "">("");
+  const [parentId, setParentId] = useState<string | null>(null);
 
   useEffect(() => {
     if (menuToEdit) {
-      setForm({
-        code: menuToEdit.code,
-        label: menuToEdit.label,
-        url: menuToEdit.url || "",
-        icon: menuToEdit.icon || "",
-        order: menuToEdit.order || 0,
-        parentCode: menuToEdit.parentCode || null,
-      });
+      setLabel(menuToEdit.label);
+      setUrl(menuToEdit.url || "");
+      setIcon(menuToEdit.icon || "");
+      setOrder(menuToEdit.order);
+      setParentId(menuToEdit.parentId || null);
     } else {
-      setForm({
-        code: "",
-        label: "",
-        url: "",
-        icon: "",
-        order: 0,
-        parentCode: null,
-      });
+      setLabel("");
+      setUrl("");
+      setIcon("");
+      setOrder("");
+      setParentId(null);
     }
   }, [menuToEdit, opened]);
 
+  const parentOptions = allMenus
+    .filter((m) => m.id !== menuToEdit?.id)
+    .map((m) => ({
+      value: m.id,
+      label: `${m.label} (Order: ${m.order})`,
+    }));
+
   const handleSubmit = async () => {
-    if (!form.code) return notifications.show({ title: "Error", message: "Code is required", color: "red", icon: <IconX size={16} /> });
-    if (!form.label) return notifications.show({ title: "Error", message: "Label is required", color: "red", icon: <IconX size={16} /> });
+    if (!label) return notifications.show({ message: "Label is required", color: "red" });
+    if (order === "" || order === undefined) return notifications.show({ message: "Order is required", color: "red" });
 
     setLoading(true);
     try {
-      const isEditing = !!menuToEdit;
-      const url = isEditing ? `/api/menus/${menuToEdit.idMenu}` : "/api/menus";
-      const method = isEditing ? "PATCH" : "POST";
-
-      const bodyData = {
-        code: form.code,
-        label: form.label,
-        url: form.url.trim() || null,
-        icon: form.icon.trim() || null,
-        order: form.order,
-        parentCode: form.parentCode,
+      const payload = {
+        label,
+        url: url || null,
+        icon: icon || null,
+        order: Number(order),
+        parentId: parentId || null,
       };
 
-      const res = await fetch(url, {
+      const isEditMode = !!menuToEdit;
+      const apiUrl = isEditMode ? `/api/menus/${menuToEdit.id}` : "/api/menus";
+      const method = isEditMode ? "PATCH" : "POST";
+
+      const res = await fetch(apiUrl, {
         method: method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyData),
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();
@@ -80,94 +77,75 @@ export const MenuForm = ({ opened, onClose, allMenus, menuToEdit, onSuccess }: M
         onClose();
         onSuccess();
       } else {
-        notifications.show({ title: "Error", message: json.message || "Something went wrong", color: "red", icon: <IconX size={16} /> });
+        notifications.show({ title: "Error", message: json.message, color: "red", icon: <IconX size={16} /> });
       }
     } catch (error) {
-      console.error("Submit error:", error);
-      notifications.show({ title: "Error", message: "Unexpected error", color: "red", icon: <IconX size={16} /> });
+      console.error(error);
+      notifications.show({ title: "Error", message: "Network error", color: "red" });
     } finally {
       setLoading(false);
     }
   };
 
-  const parentOptions = allMenus
-    .filter((m) => m.idMenu !== menuToEdit?.idMenu)
-    .map((m) => ({
-      value: m.code,
-      label: `${m.label} (${m.code})`,
-    }));
-
   return (
-    <Modal opened={opened} onClose={onClose} title={menuToEdit ? "Edit Menu" : "Add New Menu"} centered size="lg">
-      <Stack gap="md">
-        <Group grow align="flex-start">
-          <TextInput
-            label="Menu Code"
-            description="Unique ID (e.g. DASHBOARD)"
-            placeholder="DASHBOARD"
-            value={form.code}
-            onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
-            withAsterisk
-          />
-          <TextInput
-            label="Label"
-            description="Display Name"
-            placeholder="Dashboard"
-            value={form.label}
-            onChange={(e) => setForm({ ...form, label: e.target.value })}
-            withAsterisk
-          />
-        </Group>
+    <Modal opened={opened} onClose={onClose} title={menuToEdit ? "Edit Menu" : "Add New Menu"} centered>
+      <Flex direction="column" gap="md">
+        <TextInput
+          label="Label Name"
+          placeholder="e.g. Dashboard"
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          withAsterisk
+          data-autofocus
+        />
 
-        <Group grow align="flex-start">
-          <TextInput
-            label="URL Path"
-            description="Route path (e.g. /dashboard/users)"
-            placeholder="/dashboard/..."
-            value={form.url}
-            onChange={(e) => setForm({ ...form, url: e.target.value })}
-          />
+        <TextInput
+          label="URL Path"
+          placeholder="e.g. /dashboard"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          description="Leave empty if this is a parent menu without link"
+        />
+
+        <Flex gap="md">
           <TextInput
             label="Icon Name"
-            description="Tabler Icon name (e.g. IconHome)"
-            placeholder="IconHome"
-            value={form.icon}
-            onChange={(e) => setForm({ ...form, icon: e.target.value })}
+            placeholder="e.g. IconHome"
+            value={icon}
+            onChange={(e) => setIcon(e.target.value)}
+            style={{ flex: 1 }}
+            description="Tabler Icon name"
           />
-        </Group>
-
-        <Group grow align="flex-start">
           <NumberInput
-            label="Order Sequence"
-            description="Lower number appears first"
+            label="Order"
             placeholder="0"
+            value={order}
+            onChange={(val) => setOrder(val === "" ? "" : Number(val))}
+            style={{ width: 100 }}
+            withAsterisk
             min={0}
-            value={form.order}
-            onChange={(val) => setForm({ ...form, order: Number(val) })}
           />
+        </Flex>
 
-          <Select
-            label="Parent Menu"
-            description="Leave empty for Root Menu"
-            placeholder="Select Parent"
-            data={parentOptions}
-            value={form.parentCode}
-            onChange={(val) => setForm({ ...form, parentCode: val })}
-            searchable
-            clearable
-            nothingFoundMessage="No menu found"
-          />
-        </Group>
+        <Select
+          label="Parent Menu (Optional)"
+          placeholder="Select Parent or Leave as Root"
+          data={parentOptions}
+          value={parentId}
+          onChange={setParentId}
+          clearable
+          searchable
+        />
 
-        <Group justify="flex-end" mt="md">
+        <Flex justify="flex-end" gap="sm" mt="lg">
           <Button variant="default" onClick={onClose} disabled={loading}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} loading={loading}>
-            {menuToEdit ? "Save Changes" : "Create Menu"}
+            {menuToEdit ? "Update" : "Create"}
           </Button>
-        </Group>
-      </Stack>
+        </Flex>
+      </Flex>
     </Modal>
   );
 };

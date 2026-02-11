@@ -1,20 +1,20 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { TextInput, PasswordInput, Button, Paper, Title, Text, Container, Alert, Stack, Center, Anchor } from "@mantine/core";
+import { Anchor, Button, Center, Container, Paper, PasswordInput, Stack, Text, TextInput, Title } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import { IconAlertCircle, IconCheck } from "@tabler/icons-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
     email: "",
     password: "",
     confirmPassword: "",
+    name: "",
   });
 
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -24,45 +24,64 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setSuccess("");
     setLoading(true);
 
     if (form.password !== form.confirmPassword) {
-      setError("Password dan Konfirmasi Password tidak sama!");
+      notifications.show({
+        title: "Validasi Gagal",
+        message: "Password dan Konfirmasi Password tidak cocok",
+        color: "red",
+        icon: <IconAlertCircle size={16} />,
+      });
       setLoading(false);
       return;
     }
 
     if (form.password.length < 6) {
-      setError("Password minimal 6 karakter");
+      notifications.show({
+        title: "Validasi Gagal",
+        message: "Password minimal 6 karakter",
+        color: "red",
+        icon: <IconAlertCircle size={16} />,
+      });
       setLoading(false);
       return;
     }
 
     try {
-      const res = await fetch("/api/register", {
+      const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: form.email,
           password: form.password,
+          name: form.name,
         }),
       });
 
       const json = await res.json();
 
-      if (!res.ok) {
+      if (!json.success) {
         throw new Error(json.message || "Gagal melakukan registrasi");
       }
 
-      setSuccess("Registrasi berhasil! Mengalihkan ke halaman login...");
+      notifications.show({
+        title: "Registrasi Berhasil",
+        message: "Akun Anda berhasil dibuat. Silakan login.",
+        color: "teal",
+        icon: <IconCheck size={16} />,
+      });
 
       setTimeout(() => {
         router.push("/login");
-      }, 2000);
+      }, 1500);
     } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan pada server.");
+      notifications.show({
+        title: "Registrasi Gagal",
+        message: err.message || "Terjadi kesalahan pada server.",
+        color: "red",
+        icon: <IconAlertCircle size={16} />,
+      });
     } finally {
       setLoading(false);
     }
@@ -79,20 +98,17 @@ export default function RegisterPage() {
         </Text>
 
         <Paper withBorder shadow="md" p={30} mt={30} radius="md">
-          {error && (
-            <Alert icon={<IconAlertCircle size="1rem" />} title="Gagal" color="red" mb="md" radius="md">
-              {error}
-            </Alert>
-          )}
-
-          {success && (
-            <Alert icon={<IconCheck size="1rem" />} title="Berhasil" color="teal" mb="md" radius="md">
-              {success}
-            </Alert>
-          )}
-
           <form onSubmit={handleSubmit}>
             <Stack>
+              <TextInput
+                label="Nama Lengkap"
+                placeholder="John Doe"
+                required
+                value={form.name}
+                onChange={(e) => handleChange("name", e.currentTarget.value)}
+                radius="md"
+              />
+
               <TextInput
                 label="Email"
                 placeholder="user@mail.com"

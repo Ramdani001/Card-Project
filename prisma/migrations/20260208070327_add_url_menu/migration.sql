@@ -1,4 +1,0 @@
--- AlterTable
-ALTER TABLE "Menu" ADD COLUMN     "icon" TEXT,
-ADD COLUMN     "order" INTEGER NOT NULL DEFAULT 0,
-ADD COLUMN     "url" TEXT;

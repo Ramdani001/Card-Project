@@ -1,8 +1,10 @@
 import { CardData } from "./CardData";
 
 export interface CartItem {
-  idCartItem: number;
-  idCard: number;
+  id: string;
+  cartId: string;
+  cardId: string;
   quantity: number;
+  createdAt: string;
   card: CardData;
 }
