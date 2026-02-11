@@ -20,7 +20,7 @@ export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen }:
 
   return (
     <>
-      <Box bg="#212529" c="gray.4" py={8} style={{ fontSize: 12 }}>
+      {/* <Box bg="#212529" c="gray.4" py={8} style={{ fontSize: 12 }}>
         <Container size="xl">
           <Group justify="space-between">
             <Text size="xs">Indonesia&apos;s Premier TCG Store | 100% Authentic Cards</Text>
@@ -35,7 +35,7 @@ export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen }:
             </Group>
           </Group>
         </Container>
-      </Box>
+      </Box> */}
 
       <Box
         component="header"
@@ -47,12 +47,12 @@ export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen }:
           <Group justify="space-between">
             <Group>
               <Burger opened={opened} onClick={toggle} hiddenFrom="md" size="sm" />
-              <Title order={3} style={{ fontFamily: "Impact, sans-serif", letterSpacing: 1, color: "#212529" }}>
-                DEV
-                <Text span c="blue" inherit>
-                  CARD
-                </Text>
-              </Title>
+                <Title order={3} style={{ fontFamily: "Impact, sans-serif", letterSpacing: 1, color: "#212529" }}>
+                  DEV
+                  <Text span c="blue" inherit>
+                    CARD
+                  </Text>
+                </Title>
             </Group>
 
             <Box w={500} visibleFrom="md">
