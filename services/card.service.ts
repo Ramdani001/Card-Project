@@ -1,7 +1,6 @@
 import { deleteFile, saveFile } from "@/helpers/file.helper";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
-import { unlink } from "fs/promises";
 
 interface CreateCardParams {
   name: string;
@@ -12,6 +11,7 @@ interface CreateCardParams {
   description?: string;
   sku?: string;
   file: File;
+  userId: string;
 }
 
 interface UpdateCardParams {
@@ -24,6 +24,7 @@ interface UpdateCardParams {
   description?: string;
   sku?: string;
   file?: File | null;
+  userId: string;
 }
 
 const generateSlug = (name: string) => {
@@ -82,14 +83,16 @@ export const createCard = async (params: CreateCardParams) => {
     if (!disc) throw new Error("Invalid Discount ID");
   }
 
-  let uploadedFile = null;
+  let uploadedFileUrl: string | null = null;
 
   try {
-    uploadedFile = await saveFile(file);
+    const uploadResult = await saveFile(file);
+    uploadedFileUrl = uploadResult.relativePath;
+
     const slug = generateSlug(name);
 
-    return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      return await tx.card.create({
+    const newCard = await prisma.$transaction(async (tx) => {
+      const card = await tx.card.create({
         data: {
           name,
           slug,
@@ -103,7 +106,7 @@ export const createCard = async (params: CreateCardParams) => {
           },
           images: {
             create: {
-              url: uploadedFile!.relativePath,
+              url: uploadedFileUrl!,
               isPrimary: true,
             },
           },
@@ -113,10 +116,14 @@ export const createCard = async (params: CreateCardParams) => {
           categories: true,
         },
       });
+
+      return card;
     });
+
+    return newCard;
   } catch (error) {
-    if (uploadedFile) {
-      await unlink(uploadedFile.absolutePath).catch(() => {});
+    if (uploadedFileUrl) {
+      await deleteFile(uploadedFileUrl).catch((err) => console.error("Gagal cleanup file Supabase setelah error DB:", err));
     }
     throw error;
   }
@@ -132,13 +139,15 @@ export const updateCard = async (params: UpdateCardParams) => {
 
   if (!existingCard) throw new Error("Card not found");
 
-  let newUploadedFile = null;
+  let newUploadedUrl: string | null = null;
+
   if (file && file.size > 0) {
-    newUploadedFile = await saveFile(file);
+    const uploadResult = await saveFile(file);
+    newUploadedUrl = uploadResult.relativePath;
   }
 
   try {
-    const updatedCard = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    const updatedCard = await prisma.$transaction(async (tx) => {
       await tx.cardHistory.create({
         data: {
           cardId: existingCard.id,
@@ -149,7 +158,7 @@ export const updateCard = async (params: UpdateCardParams) => {
           sku: existingCard.sku,
           discountId: existingCard.discountId,
           changeType: "UPDATE",
-          changedBy: "SYSTEM",
+          changedBy: params.userId,
         },
       });
 
@@ -179,11 +188,12 @@ export const updateCard = async (params: UpdateCardParams) => {
         }
       }
 
-      if (newUploadedFile) {
+      if (newUploadedUrl) {
         await tx.imageCard.deleteMany({ where: { cardId: id } });
+
         await tx.imageCard.create({
           data: {
-            url: newUploadedFile.relativePath,
+            url: newUploadedUrl,
             cardId: id,
             isPrimary: true,
           },
@@ -200,31 +210,22 @@ export const updateCard = async (params: UpdateCardParams) => {
       });
     });
 
-    if (newUploadedFile && existingCard.images.length > 0) {
+    if (newUploadedUrl && existingCard.images.length > 0) {
       for (const img of existingCard.images) {
-        await deleteFile(img.url);
+        await deleteFile(img.url).catch(console.error);
       }
     }
 
     return updatedCard;
   } catch (error) {
-    if (newUploadedFile) {
-      await unlink(newUploadedFile.absolutePath).catch(() => {});
+    if (newUploadedUrl) {
+      await deleteFile(newUploadedUrl).catch(console.error);
     }
     throw error;
   }
 };
 
 export const deleteCard = async (id: string) => {
-  const card = await prisma.card.findUnique({ where: { id } });
-  if (!card) throw new Error("Card not found");
-
-  return await prisma.card.delete({
-    where: { id },
-  });
-};
-
-export const forceDeleteCard = async (id: string) => {
   const card = await prisma.card.findUnique({
     where: { id },
     include: { images: true },
@@ -232,12 +233,19 @@ export const forceDeleteCard = async (id: string) => {
 
   if (!card) throw new Error("Card not found");
 
-  await prisma.card.delete({ where: { id } });
+  const deleted = await prisma.card.delete({
+    where: { id },
+  });
 
   if (card.images.length > 0) {
     for (const img of card.images) {
-      await deleteFile(img.url);
+      await deleteFile(img.url).catch(console.error);
     }
   }
-  return true;
+
+  return deleted;
+};
+
+export const forceDeleteCard = async (id: string) => {
+  return await deleteCard(id);
 };

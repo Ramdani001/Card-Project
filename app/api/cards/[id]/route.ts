@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import { getCardById, updateCard, deleteCard } from "@/services/card.service";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -27,6 +29,11 @@ export const GET = async (_req: NextRequest, { params }: RouteParams) => {
 
 export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return sendResponse({ success: false, message: "Unauthorized", status: 401 });
+    }
+
     const { id } = await params;
     const formData = await req.formData();
 
@@ -82,6 +89,7 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
       description,
       sku,
       file,
+      userId: session.user.id,
     });
 
     return sendResponse({
