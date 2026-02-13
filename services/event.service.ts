@@ -58,8 +58,7 @@ export const createEvent = async (params: CreateEventParams) => {
 
   const existingSlug = await prisma.event.findUnique({ where: { slug } });
   if (existingSlug) throw new Error("Event title already exists (Slug conflict)");
-
-  const uploadedFiles: { relativePath: string; absolutePath: string }[] = [];
+  const uploadedFiles: any[] = [];
 
   try {
     if (files && files.length > 0) {
@@ -69,7 +68,7 @@ export const createEvent = async (params: CreateEventParams) => {
       }
     }
 
-    return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    return await prisma.$transaction(async (tx) => {
       return await tx.event.create({
         data: {
           title,
@@ -79,7 +78,7 @@ export const createEvent = async (params: CreateEventParams) => {
           endDate,
           images: {
             create: uploadedFiles.map((f) => ({
-              url: f.relativePath,
+              ...f,
             })),
           },
         },
@@ -88,7 +87,7 @@ export const createEvent = async (params: CreateEventParams) => {
     });
   } catch (error) {
     for (const f of uploadedFiles) {
-      await deleteFile(f.relativePath);
+      if (f.path) await deleteFile(f.path).catch(console.error);
     }
     throw error;
   }
@@ -97,10 +96,28 @@ export const createEvent = async (params: CreateEventParams) => {
 export const updateEvent = async (params: UpdateEventParams) => {
   const { id, title, content, startDate, endDate, files } = params;
 
-  const event = await prisma.event.findUnique({ where: { id }, include: { images: true } });
+  const event = await prisma.event.findUnique({
+    where: { id },
+    include: { images: true },
+  });
+
   if (!event) throw new Error("Event not found");
 
-  const uploadedFiles: { relativePath: string; absolutePath: string }[] = [];
+  const newUploadedFiles: any[] = [];
+
+  if (files && files.length > 0) {
+    try {
+      for (const file of files) {
+        const saved = await saveFile(file);
+        newUploadedFiles.push(saved);
+      }
+    } catch (uploadError) {
+      for (const f of newUploadedFiles) {
+        if (f.path) await deleteFile(f.path).catch(console.error);
+      }
+      throw uploadError;
+    }
+  }
 
   try {
     let slug = undefined;
@@ -110,19 +127,17 @@ export const updateEvent = async (params: UpdateEventParams) => {
       if (exist && exist.id !== id) throw new Error("Event title already exists");
     }
 
-    if (files && files.length > 0) {
-      for (const file of files) {
-        const saved = await saveFile(file);
-        uploadedFiles.push(saved);
-      }
-    }
-
-    return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      if (uploadedFiles.length > 0) {
+    const updatedEvent = await prisma.$transaction(async (tx) => {
+      if (newUploadedFiles.length > 0) {
         await tx.eventImage.deleteMany({ where: { eventId: id } });
 
-        for (const oldImg of event.images) {
-          await deleteFile(oldImg.url);
+        for (const fileData of newUploadedFiles) {
+          await tx.eventImage.create({
+            data: {
+              eventId: id,
+              ...fileData,
+            },
+          });
         }
       }
 
@@ -133,20 +148,23 @@ export const updateEvent = async (params: UpdateEventParams) => {
           ...(content && { content }),
           ...(startDate && { startDate }),
           ...(endDate && { endDate }),
-          ...(uploadedFiles.length > 0 && {
-            images: {
-              create: uploadedFiles.map((f) => ({ url: f.relativePath })),
-            },
-          }),
         },
         include: { images: true },
       });
 
       return updated;
     });
+
+    if (newUploadedFiles.length > 0 && event.images.length > 0) {
+      for (const oldImg of event.images) {
+        if (oldImg.path) await deleteFile(oldImg.path).catch(console.error);
+      }
+    }
+
+    return updatedEvent;
   } catch (error) {
-    for (const f of uploadedFiles) {
-      await deleteFile(f.relativePath);
+    for (const f of newUploadedFiles) {
+      if (f.path) await deleteFile(f.path).catch(console.error);
     }
     throw error;
   }
@@ -159,7 +177,7 @@ export const deleteEvent = async (id: string) => {
   await prisma.event.delete({ where: { id } });
 
   for (const img of event.images) {
-    await deleteFile(img.url);
+    await deleteFile(img.path);
   }
 
   return true;

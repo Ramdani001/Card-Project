@@ -65,9 +65,16 @@ model CategoriesOnCards {
 }
 
 model ImageCard {
-    id        String   @id @default(uuid())
-    cardId    String
-    url       String
+    id     String @id @default(uuid())
+    cardId String
+
+    url          String
+    path         String
+    originalName String
+    fileName     String
+    mimeType     String
+    size         Int
+
     isPrimary Boolean  @default(false)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt

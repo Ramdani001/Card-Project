@@ -86,8 +86,8 @@ export const createCard = async (params: CreateCardParams) => {
   let uploadedFileUrl: string | null = null;
 
   try {
-    const uploadResult = await saveFile(file);
-    uploadedFileUrl = uploadResult.relativePath;
+    const fileData = await saveFile(file);
+    uploadedFileUrl = fileData.path;
 
     const slug = generateSlug(name);
 
@@ -106,7 +106,7 @@ export const createCard = async (params: CreateCardParams) => {
           },
           images: {
             create: {
-              url: uploadedFileUrl!,
+              ...fileData,
               isPrimary: true,
             },
           },
@@ -139,11 +139,12 @@ export const updateCard = async (params: UpdateCardParams) => {
 
   if (!existingCard) throw new Error("Card not found");
 
-  let newUploadedUrl: string | null = null;
+  let fileData: any = null;
+  let newUploadedPath: string | null = null;
 
   if (file && file.size > 0) {
-    const uploadResult = await saveFile(file);
-    newUploadedUrl = uploadResult.relativePath;
+    fileData = await saveFile(file);
+    newUploadedPath = fileData.path;
   }
 
   try {
@@ -188,12 +189,12 @@ export const updateCard = async (params: UpdateCardParams) => {
         }
       }
 
-      if (newUploadedUrl) {
+      if (fileData) {
         await tx.imageCard.deleteMany({ where: { cardId: id } });
 
         await tx.imageCard.create({
           data: {
-            url: newUploadedUrl,
+            ...fileData,
             cardId: id,
             isPrimary: true,
           },
@@ -210,16 +211,16 @@ export const updateCard = async (params: UpdateCardParams) => {
       });
     });
 
-    if (newUploadedUrl && existingCard.images.length > 0) {
+    if (fileData && existingCard.images.length > 0) {
       for (const img of existingCard.images) {
-        await deleteFile(img.url).catch(console.error);
+        await deleteFile(img.path).catch(console.error);
       }
     }
 
     return updatedCard;
   } catch (error) {
-    if (newUploadedUrl) {
-      await deleteFile(newUploadedUrl).catch(console.error);
+    if (newUploadedPath) {
+      await deleteFile(newUploadedPath).catch(console.error);
     }
     throw error;
   }
@@ -239,13 +240,9 @@ export const deleteCard = async (id: string) => {
 
   if (card.images.length > 0) {
     for (const img of card.images) {
-      await deleteFile(img.url).catch(console.error);
+      await deleteFile(img.path).catch(console.error);
     }
   }
 
   return deleted;
-};
-
-export const forceDeleteCard = async (id: string) => {
-  return await deleteCard(id);
 };

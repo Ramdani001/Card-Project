@@ -11,9 +11,10 @@ export const saveFile = async (file: File) => {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+    const fileExt = file.name.split(".").pop();
+    const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-    const { error } = await supabase.storage.from(BUCKET_NAME).upload(filename, buffer, {
+    const { error } = await supabase.storage.from(BUCKET_NAME).upload(uniqueFileName, buffer, {
       contentType: file.type,
       upsert: false,
     });
@@ -23,28 +24,26 @@ export const saveFile = async (file: File) => {
       throw new Error("Gagal upload ke storage");
     }
 
-    const { data: publicUrlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(filename);
-
-    const publicUrl = publicUrlData.publicUrl;
+    const { data: publicUrlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(uniqueFileName);
 
     return {
-      filename: filename,
-      relativePath: publicUrl,
-      absolutePath: publicUrl,
+      url: publicUrlData.publicUrl,
+      path: uniqueFileName,
+      originalName: file.name,
+      fileName: uniqueFileName,
+      mimeType: file.type,
+      size: file.size,
     };
   } catch (err) {
     throw err;
   }
 };
 
-export const deleteFile = async (fileUrlOrPath: string | null) => {
-  if (!fileUrlOrPath) return;
+export const deleteFile = async (path: string | null) => {
+  if (!path) return;
 
   try {
-    const parts = fileUrlOrPath.split("/");
-    const filename = parts[parts.length - 1];
-
-    const { error } = await supabase.storage.from(BUCKET_NAME).remove([filename]);
+    const { error } = await supabase.storage.from(BUCKET_NAME).remove([path]);
 
     if (error) {
       console.error("Gagal hapus file di Supabase:", error);
