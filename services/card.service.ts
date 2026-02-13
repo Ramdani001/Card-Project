@@ -1,10 +1,7 @@
+import { deleteFile, saveFile } from "@/helpers/file.helper";
 import prisma from "@/lib/prisma";
-import { writeFile, mkdir, unlink } from "fs/promises";
-import { existsSync } from "fs";
-import path from "path";
 import { Prisma } from "@/prisma/generated/prisma/client";
-
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
+import { unlink } from "fs/promises";
 
 interface CreateCardParams {
   name: string;
@@ -36,29 +33,6 @@ const generateSlug = (name: string) => {
     .replace(/[^\w\s-]/g, "")
     .replace(/[\s_-]+/g, "-")
     .replace(/^-+|-+$/g, "");
-};
-
-const saveFile = async (file: File) => {
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
-  const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
-  const relativePath = `/uploads/${filename}`;
-  const absolutePath = path.join(UPLOAD_DIR, filename);
-
-  if (!existsSync(UPLOAD_DIR)) {
-    await mkdir(UPLOAD_DIR, { recursive: true });
-  }
-
-  await writeFile(absolutePath, buffer);
-  return { filename, relativePath, absolutePath };
-};
-
-const deleteFile = async (relativePath: string) => {
-  if (!relativePath) return;
-  const absolutePath = path.join(process.cwd(), "public", relativePath);
-  if (existsSync(absolutePath)) {
-    await unlink(absolutePath).catch(() => {});
-  }
 };
 
 export const getCards = async (options: Prisma.CardFindManyArgs) => {
