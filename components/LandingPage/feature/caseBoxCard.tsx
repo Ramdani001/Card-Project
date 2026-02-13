@@ -13,11 +13,6 @@ export const CardComp = () => {
                     />
                 </Card.Section>
             </Card>
-            <Center pt={10}>
-                <Text>
-                    Yugioh
-                </Text>
-            </Center>
     </>
   );
 };

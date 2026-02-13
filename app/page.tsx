@@ -1,7 +1,9 @@
 "use client";
 
+import { SingleCard } from "@/components/LandingPage/feature/SingleCard";
 import { HeaderSection } from "@/components/LandingPage/HeaderSection";
 import { HeroSection } from "@/components/LandingPage/HeroSection";
+import { SwiperCard } from "@/components/LandingPage/swiper/SwiperCard";
 import { CartItem } from "@/types/CartItem";
 import { Box } from "@mantine/core";
 import { useState } from "react";
@@ -18,6 +20,8 @@ export default function TcgCornerClone() {
     <Box>
       <HeaderSection search={search} setSearch={setSearch} cartItems={cartItems} setIsDrawerOpen={setIsDrawerOpen} />
       <HeroSection />
+      <SwiperCard />
+      <SingleCard />
     </Box>
   );
 }

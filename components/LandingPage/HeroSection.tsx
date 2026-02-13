@@ -9,7 +9,7 @@ export const HeroSection = () => {
       <Container size="xl">
 
         {/* Hero Section */}
-       <Center>
+       <Center mb={{base: 5, md: 7, lg: 20}}>
         <SimpleGrid cols={{ base: 0, md: 6, lg: 3 }} spacing="xl">
             <Box className="cardHover">
                 <CardComp />
@@ -25,8 +25,6 @@ export const HeroSection = () => {
 
 
       </Container>
-        {/* Swiper Image */}
-        <SwiperCard/>
     </Box>
   );
 };

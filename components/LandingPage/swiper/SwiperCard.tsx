@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 // Import Swiper React components
 import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay } from 'swiper/modules';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -18,7 +19,7 @@ export const SwiperCard = () => {
         grabCursor={true}
         effect={'creative'}
         autoplay={{
-          delay: 1000,
+          delay: 2500,
           disableOnInteraction: false,
         }}
         creativeEffect={{
@@ -30,7 +31,7 @@ export const SwiperCard = () => {
             translate: ['100%', 0, 0],
           },
         }}
-        modules={[EffectCreative]}
+        modules={[Autoplay, EffectCreative]}
         className="mySwiper"
       >
         <SwiperSlide>
