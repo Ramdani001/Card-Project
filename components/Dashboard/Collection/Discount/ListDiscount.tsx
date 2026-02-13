@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconPencil, IconPlus, IconTrash, IconPercentage, IconCoin, IconCalendar, IconCheck, IconX } from "@tabler/icons-react";
+import { IconPencil, IconPlus, IconTrash, IconPercentage, IconCoin, IconCalendar, IconCheck, IconX, IconRefresh } from "@tabler/icons-react";
 import { TableComponent, ColumnDef } from "@/components/layout/TableComponent";
 import { PaginationMetaData } from "@/types/PaginationMetaData";
 import { DiscountForm } from "./DiscountForm";
@@ -190,9 +190,14 @@ const ListDiscount = () => {
     <Paper shadow="xs" p="md" radius="md">
       <Flex justify="space-between" align="center" mb="lg">
         <Title order={3}>Discount List</Title>
-        <Button leftSection={<IconPlus size={18} />} onClick={handleOpenAdd}>
-          Add Discount
-        </Button>
+        <Group>
+          <ActionIcon variant="default" size="lg" onClick={fetchDiscounts} loading={loading}>
+            <IconRefresh size={18} />
+          </ActionIcon>
+          <Button leftSection={<IconPlus size={18} />} onClick={handleOpenAdd}>
+            Add Discount
+          </Button>
+        </Group>
       </Flex>
 
       <TableComponent

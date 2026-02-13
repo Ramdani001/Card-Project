@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip, Avatar, Box } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { IconCalendarEvent, IconCheck, IconPencil, IconTrash, IconX, IconPhoto } from "@tabler/icons-react";
-import { TableComponent, ColumnDef } from "@/components/layout/TableComponent";
-import { PaginationMetaData } from "@/types/PaginationMetaData";
-import { EventForm } from "./EventForm";
-import { notifications } from "@mantine/notifications";
-import { openConfirmModal } from "@mantine/modals";
+import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
 import { Event } from "@/types/Event";
+import { PaginationMetaData } from "@/types/PaginationMetaData";
+import { ActionIcon, Avatar, Badge, Box, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { openConfirmModal } from "@mantine/modals";
+import { notifications } from "@mantine/notifications";
+import { IconCalendarEvent, IconCheck, IconPencil, IconPhoto, IconPlus, IconRefresh, IconTrash, IconX } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import { EventForm } from "./EventForm";
 
 const ListEvent = () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -219,9 +219,15 @@ const ListEvent = () => {
     <Paper shadow="xs" p="md" radius="md">
       <Flex justify="space-between" align="center" mb="lg">
         <Title order={3}>List Event</Title>
-        <Button leftSection={<IconCalendarEvent size={18} />} onClick={handleOpenAdd}>
-          Add Event
-        </Button>
+
+        <Group>
+          <ActionIcon variant="default" size="lg" onClick={fetchEvents} loading={loading}>
+            <IconRefresh size={18} />
+          </ActionIcon>
+          <Button leftSection={<IconPlus size={18} />} onClick={handleOpenAdd}>
+            Add Event
+          </Button>
+        </Group>
       </Flex>
 
       <TableComponent

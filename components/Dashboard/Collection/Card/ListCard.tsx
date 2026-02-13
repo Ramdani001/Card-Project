@@ -4,7 +4,7 @@ import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
 import { PaginationMetaData } from "@/types/PaginationMetaData";
 import { ActionIcon, Avatar, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconCheck, IconCreditCard, IconPencil, IconTrash, IconX } from "@tabler/icons-react";
+import { IconCheck, IconCreditCard, IconPencil, IconPlus, IconRefresh, IconTrash, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { CardForm } from "./CardForm";
 import { notifications } from "@mantine/notifications";
@@ -232,9 +232,15 @@ const ListCard = () => {
     <Paper shadow="xs" p="md" radius="md">
       <Flex justify="space-between" align="center" mb="lg">
         <Title order={3}>Product Cards</Title>
-        <Button leftSection={<IconCreditCard size={18} />} onClick={handleOpenAdd}>
-          Add Product
-        </Button>
+
+        <Group>
+          <ActionIcon variant="default" size="lg" onClick={fetchCards} loading={loading}>
+            <IconRefresh size={18} />
+          </ActionIcon>
+          <Button leftSection={<IconPlus size={18} />} onClick={handleOpenAdd}>
+            Add Product
+          </Button>
+        </Group>
       </Flex>
 
       <TableComponent

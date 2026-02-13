@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconPencil, IconPlus, IconTrash, IconCheck, IconX, IconTag } from "@tabler/icons-react";
+import { IconPencil, IconPlus, IconTrash, IconCheck, IconX, IconTag, IconRefresh } from "@tabler/icons-react";
 import { TableComponent, ColumnDef } from "@/components/layout/TableComponent";
 import { PaginationMetaData } from "@/types/PaginationMetaData";
 import { notifications } from "@mantine/notifications";
@@ -183,9 +183,15 @@ const ListCategory = () => {
     <Paper shadow="xs" p="md" radius="md">
       <Flex justify="space-between" align="center" mb="lg">
         <Title order={3}>Categories</Title>
-        <Button leftSection={<IconPlus size={18} />} onClick={handleOpenAdd}>
-          Add Category
-        </Button>
+
+        <Group>
+          <ActionIcon variant="default" size="lg" onClick={fetchCategories} loading={loading}>
+            <IconRefresh size={18} />
+          </ActionIcon>
+          <Button leftSection={<IconPlus size={18} />} onClick={handleOpenAdd}>
+            Add Category
+          </Button>
+        </Group>
       </Flex>
 
       <TableComponent
