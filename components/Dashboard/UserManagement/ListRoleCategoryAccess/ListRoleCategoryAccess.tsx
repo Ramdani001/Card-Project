@@ -2,7 +2,7 @@
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
 import { PaginationMetaData } from "@/types/PaginationMetaData";
-import { ActionIcon, Button, Flex, Group, Paper, Text, Title } from "@mantine/core";
+import { ActionIcon, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
@@ -95,14 +95,14 @@ const ListRoleCategoryAccess = () => {
 
   const handleDelete = (access: RoleCategoryAccess) => {
     modals.openConfirmModal({
-      title: "Delete Access",
+      title: "Revoke Access",
       centered: true,
       children: (
         <Text size="sm">
           Are you sure you want to revoke <strong>{access.role.name}</strong> access to <strong>{access.category.name}</strong>?
         </Text>
       ),
-      labels: { confirm: "Revoke Access", cancel: "Cancel" },
+      labels: { confirm: "Revoke", cancel: "Cancel" },
       confirmProps: { color: "red" },
       onConfirm: async () => {
         try {
@@ -147,7 +147,7 @@ const ListRoleCategoryAccess = () => {
     },
     {
       key: "createdAt",
-      label: "Created At",
+      label: "Assigned At",
       sortable: true,
       render: (item) => (
         <Text size="xs">{new Date(item.createdAt).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</Text>
@@ -159,12 +159,17 @@ const ListRoleCategoryAccess = () => {
       width: 120,
       render: (item) => (
         <Group gap={4}>
-          <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenEdit(item)}>
-            <IconEdit size={18} />
-          </ActionIcon>
-          <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(item)}>
-            <IconTrash size={18} />
-          </ActionIcon>
+          <Tooltip label="Manage all accesses for this role">
+            <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenEdit(item)}>
+              <IconEdit size={18} />
+            </ActionIcon>
+          </Tooltip>
+
+          <Tooltip label="Revoke this specific category">
+            <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(item)}>
+              <IconTrash size={18} />
+            </ActionIcon>
+          </Tooltip>
         </Group>
       ),
     },
@@ -173,13 +178,13 @@ const ListRoleCategoryAccess = () => {
   return (
     <Paper shadow="xs" p="md" radius="md">
       <Flex justify="space-between" align="center" mb="lg">
-        <Title order={3}>Role & Category Access Management</Title>
+        <Title order={3}>Role Access Management</Title>
         <Group>
           <ActionIcon variant="default" size="lg" onClick={fetchAccesses} loading={loading}>
             <IconRefresh size={18} />
           </ActionIcon>
           <Button leftSection={<IconPlus size={16} />} onClick={handleOpenCreate}>
-            Assign Access
+            Assign New Access
           </Button>
         </Group>
       </Flex>
