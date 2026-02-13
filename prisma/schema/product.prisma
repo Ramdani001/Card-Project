@@ -80,8 +80,6 @@ model Discount {
     name      String
     value     Decimal      @db.Decimal(10, 2)
     type      DiscountType
-    startDate DateTime?
-    endDate   DateTime?
     createdAt DateTime     @default(now())
     updatedAt DateTime     @updatedAt
 

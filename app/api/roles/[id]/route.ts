@@ -26,9 +26,16 @@ export const GET = async (_req: NextRequest, { params }: RouteParams) => {
 export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
   try {
     const { id } = await params;
-    const body = await req.json();
 
-    const updatedRole = await updateRole(id, body.name);
+    const body = await req.json();
+    const { name, categoryIds, menuIds } = body;
+
+    const updatedRole = await updateRole({
+      id,
+      name: name || undefined,
+      categoryIds: Array.isArray(categoryIds) ? categoryIds : undefined,
+      menuIds: Array.isArray(menuIds) ? menuIds : undefined,
+    });
 
     return sendResponse({
       success: true,
@@ -36,8 +43,13 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
       data: updatedRole,
     });
   } catch (err: any) {
-    if (err.message === "Role not found") return sendResponse({ success: false, message: err.message, status: 404 });
-    if (err.message === "Role name already exists") return sendResponse({ success: false, message: err.message, status: 409 });
+    if (err.message === "Role not found") {
+      return sendResponse({ success: false, message: err.message, status: 404 });
+    }
+    if (err.message === "Role name already exists") {
+      return sendResponse({ success: false, message: err.message, status: 409 });
+    }
+
     return handleApiError(err);
   }
 };

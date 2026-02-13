@@ -33,11 +33,11 @@ const UserManagement = () => {
             </Text>
           </Tabs.Tab>
 
-          <Tabs.Tab value="category-card-access" leftSection={<IconPaperBag style={iconStyle} />}>
+          {/* <Tabs.Tab value="category-card-access" leftSection={<IconPaperBag style={iconStyle} />}>
             <Text span visibleFrom="sm">
               Role Category Access
             </Text>
-          </Tabs.Tab>
+          </Tabs.Tab> */}
         </Tabs.List>
 
         <Tabs.Panel value="list-member">

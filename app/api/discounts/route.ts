@@ -29,7 +29,7 @@ export const GET = async (req: NextRequest) => {
 export const POST = async (req: NextRequest) => {
   try {
     const body = await req.json();
-    const { name, value, type, startDate, endDate } = body;
+    const { name, value, type } = body;
 
     if (!name || !value || !type) {
       return sendResponse({ success: false, message: "Name, Value, and Type are required", status: 400 });
@@ -43,8 +43,6 @@ export const POST = async (req: NextRequest) => {
       name,
       value: Number(value),
       type: type as DiscountType,
-      startDate,
-      endDate,
     });
 
     return sendResponse({

@@ -9,11 +9,15 @@ import { notifications } from "@mantine/notifications";
 import { IconEdit, IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { RoleFormModal } from "./RoleFormModal";
+import { CategoryCard } from "@/types/CategoryCard";
+import { Menu } from "@/types/Menu";
 
 export interface Role {
   id: string;
   name: string;
   createdAt: string;
+  cardCategoryRoleAccesses: { category: CategoryCard }[];
+  roleMenuAccesses: { menu: Menu }[];
   _count?: {
     users: number;
   };
@@ -157,6 +161,74 @@ const ListRole = () => {
           {item._count?.users || 0} Users
         </Badge>
       ),
+    },
+    {
+      key: "categoryAccess",
+      label: "Category Access",
+      sortable: false,
+      render: (item) => {
+        const accesses = item.cardCategoryRoleAccesses || [];
+        const limit = 2;
+        const hasMore = accesses.length > limit;
+
+        return (
+          <Group gap={4}>
+            {accesses.length > 0 ? (
+              <>
+                {accesses.slice(0, limit).map((access: any) => (
+                  <Badge key={access.category.id} variant="light" color="cyan" size="sm">
+                    {access.category.name}
+                  </Badge>
+                ))}
+
+                {hasMore && (
+                  <Badge variant="outline" color="gray" size="sm" style={{ cursor: "help" }}>
+                    +{accesses.length - limit} more
+                  </Badge>
+                )}
+              </>
+            ) : (
+              <Text size="xs" c="dimmed" fs="italic">
+                No access defined
+              </Text>
+            )}
+          </Group>
+        );
+      },
+    },
+    {
+      key: "menuAccess",
+      label: "Menu Access",
+      sortable: false,
+      render: (item) => {
+        const accesses = item.roleMenuAccesses || [];
+        const limit = 2;
+        const hasMore = accesses.length > limit;
+
+        return (
+          <Group gap={4}>
+            {accesses.length > 0 ? (
+              <>
+                {accesses.slice(0, limit).map((access: any) => (
+                  <Badge key={access.menu.id} variant="light" color="cyan" size="sm">
+                    {access.menu.label}
+                  </Badge>
+                ))}
+
+                {hasMore && (
+                  <Badge variant="outline" color="gray" size="sm" style={{ cursor: "help" }}>
+                    +{accesses.length - limit} more
+                  </Badge>
+                )}
+              </>
+            ) : (
+              <Text size="xs" c="dimmed" fs="italic">
+                No access defined
+              </Text>
+            )}
+          </Group>
+        );
+      },
     },
     {
       key: "createdAt",

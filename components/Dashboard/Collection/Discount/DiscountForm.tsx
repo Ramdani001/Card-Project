@@ -1,10 +1,9 @@
 "use client";
 
 import { Discount } from "@/types/Discount";
-import { Button, Flex, Modal, NumberInput, SegmentedControl, TextInput, Text } from "@mantine/core";
-import { DateInput } from "@mantine/dates";
+import { Button, Flex, Modal, NumberInput, SegmentedControl, Text, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconX, IconCalendar } from "@tabler/icons-react";
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
 interface DiscountFormProps {
@@ -20,22 +19,16 @@ export const DiscountForm = ({ opened, onClose, discountToEdit, onSuccess }: Dis
   const [name, setName] = useState("");
   const [type, setType] = useState<"NOMINAL" | "PERCENTAGE">("PERCENTAGE");
   const [value, setValue] = useState<number | "">("");
-  const [startDate, setStartDate] = useState<Date | string | null>(null);
-  const [endDate, setEndDate] = useState<Date | string | null>(null);
 
   useEffect(() => {
     if (discountToEdit) {
       setName(discountToEdit.name);
       setType(discountToEdit.type);
       setValue(Number(discountToEdit.value));
-      setStartDate(discountToEdit.startDate ? new Date(discountToEdit.startDate) : null);
-      setEndDate(discountToEdit.endDate ? new Date(discountToEdit.endDate) : null);
     } else {
       setName("");
       setType("PERCENTAGE");
       setValue("");
-      setStartDate(new Date());
-      setEndDate(null);
     }
   }, [discountToEdit, opened]);
 
@@ -53,8 +46,6 @@ export const DiscountForm = ({ opened, onClose, discountToEdit, onSuccess }: Dis
         name,
         type,
         value: Number(value),
-        startDate: startDate,
-        endDate: endDate,
       };
 
       const isEditMode = !!discountToEdit;
@@ -117,28 +108,6 @@ export const DiscountForm = ({ opened, onClose, discountToEdit, onSuccess }: Dis
           decimalSeparator={type === "NOMINAL" ? "," : undefined}
           withAsterisk
         />
-
-        <Flex gap="md">
-          <DateInput
-            value={startDate}
-            onChange={setStartDate}
-            label="Start Date"
-            placeholder="Pick date"
-            style={{ flex: 1 }}
-            rightSection={<IconCalendar size={16} style={{ opacity: 0.5 }} />}
-            clearable
-          />
-          <DateInput
-            value={endDate}
-            onChange={setEndDate}
-            label="End Date"
-            placeholder="Pick date"
-            minDate={startDate || undefined}
-            style={{ flex: 1 }}
-            rightSection={<IconCalendar size={16} style={{ opacity: 0.5 }} />}
-            clearable
-          />
-        </Flex>
 
         <Flex justify="flex-end" gap="sm" mt="lg">
           <Button variant="default" onClick={onClose} disabled={loading}>

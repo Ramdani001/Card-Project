@@ -130,7 +130,7 @@ export const createCard = async (params: CreateCardParams) => {
 };
 
 export const updateCard = async (params: UpdateCardParams) => {
-  const { id, name, price, stock, categoryIds, discountId, description, sku, file } = params;
+  const { id, name, price, stock, categoryIds, discountId, description, sku, file, userId } = params;
 
   const existingCard = await prisma.card.findUnique({
     where: { id },
@@ -158,7 +158,7 @@ export const updateCard = async (params: UpdateCardParams) => {
           sku: existingCard.sku,
           discountId: existingCard.discountId,
           changeType: "UPDATE",
-          changedBy: params.userId,
+          changedBy: userId,
         },
       });
 

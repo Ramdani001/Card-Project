@@ -28,8 +28,9 @@ export const GET = async (req: NextRequest) => {
 export const POST = async (req: NextRequest) => {
   try {
     const body = await req.json();
+    const { name, categoryIds, menuIds } = body;
 
-    if (!body.name || typeof body.name !== "string") {
+    if (!name || typeof name !== "string") {
       return sendResponse({
         success: false,
         message: "Valid Role name is required",
@@ -37,7 +38,11 @@ export const POST = async (req: NextRequest) => {
       });
     }
 
-    const newRole = await createRole(body.name);
+    const newRole = await createRole({
+      name,
+      categoryIds: Array.isArray(categoryIds) ? categoryIds : [],
+      menuIds: Array.isArray(menuIds) ? menuIds : [],
+    });
 
     return sendResponse({
       success: true,

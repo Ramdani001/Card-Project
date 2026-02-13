@@ -5,8 +5,6 @@ interface CreateDiscountParams {
   name: string;
   value: number;
   type: DiscountType;
-  startDate?: string | Date;
-  endDate?: string | Date;
 }
 
 interface UpdateDiscountParams {
@@ -14,8 +12,6 @@ interface UpdateDiscountParams {
   name?: string;
   value?: number;
   type?: DiscountType;
-  startDate?: string | Date | null;
-  endDate?: string | Date | null;
 }
 
 export const getDiscounts = async (options: Prisma.DiscountFindManyArgs) => {
@@ -42,31 +38,22 @@ export const getDiscountById = async (id: string) => {
 };
 
 export const createDiscount = async (params: CreateDiscountParams) => {
-  const { name, value, type, startDate, endDate } = params;
+  const { name, value, type } = params;
 
   if (value < 0) throw new Error("Discount value cannot be negative");
   if (type === "PERCENTAGE" && value > 100) throw new Error("Percentage discount cannot exceed 100%");
-
-  const start = startDate ? new Date(startDate) : null;
-  const end = endDate ? new Date(endDate) : null;
-
-  if (start && end && start > end) {
-    throw new Error("Start date must be before end date");
-  }
 
   return await prisma.discount.create({
     data: {
       name,
       value: new Prisma.Decimal(value),
       type,
-      startDate: start,
-      endDate: end,
     },
   });
 };
 
 export const updateDiscount = async (params: UpdateDiscountParams) => {
-  const { id, name, value, type, startDate, endDate } = params;
+  const { id, name, value, type } = params;
 
   const existing = await prisma.discount.findUnique({ where: { id } });
   if (!existing) throw new Error("Discount not found");
@@ -77,21 +64,12 @@ export const updateDiscount = async (params: UpdateDiscountParams) => {
     if (checkType === "PERCENTAGE" && value > 100) throw new Error("Percentage discount cannot exceed 100%");
   }
 
-  const newStart = startDate ? new Date(startDate) : startDate === null ? null : existing.startDate;
-  const newEnd = endDate ? new Date(endDate) : endDate === null ? null : existing.endDate;
-
-  if (newStart && newEnd && newStart > newEnd) {
-    throw new Error("Start date must be before end date");
-  }
-
   return await prisma.discount.update({
     where: { id },
     data: {
       ...(name && { name }),
       ...(value !== undefined && { value: new Prisma.Decimal(value) }),
       ...(type && { type }),
-      startDate: newStart,
-      endDate: newEnd,
     },
   });
 };

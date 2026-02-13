@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
+import { Discount } from "@/types/Discount";
+import { PaginationMetaData } from "@/types/PaginationMetaData";
 import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconPencil, IconPlus, IconTrash, IconPercentage, IconCoin, IconCalendar, IconCheck, IconX, IconRefresh } from "@tabler/icons-react";
-import { TableComponent, ColumnDef } from "@/components/layout/TableComponent";
-import { PaginationMetaData } from "@/types/PaginationMetaData";
-import { DiscountForm } from "./DiscountForm";
-import { notifications } from "@mantine/notifications";
 import { openConfirmModal } from "@mantine/modals";
-import { Discount } from "@/types/Discount";
+import { notifications } from "@mantine/notifications";
+import { IconCheck, IconCoin, IconPencil, IconPercentage, IconPlus, IconRefresh, IconTrash, IconX } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import { DiscountForm } from "./DiscountForm";
 
 const ListDiscount = () => {
   const [discounts, setDiscounts] = useState<Discount[]>([]);
@@ -118,11 +118,6 @@ const ListDiscount = () => {
     open();
   };
 
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return "-";
-    return new Date(dateStr).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" });
-  };
-
   const columns: ColumnDef<Discount>[] = [
     {
       key: "no",
@@ -150,19 +145,6 @@ const ListDiscount = () => {
         >
           {item.type === "PERCENTAGE" ? `${Number(item.value)}%` : `Rp ${Number(item.value).toLocaleString("id-ID")}`}
         </Badge>
-      ),
-    },
-    {
-      key: "startDate",
-      label: "Active Period",
-      sortable: true,
-      render: (item) => (
-        <Group gap={4}>
-          <IconCalendar size={14} style={{ opacity: 0.5 }} />
-          <Text size="xs">
-            {formatDate(item.startDate)} - {formatDate(item.endDate)}
-          </Text>
-        </Group>
       ),
     },
     {
