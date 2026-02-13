@@ -30,7 +30,7 @@ export async function main() {
   console.warn("Start seeding...");
 
   for (const r of roleData) {
-    const existingRole = await prisma.role.findUnique({
+    const existingRole = await prisma.role.findFirst({
       where: { name: r.name },
     });
 
