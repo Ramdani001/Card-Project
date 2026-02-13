@@ -1,8 +1,8 @@
 "use client";
 
-import { Button, Flex, Modal, PasswordInput, Select, TextInput } from "@mantine/core";
+import { Avatar, Button, FileInput, Flex, Group, Modal, PasswordInput, Select, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconX } from "@tabler/icons-react";
+import { IconCheck, IconPhoto, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { Role, User } from "./ListMember";
 
@@ -22,6 +22,7 @@ export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSucce
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [roleId, setRoleId] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (userToEdit) {
@@ -30,12 +31,14 @@ export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSucce
       setPhone(userToEdit.phone || "");
       setRoleId(userToEdit.role?.id || null);
       setPassword("");
+      setFile(null); 
     } else {
       setName("");
       setEmail("");
       setPassword("");
       setPhone("");
       setRoleId(null);
+      setFile(null);
     }
   }, [userToEdit, opened]);
 
@@ -45,15 +48,15 @@ export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSucce
 
     setLoading(true);
     try {
-      const payload: any = {
-        name,
-        email,
-        phone,
-        roleId,
-      };
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("email", email);
+      formData.append("phone", phone);
+      if (roleId) formData.append("roleId", roleId);
+      if (password) formData.append("password", password);
 
-      if (password) {
-        payload.password = password;
+      if (file) {
+        formData.append("file", file);
       }
 
       const isEditMode = !!userToEdit;
@@ -62,8 +65,7 @@ export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSucce
 
       const res = await fetch(url, {
         method: method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: formData,
       });
 
       const json = await res.json();
@@ -89,21 +91,37 @@ export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSucce
   }));
 
   return (
-    <Modal opened={opened} onClose={onClose} title={userToEdit ? "Edit User" : "Create New User"} centered>
+    <Modal opened={opened} onClose={onClose} title={userToEdit ? "Edit User" : "Create New User"} centered size="md">
       <Flex direction="column" gap="md">
+        {userToEdit && userToEdit.avatar && !file && (
+          <Group justify="center">
+            <Avatar src={userToEdit.avatar} size="xl" radius="xl" />
+          </Group>
+        )}
+
         <TextInput label="Full Name" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} />
 
         <TextInput label="Email" placeholder="john@example.com" value={email} onChange={(e) => setEmail(e.target.value)} withAsterisk type="email" />
 
         <PasswordInput
           label={userToEdit ? "New Password" : "Password"}
-          placeholder={userToEdit ? "Leave blank to keep current password" : "********"}
+          placeholder={userToEdit ? "Leave blank to keep current" : "********"}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           withAsterisk={!userToEdit}
         />
 
         <TextInput label="Phone Number" placeholder="0812..." value={phone} onChange={(e) => setPhone(e.target.value)} />
+
+        <FileInput
+          label="Profile Picture (Avatar)"
+          placeholder="Choose image"
+          leftSection={<IconPhoto size={16} />}
+          value={file}
+          onChange={setFile}
+          accept="image/png,image/jpeg,image/webp"
+          clearable
+        />
 
         <Select label="Role" placeholder="Select Role" data={roleOptions} value={roleId} onChange={setRoleId} clearable />
 

@@ -33,14 +33,18 @@ export const GET = async (_req: NextRequest, { params }: RouteParams) => {
 export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
   try {
     const { id } = await params;
-    const body = await req.json();
 
-    const payload = {
-      ...body,
-      roleId: body.roleId || body.idRole,
-    };
+    const formData = await req.formData();
 
-    const updatedUser = await updateUser(id, payload);
+    const updatedUser = await updateUser({
+      id,
+      name: (formData.get("name") as string) || undefined,
+      email: (formData.get("email") as string) || undefined,
+      phone: (formData.get("phone") as string) || undefined,
+      password: (formData.get("password") as string) || undefined,
+      roleId: (formData.get("roleId") as string) || undefined,
+      file: formData.get("file") as File | null,
+    });
 
     return sendResponse({
       success: true,

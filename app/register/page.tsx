@@ -1,8 +1,8 @@
 "use client";
 
-import { Anchor, Button, Center, Container, Paper, PasswordInput, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Anchor, Button, Center, Container, FileInput, Paper, PasswordInput, Stack, Text, TextInput, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconAlertCircle, IconCheck } from "@tabler/icons-react";
+import { IconAlertCircle, IconCheck, IconPhoto } from "@tabler/icons-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -14,6 +14,8 @@ export default function RegisterPage() {
     confirmPassword: "",
     name: "",
   });
+
+  const [file, setFile] = useState<File | null>(null);
 
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -49,14 +51,18 @@ export default function RegisterPage() {
     }
 
     try {
+      const formData = new FormData();
+      formData.append("email", form.email);
+      formData.append("password", form.password);
+      formData.append("name", form.name);
+
+      if (file) {
+        formData.append("file", file);
+      }
+
       const res = await fetch("/api/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: form.email,
-          password: form.password,
-          name: form.name,
-        }),
+        body: formData,
       });
 
       const json = await res.json();
@@ -136,6 +142,17 @@ export default function RegisterPage() {
                 onChange={(e) => handleChange("confirmPassword", e.currentTarget.value)}
                 radius="md"
                 error={form.confirmPassword && form.password !== form.confirmPassword ? "Password tidak cocok" : null}
+              />
+
+              <FileInput
+                label="Foto Profil (Opsional)"
+                placeholder="Pilih gambar"
+                leftSection={<IconPhoto size={16} />}
+                accept="image/png,image/jpeg,image/webp"
+                value={file}
+                onChange={setFile}
+                clearable
+                radius="md"
               />
 
               <Button type="submit" fullWidth mt="xl" radius="md" size="md" loading={loading}>

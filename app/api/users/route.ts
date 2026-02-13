@@ -27,8 +27,15 @@ export const GET = async (req: NextRequest) => {
 
 export const POST = async (req: NextRequest) => {
   try {
-    const body = await req.json();
-    const { email, password, name, phone, roleId } = body;
+    const formData = await req.formData();
+
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const name = formData.get("name") as string;
+    const phone = formData.get("phone") as string;
+    const roleId = formData.get("roleId") as string;
+
+    const file = formData.get("file") as File | null;
 
     if (!email || !password) {
       return sendResponse({
@@ -41,9 +48,10 @@ export const POST = async (req: NextRequest) => {
     const newUser = await createUser({
       email,
       password,
-      name,
-      phone,
-      roleId,
+      name: name || "",
+      phone: phone || undefined,
+      roleId: roleId || undefined,
+      file: file,
     });
 
     return sendResponse({

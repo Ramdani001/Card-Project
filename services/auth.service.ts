@@ -1,16 +1,16 @@
 import prisma from "@/lib/prisma";
 import { hashPassword } from "@/helpers/auth.helper";
+import { saveFile, deleteFile } from "@/helpers/file.helper";
 
 interface RegisterParams {
   email: string;
   password: string;
   name?: string;
   phone?: string;
+  file?: File | null;
 }
 
-export const register = async (params: RegisterParams) => {
-  const { email, password, name, phone } = params;
-
+export const register = async ({ email, password, name, phone, file }: RegisterParams) => {
   const existingUser = await prisma.user.findUnique({
     where: { email },
   });
@@ -31,24 +31,40 @@ export const register = async (params: RegisterParams) => {
     defaultRole = anyRole;
   }
 
-  const newUser = await prisma.user.create({
-    data: {
-      email,
-      password: hashedPassword,
-      name,
-      phone,
-      roleId: defaultRole.id,
-    },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      phone: true,
-      role: {
-        select: { name: true },
-      },
-    },
-  });
+  let avatarUrl: string | null = null;
 
-  return newUser;
+  try {
+    if (file && file.size > 0) {
+      const uploadResult = await saveFile(file);
+      avatarUrl = uploadResult.relativePath;
+    }
+
+    const newUser = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+        phone,
+        roleId: defaultRole.id,
+        avatar: avatarUrl,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        avatar: true,
+        role: {
+          select: { name: true },
+        },
+      },
+    });
+
+    return newUser;
+  } catch (error) {
+    if (avatarUrl) {
+      await deleteFile(avatarUrl).catch(console.error);
+    }
+    throw error;
+  }
 };

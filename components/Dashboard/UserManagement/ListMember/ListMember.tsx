@@ -15,7 +15,7 @@ export interface User {
   name: string | null;
   email: string;
   phone: string | null;
-  image: string | null;
+  avatar: string | null;
   roleId: string | null;
   role: {
     id: string;
@@ -165,7 +165,7 @@ const ListMember = () => {
       sortable: true,
       render: (item) => (
         <Group gap="sm">
-          <Avatar src={item.image} radius="xl" color="blue" />
+          <Avatar src={item.avatar} radius="xl" color="blue" />
           <Flex direction="column">
             <Text size="sm" fw={500}>
               {item.name || "No Name"}

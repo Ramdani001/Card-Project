@@ -4,8 +4,14 @@ import { NextRequest } from "next/server";
 
 export const POST = async (req: NextRequest) => {
   try {
-    const body = await req.json();
-    const { email, password, name, phone } = body;
+    const formData = await req.formData();
+
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const name = formData.get("name") as string;
+    const phone = formData.get("phone") as string;
+
+    const file = formData.get("file") as File | null;
 
     if (!email || !password) {
       return sendResponse({
@@ -26,8 +32,9 @@ export const POST = async (req: NextRequest) => {
     const newUser = await register({
       email,
       password,
-      name,
-      phone,
+      name: name || undefined,
+      phone: phone || undefined,
+      file: file,
     });
 
     return sendResponse({
@@ -38,7 +45,11 @@ export const POST = async (req: NextRequest) => {
     });
   } catch (err: any) {
     if (err.message === "Email already registered") {
-      return sendResponse({ success: false, message: err.message, status: 409 });
+      return sendResponse({
+        success: false,
+        message: err.message,
+        status: 409,
+      });
     }
     return handleApiError(err);
   }
