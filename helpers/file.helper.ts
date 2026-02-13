@@ -1,38 +1,55 @@
-import { writeFile, mkdir, unlink } from "fs/promises";
-import { existsSync } from "fs";
-import path from "path";
+import { createClient } from "@supabase/supabase-js";
 
-const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+const BUCKET_NAME = "uploads";
 
 export const saveFile = async (file: File) => {
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
+  try {
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
 
-  const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
+    const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
 
-  const relativePath = `/uploads/${filename}`;
-  const absolutePath = path.join(UPLOAD_DIR, filename);
+    const { error } = await supabase.storage.from(BUCKET_NAME).upload(filename, buffer, {
+      contentType: file.type,
+      upsert: false,
+    });
 
-  if (!existsSync(UPLOAD_DIR)) {
-    await mkdir(UPLOAD_DIR, { recursive: true });
+    if (error) {
+      console.error("Supabase Upload Error:", error);
+      throw new Error("Gagal upload ke storage");
+    }
+
+    const { data: publicUrlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(filename);
+
+    const publicUrl = publicUrlData.publicUrl;
+
+    return {
+      filename: filename,
+      relativePath: publicUrl,
+      absolutePath: publicUrl,
+    };
+  } catch (err) {
+    throw err;
   }
-
-  await writeFile(absolutePath, buffer);
-
-  return { filename, relativePath, absolutePath };
 };
 
-export const deleteFile = async (relativePath: string | null) => {
-  if (!relativePath) return;
+export const deleteFile = async (fileUrlOrPath: string | null) => {
+  if (!fileUrlOrPath) return;
 
-  const cleanPath = relativePath.startsWith("/") ? relativePath.slice(1) : relativePath;
-  const absolutePath = path.join(process.cwd(), "public", cleanPath);
+  try {
+    const parts = fileUrlOrPath.split("/");
+    const filename = parts[parts.length - 1];
 
-  if (existsSync(absolutePath)) {
-    try {
-      await unlink(absolutePath);
-    } catch (error) {
-      console.error(`Gagal menghapus file: ${absolutePath}`, error);
+    const { error } = await supabase.storage.from(BUCKET_NAME).remove([filename]);
+
+    if (error) {
+      console.error("Gagal hapus file di Supabase:", error);
     }
+  } catch (error) {
+    console.error("Error saat delete file:", error);
   }
 };
