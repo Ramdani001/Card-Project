@@ -26,7 +26,6 @@ export const getCategories = async (options: Prisma.CategoryFindManyArgs) => {
     ...options,
     where: {
       ...options.where,
-      isActive: true,
     },
     include: {
       _count: {
@@ -112,8 +111,7 @@ export const deleteCategory = async (id: string) => {
     throw new Error("Category not found");
   }
 
-  return await prisma.category.update({
+  return await prisma.category.delete({
     where: { id },
-    data: { isActive: false },
   });
 };

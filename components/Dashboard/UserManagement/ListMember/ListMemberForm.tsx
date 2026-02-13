@@ -22,7 +22,6 @@ export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSucce
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
   const [roleId, setRoleId] = useState<string | null>(null);
-  const [isActive, setIsActive] = useState(true);
 
   useEffect(() => {
     if (userToEdit) {
@@ -30,7 +29,6 @@ export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSucce
       setEmail(userToEdit.email);
       setPhone(userToEdit.phone || "");
       setRoleId(userToEdit.role?.id || null);
-      setIsActive(userToEdit.isActive);
       setPassword("");
     } else {
       setName("");
@@ -38,7 +36,6 @@ export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSucce
       setPassword("");
       setPhone("");
       setRoleId(null);
-      setIsActive(true);
     }
   }, [userToEdit, opened]);
 
@@ -53,7 +50,6 @@ export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSucce
         email,
         phone,
         roleId,
-        isActive,
       };
 
       if (password) {

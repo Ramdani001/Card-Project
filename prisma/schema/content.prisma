@@ -1,35 +1,33 @@
 model AppConfig {
     id        String   @id @default(uuid())
-    key       String
+    key       String   @unique
     value     String   @db.Text
-    isActive  Boolean  @default(true)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
 
 model Menu {
-    id        String   @id @default(uuid())
-    label     String
-    url       String?
-    icon      String?
-    order     Int      @default(0)
-    parentId  String?
-    isActive  Boolean  @default(true)
+    id    String  @id @default(uuid())
+    label String
+    url   String?
+    icon  String?
+    order Int     @default(0)
+
+    parentId String?
+    parent   Menu?   @relation("MenuToSubMenu", fields: [parentId], references: [id], onDelete: Cascade)
+    subMenus Menu[]  @relation("MenuToSubMenu")
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
-
-    parent   Menu?  @relation("MenuToSubMenu", fields: [parentId], references: [id])
-    subMenus Menu[] @relation("MenuToSubMenu")
 }
 
 model Event {
     id        String   @id @default(uuid())
     title     String
-    slug      String
+    slug      String   @unique
     content   String   @db.Text
     startDate DateTime
     endDate   DateTime
-    isActive  Boolean  @default(true)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
@@ -37,9 +35,12 @@ model Event {
 }
 
 model EventImage {
-    id        String   @id @default(uuid())
-    url       String
-    eventId   String
+    id      String @id @default(uuid())
+    url     String
+    eventId String
+
+    isPrimary Boolean @default(false)
+
     createdAt DateTime @default(now())
 
     event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)

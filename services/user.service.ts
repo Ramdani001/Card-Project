@@ -8,7 +8,6 @@ const userSelectScope = {
   email: true,
   phone: true,
   avatar: true,
-  isActive: true,
   role: {
     select: { id: true, name: true },
   },
@@ -23,7 +22,7 @@ export const getUserById = async (id: string) => {
 };
 
 export const updateUser = async (id: string, data: any) => {
-  const { name, email, phone, password, roleId, isActive } = data;
+  const { name, email, phone, password, roleId } = data;
 
   const existingUser = await prisma.user.findUnique({ where: { id } });
   if (!existingUser) throw new Error("User not found");
@@ -33,7 +32,6 @@ export const updateUser = async (id: string, data: any) => {
     ...(email && { email }),
     ...(phone && { phone }),
     ...(roleId && { roleId }),
-    ...(isActive !== undefined && { isActive }),
   };
 
   if (password) {
@@ -51,9 +49,8 @@ export const deleteUser = async (id: string) => {
   const existingUser = await prisma.user.findUnique({ where: { id } });
   if (!existingUser) throw new Error("User not found");
 
-  return await prisma.user.update({
+  return await prisma.user.delete({
     where: { id },
-    data: { isActive: false },
   });
 };
 
@@ -85,7 +82,6 @@ export const createUser = async (data: any) => {
       name,
       phone,
       roleId: roleId || null,
-      isActive: true,
     },
     select: userSelectScope,
   });

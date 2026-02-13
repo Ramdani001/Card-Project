@@ -5,5 +5,4 @@ export interface Discount {
   type: "NOMINAL" | "PERCENTAGE";
   startDate: string | null;
   endDate: string | null;
-  isActive: boolean;
 }

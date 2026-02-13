@@ -38,7 +38,6 @@ export const register = async (params: RegisterParams) => {
       name,
       phone,
       roleId: defaultRole.id,
-      isActive: true,
     },
     select: {
       id: true,

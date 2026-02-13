@@ -6,7 +6,6 @@ export const getRoleCategoryAccesses = async (options: Prisma.CardCategoryRoleAc
     ...options,
     where: {
       ...options.where,
-      isActive: true,
     },
     include: {
       role: { select: { id: true, name: true } },
@@ -39,29 +38,21 @@ export const createRoleCategoryAccess = async (roleId: string, categoryId: strin
   });
 
   if (existingAccess) {
-    if (existingAccess.isActive) {
-      throw new Error("This role already has active access to this category");
-    }
-    return await prisma.cardCategoryRoleAccess.update({
-      where: { id: existingAccess.id },
-      data: { isActive: true },
-    });
+    throw new Error("This role already has active access to this category");
   }
 
   return await prisma.cardCategoryRoleAccess.create({
-    data: { roleId, categoryId, isActive: true },
+    data: { roleId, categoryId },
   });
 };
 
 export const syncRoleCategoryAccess = async (roleId: string, categoryIds: string[]) => {
   return await prisma.$transaction(async (tx) => {
-    await tx.cardCategoryRoleAccess.updateMany({
+    await tx.cardCategoryRoleAccess.deleteMany({
       where: {
         roleId,
         categoryId: { notIn: categoryIds },
-        isActive: true,
       },
-      data: { isActive: false },
     });
 
     const results = [];
@@ -72,18 +63,10 @@ export const syncRoleCategoryAccess = async (roleId: string, categoryIds: string
       });
 
       if (existingAccess) {
-        if (!existingAccess.isActive) {
-          const updated = await tx.cardCategoryRoleAccess.update({
-            where: { id: existingAccess.id },
-            data: { isActive: true },
-          });
-          results.push(updated);
-        } else {
-          results.push(existingAccess);
-        }
+        results.push(existingAccess);
       } else {
         const created = await tx.cardCategoryRoleAccess.create({
-          data: { roleId, categoryId, isActive: true },
+          data: { roleId, categoryId },
         });
         results.push(created);
       }
@@ -93,7 +76,7 @@ export const syncRoleCategoryAccess = async (roleId: string, categoryIds: string
   });
 };
 
-export const updateRoleCategoryAccess = async (id: string, data: { roleId?: string; categoryId?: string; isActive?: boolean }) => {
+export const updateRoleCategoryAccess = async (id: string, data: { roleId?: string; categoryId?: string }) => {
   const existingAccess = await prisma.cardCategoryRoleAccess.findUnique({ where: { id } });
   if (!existingAccess) throw new Error("Access record not found");
 
@@ -106,7 +89,7 @@ export const updateRoleCategoryAccess = async (id: string, data: { roleId?: stri
       },
     });
 
-    if (checkDuplicate && checkDuplicate.isActive) {
+    if (checkDuplicate) {
       throw new Error("This role already has access to this category");
     }
   }
@@ -121,8 +104,7 @@ export const deleteRoleCategoryAccess = async (id: string) => {
   const existingAccess = await prisma.cardCategoryRoleAccess.findUnique({ where: { id } });
   if (!existingAccess) throw new Error("Access record not found");
 
-  return await prisma.cardCategoryRoleAccess.update({
+  return await prisma.cardCategoryRoleAccess.delete({
     where: { id },
-    data: { isActive: false },
   });
 };

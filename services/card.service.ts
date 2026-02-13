@@ -245,23 +245,8 @@ export const deleteCard = async (id: string) => {
   const card = await prisma.card.findUnique({ where: { id } });
   if (!card) throw new Error("Card not found");
 
-  await prisma.cardHistory.create({
-    data: {
-      cardId: card.id,
-      name: card.name,
-      price: card.price,
-      stock: card.stock,
-      description: card.description,
-      sku: card.sku,
-      discountId: card.discountId,
-      changeType: "DELETE",
-      changedBy: "SYSTEM",
-    },
-  });
-
-  return await prisma.card.update({
+  return await prisma.card.delete({
     where: { id },
-    data: { isActive: false },
   });
 };
 

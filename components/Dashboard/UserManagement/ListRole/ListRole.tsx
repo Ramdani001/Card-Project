@@ -13,7 +13,6 @@ import { RoleFormModal } from "./RoleFormModal";
 export interface Role {
   id: string;
   name: string;
-  isActive: boolean;
   createdAt: string;
   _count?: {
     users: number;

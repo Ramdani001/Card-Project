@@ -1,7 +1,6 @@
 model Role {
     id        String   @id @default(uuid())
-    name      String
-    isActive  Boolean  @default(true)
+    name      String   @unique
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
@@ -18,20 +17,20 @@ model CardCategoryRoleAccess {
     categoryId String
     category   Category @relation(fields: [categoryId], references: [id])
 
-    isActive  Boolean  @default(true)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+
+    @@unique([roleId, categoryId])
 }
 
 model User {
     id        String   @id @default(uuid())
-    email     String
+    email     String   @unique
     password  String
     name      String?
     phone     String?
     avatar    String?
     roleId    String?
-    isActive  Boolean  @default(true)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 

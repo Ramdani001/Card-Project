@@ -5,7 +5,6 @@ export interface Menu {
   icon: string | null;
   order: number;
   parentId: string | null;
-  isActive: boolean;
   parent?: {
     id: string;
     label: string;

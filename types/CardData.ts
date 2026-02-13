@@ -7,7 +7,6 @@ export interface CardData {
   sku?: string;
   discountId?: string;
   description?: string;
-  isActive: boolean;
   images: { id: string; url: string; isPrimary: boolean }[];
   categories: {
     category: {

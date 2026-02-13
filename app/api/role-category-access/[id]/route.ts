@@ -23,9 +23,9 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
   try {
     const { id } = await params;
     const body = await req.json();
-    const { roleId, categoryId, isActive } = body;
+    const { roleId, categoryId } = body;
 
-    const updatedAccess = await updateRoleCategoryAccess(id, { roleId, categoryId, isActive });
+    const updatedAccess = await updateRoleCategoryAccess(id, { roleId, categoryId });
 
     return sendResponse({
       success: true,

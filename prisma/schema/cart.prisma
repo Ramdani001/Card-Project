@@ -1,7 +1,6 @@
 model Cart {
     id        String   @id @default(uuid())
     userId    String?
-    isActive  Boolean  @default(true)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
@@ -19,4 +18,6 @@ model CartItem {
 
     cart Cart @relation(fields: [cartId], references: [id], onDelete: Cascade)
     card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+    @@unique([cartId, cardId])
 }

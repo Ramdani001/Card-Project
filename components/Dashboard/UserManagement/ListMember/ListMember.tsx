@@ -16,7 +16,6 @@ export interface User {
   email: string;
   phone: string | null;
   image: string | null;
-  isActive: boolean;
   roleId: string | null;
   role: {
     id: string;

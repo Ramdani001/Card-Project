@@ -1,9 +1,8 @@
 model Category {
     id        String   @id @default(uuid())
     name      String
-    slug      String
+    slug      String   @unique
     note      String?
-    isActive  Boolean  @default(true)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
@@ -12,17 +11,18 @@ model Category {
 }
 
 model Card {
-    id          String   @id @default(uuid())
-    name        String
-    slug        String
-    price       Decimal  @db.Decimal(15, 2)
+    id   String  @id @default(uuid())
+    name String
+    slug String  @unique
+    sku  String? @unique
+
+    price       Decimal @db.Decimal(15, 2)
     stock       Int
-    description String?  @db.Text
-    sku         String?
-    discountId  String?
-    isActive    Boolean  @default(true)
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+    description String? @db.Text
+
+    discountId String?
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
 
     discount         Discount?           @relation(fields: [discountId], references: [id])
     categories       CategoriesOnCards[]
@@ -33,21 +33,24 @@ model Card {
 }
 
 model CardHistory {
-    id          String   @id @default(uuid())
-    cardId      String
+    id     String @id @default(uuid())
+    cardId String
+
     name        String
-    price       Decimal  @db.Decimal(15, 2)
+    price       Decimal @db.Decimal(15, 2)
     stock       Int
     sku         String?
-    description String?  @db.Text
-    discountId  String?
-    changedBy   String?
-    changeType  String?
-    createdAt   DateTime @default(now())
+    description String? @db.Text
 
-    card     Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
-    user     User?     @relation(fields: [changedBy], references: [id])
-    discount Discount? @relation(fields: [discountId], references: [id])
+    discountId String?
+    changedBy  String?
+    changeType String?
+    createdAt  DateTime @default(now())
+
+    card Card  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+    user User? @relation(fields: [changedBy], references: [id])
+
+    discount Discount? @relation(fields: [discountId], references: [id], onDelete: SetNull)
 }
 
 model CategoriesOnCards {
@@ -66,7 +69,6 @@ model ImageCard {
     cardId    String
     url       String
     isPrimary Boolean  @default(false)
-    isActive  Boolean  @default(true)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
@@ -80,7 +82,6 @@ model Discount {
     type      DiscountType
     startDate DateTime?
     endDate   DateTime?
-    isActive  Boolean      @default(true)
     createdAt DateTime     @default(now())
     updatedAt DateTime     @updatedAt
 
@@ -90,7 +91,7 @@ model Discount {
 
 model Voucher {
     id          String  @id @default(uuid())
-    code        String
+    code        String  @unique
     name        String
     description String? @db.Text
 
@@ -106,7 +107,6 @@ model Voucher {
     startDate DateTime
     endDate   DateTime
 
-    isActive  Boolean  @default(true)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 

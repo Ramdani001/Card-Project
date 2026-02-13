@@ -15,7 +15,7 @@ export const checkout = async (params: CreateTransactionParams) => {
   const { userId, customerName, customerEmail, voucherCode, address, paymentMethod } = params;
 
   const cart = await prisma.cart.findFirst({
-    where: { userId, isActive: true },
+    where: { userId },
     include: {
       items: { include: { card: true } },
     },
@@ -63,7 +63,7 @@ export const checkout = async (params: CreateTransactionParams) => {
 
   if (voucherCode) {
     const voucher = await prisma.voucher.findUnique({
-      where: { code: voucherCode, isActive: true },
+      where: { code: voucherCode },
     });
 
     if (!voucher) throw new Error("Invalid voucher code");

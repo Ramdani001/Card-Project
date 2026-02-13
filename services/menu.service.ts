@@ -16,14 +16,12 @@ interface UpdateMenuParams {
   icon?: string;
   order?: number;
   parentId?: string | null;
-  isActive?: boolean;
 }
 
 export const getMenus = async (options: Prisma.MenuFindManyArgs) => {
   const finalOptions: Prisma.MenuFindManyArgs = {
     where: {
       ...options.where,
-      isActive: true,
     },
     include: {
       subMenus: {
@@ -71,7 +69,7 @@ export const createMenu = async (params: CreateMenuParams) => {
 };
 
 export const updateMenu = async (params: UpdateMenuParams) => {
-  const { id, label, url, icon, order, parentId, isActive } = params;
+  const { id, label, url, icon, order, parentId } = params;
 
   const existingMenu = await prisma.menu.findUnique({ where: { id } });
   if (!existingMenu) throw new Error("Menu not found");
@@ -90,7 +88,6 @@ export const updateMenu = async (params: UpdateMenuParams) => {
       ...(icon !== undefined && { icon }),
       ...(order !== undefined && { order }),
       ...(parentId !== undefined && { parentId }),
-      ...(isActive !== undefined && { isActive }),
     },
   });
 };
@@ -99,8 +96,7 @@ export const deleteMenu = async (id: string) => {
   const existingMenu = await prisma.menu.findUnique({ where: { id } });
   if (!existingMenu) throw new Error("Menu not found");
 
-  return await prisma.menu.update({
+  return await prisma.menu.delete({
     where: { id },
-    data: { isActive: false },
   });
 };

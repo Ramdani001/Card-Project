@@ -53,7 +53,6 @@ export const getDashboardOverview = async () => {
         stock: {
           lte: LOW_STOCK_THRESHOLD,
         },
-        isActive: true,
       },
     }),
   ]);

@@ -6,7 +6,6 @@ export const getRoles = async (options: Prisma.RoleFindManyArgs) => {
     ...options,
     where: {
       ...options.where,
-      isActive: true,
     },
     include: {
       _count: { select: { users: true } },
@@ -42,7 +41,7 @@ export const createRole = async (name: string) => {
   });
 };
 
-export const updateRole = async (id: string, name?: string, isActive?: boolean) => {
+export const updateRole = async (id: string, name?: string) => {
   const existingRole = await prisma.role.findUnique({ where: { id } });
   if (!existingRole) throw new Error("Role not found");
 
@@ -55,7 +54,6 @@ export const updateRole = async (id: string, name?: string, isActive?: boolean) 
     where: { id },
     data: {
       ...(name && { name }),
-      ...(isActive !== undefined && { isActive }),
     },
   });
 };
@@ -72,8 +70,7 @@ export const deleteRole = async (id: string) => {
     throw new Error("Cannot delete role: It is assigned to one or more users");
   }
 
-  return await prisma.role.update({
+  return await prisma.role.delete({
     where: { id },
-    data: { isActive: false },
   });
 };

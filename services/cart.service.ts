@@ -13,7 +13,7 @@ interface UpdateCartItemParams {
 
 export const getCartByUserId = async (userId: string) => {
   const cart = await prisma.cart.findFirst({
-    where: { userId, isActive: true },
+    where: { userId },
     include: {
       items: {
         orderBy: { createdAt: "desc" },
@@ -52,7 +52,7 @@ export const addToCart = async (params: AddToCartParams) => {
   if (card.stock < quantity) throw new Error("Insufficient stock");
 
   let cart = await prisma.cart.findFirst({
-    where: { userId, isActive: true },
+    where: { userId },
   });
 
   if (!cart) {
@@ -120,7 +120,7 @@ export const removeCartItem = async (itemId: string) => {
 
 export const clearCart = async (userId: string) => {
   const cart = await prisma.cart.findFirst({
-    where: { userId, isActive: true },
+    where: { userId },
   });
 
   if (!cart) return;

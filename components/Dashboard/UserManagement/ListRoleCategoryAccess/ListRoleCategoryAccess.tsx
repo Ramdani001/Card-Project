@@ -14,7 +14,6 @@ export interface RoleCategoryAccess {
   id: string;
   roleId: string;
   categoryId: string;
-  isActive: boolean;
   createdAt: string;
   role: { id: string; name: string };
   category: { id: string; name: string };

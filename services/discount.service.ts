@@ -16,7 +16,6 @@ interface UpdateDiscountParams {
   type?: DiscountType;
   startDate?: string | Date | null;
   endDate?: string | Date | null;
-  isActive?: boolean;
 }
 
 export const getDiscounts = async (options: Prisma.DiscountFindManyArgs) => {
@@ -24,7 +23,6 @@ export const getDiscounts = async (options: Prisma.DiscountFindManyArgs) => {
     ...options,
     where: {
       ...options.where,
-      isActive: true,
     },
     orderBy: options.orderBy || { createdAt: "desc" },
   };
@@ -68,7 +66,7 @@ export const createDiscount = async (params: CreateDiscountParams) => {
 };
 
 export const updateDiscount = async (params: UpdateDiscountParams) => {
-  const { id, name, value, type, startDate, endDate, isActive } = params;
+  const { id, name, value, type, startDate, endDate } = params;
 
   const existing = await prisma.discount.findUnique({ where: { id } });
   if (!existing) throw new Error("Discount not found");
@@ -94,7 +92,6 @@ export const updateDiscount = async (params: UpdateDiscountParams) => {
       ...(type && { type }),
       startDate: newStart,
       endDate: newEnd,
-      ...(isActive !== undefined && { isActive }),
     },
   });
 };
@@ -103,8 +100,7 @@ export const deleteDiscount = async (id: string) => {
   const existing = await prisma.discount.findUnique({ where: { id } });
   if (!existing) throw new Error("Discount not found");
 
-  return await prisma.discount.update({
+  return await prisma.discount.delete({
     where: { id },
-    data: { isActive: false },
   });
 };

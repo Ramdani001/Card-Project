@@ -30,7 +30,7 @@ export async function main() {
   console.warn("Start seeding...");
 
   for (const r of roleData) {
-    const existingRole = await prisma.role.findFirst({
+    const existingRole = await prisma.role.findUnique({
       where: { name: r.name },
     });
 
@@ -43,7 +43,7 @@ export async function main() {
   console.warn("Roles seeded.");
 
   for (const u of userData) {
-    const role = await prisma.role.findFirst({
+    const role = await prisma.role.findUnique({
       where: { name: u.roleName },
     });
 
@@ -54,7 +54,7 @@ export async function main() {
 
     const hashedPassword = await bcrypt.hash(u.password, saltRounds);
 
-    const existingUser = await prisma.user.findFirst({
+    const existingUser = await prisma.user.findUnique({
       where: { email: u.email },
     });
 
@@ -65,7 +65,6 @@ export async function main() {
           password: hashedPassword,
           name: u.name,
           roleId: role.id,
-          isActive: true,
         },
       });
     } else {
