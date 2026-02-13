@@ -53,6 +53,46 @@ export const createRoleCategoryAccess = async (roleId: string, categoryId: strin
   });
 };
 
+export const syncRoleCategoryAccess = async (roleId: string, categoryIds: string[]) => {
+  return await prisma.$transaction(async (tx) => {
+    await tx.cardCategoryRoleAccess.updateMany({
+      where: {
+        roleId,
+        categoryId: { notIn: categoryIds },
+        isActive: true,
+      },
+      data: { isActive: false },
+    });
+
+    const results = [];
+
+    for (const categoryId of categoryIds) {
+      const existingAccess = await tx.cardCategoryRoleAccess.findFirst({
+        where: { roleId, categoryId },
+      });
+
+      if (existingAccess) {
+        if (!existingAccess.isActive) {
+          const updated = await tx.cardCategoryRoleAccess.update({
+            where: { id: existingAccess.id },
+            data: { isActive: true },
+          });
+          results.push(updated);
+        } else {
+          results.push(existingAccess);
+        }
+      } else {
+        const created = await tx.cardCategoryRoleAccess.create({
+          data: { roleId, categoryId, isActive: true },
+        });
+        results.push(created);
+      }
+    }
+
+    return results;
+  });
+};
+
 export const updateRoleCategoryAccess = async (id: string, data: { roleId?: string; categoryId?: string; isActive?: boolean }) => {
   const existingAccess = await prisma.cardCategoryRoleAccess.findUnique({ where: { id } });
   if (!existingAccess) throw new Error("Access record not found");

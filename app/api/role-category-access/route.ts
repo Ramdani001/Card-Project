@@ -11,12 +11,10 @@ export const GET = async (req: NextRequest) => {
     const searchParams = req.nextUrl.searchParams;
     const roleId = searchParams.get("roleId");
     const categoryId = searchParams.get("categoryId");
-    const isActive = searchParams.get("isActive");
 
     const additionalWhere: Prisma.CardCategoryRoleAccessWhereInput = {};
     if (roleId) additionalWhere.roleId = roleId;
     if (categoryId) additionalWhere.categoryId = categoryId;
-    if (isActive) additionalWhere.isActive = isActive === "true";
 
     const finalOptions = {
       ...options,
