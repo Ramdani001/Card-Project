@@ -43,7 +43,7 @@ export async function main() {
   console.warn("Roles seeded.");
 
   for (const u of userData) {
-    const role = await prisma.role.findUnique({
+    const role = await prisma.role.findFirst({
       where: { name: u.roleName },
     });
 
@@ -54,7 +54,7 @@ export async function main() {
 
     const hashedPassword = await bcrypt.hash(u.password, saltRounds);
 
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await prisma.user.findFirst({
       where: { email: u.email },
     });
 
