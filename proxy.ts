@@ -1,38 +1,8 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
+import { apiPermissions } from "./config/apiPermissions";
+import { pagePermissions } from "./config/pagePermission";
 
-const apiPermissions: Record<string, Record<string, string[]>> = {
-  // "/api/users": {
-  //   GET: ["*"],
-  //   POST: ["Administrator"],
-  //   PATCH: ["Administrator"],
-  //   DELETE: ["Administrator"],
-  // },
-  // "/api/cards": {
-  //   GET: ["*"],
-  //   POST: ["Administrator", "User"],
-  //   PATCH: ["Administrator", "User"],
-  //   DELETE: ["Administrator", "User"],
-  // },
-  // "/api/type-cards": {
-  //   GET: ["*"],
-  //   POST: ["Administrator"],
-  //   PATCH: ["Administrator"],
-  //   DELETE: ["Administrator"],
-  // },
-  // "/api/discounts": {
-  //   GET: ["*"],
-  //   POST: ["Administrator"],
-  //   PATCH: ["Administrator"],
-  //   DELETE: ["Administrator"],
-  // },
-  // "/api/roles": {
-  //   GET: ["*"],
-  //   POST: ["Administrator"],
-  //   PATCH: ["Administrator"],
-  //   DELETE: ["Administrator"],
-  // },
-};
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
@@ -40,20 +10,40 @@ export default withAuth(
     const method = req.method;
     const userRole = token?.role as string;
 
-    const matchingPath = Object.keys(apiPermissions).find((path) => pathname.startsWith(path));
+    if (pathname.startsWith("/api")) {
+      const matchingApiPath = Object.keys(apiPermissions).find((path) => pathname.startsWith(path));
 
-    if (matchingPath) {
-      const allowedRoles = apiPermissions[matchingPath][method];
+      if (matchingApiPath) {
+        const allowedRoles = apiPermissions[matchingApiPath][method];
 
-      if (allowedRoles) {
-        if (!token) {
-          return NextResponse.json({ success: false, message: "Authentication required for this API" }, { status: 401 });
+        if (allowedRoles) {
+          if (!token) {
+            return NextResponse.json({ success: false, message: "Authentication required" }, { status: 401 });
+          }
+
+          const isAllRoles = allowedRoles.includes("*");
+          if (!isAllRoles && !allowedRoles.includes(userRole)) {
+            return NextResponse.json(
+              {
+                success: false,
+                message: `Forbidden: Role '${userRole}' cannot access ${method} ${pathname}`,
+              },
+              { status: 403 }
+            );
+          }
         }
+      }
 
-        const isAllRoles = allowedRoles.includes("*");
-        if (!isAllRoles && !allowedRoles.includes(userRole)) {
-          return NextResponse.json({ success: false, message: `Forbidden: ${userRole} cannot ${method}` }, { status: 403 });
-        }
+      return NextResponse.next();
+    }
+
+    const matchingPagePath = Object.keys(pagePermissions).find((path) => pathname.startsWith(path));
+
+    if (matchingPagePath) {
+      const allowedRoles = pagePermissions[matchingPagePath];
+
+      if (!allowedRoles.includes(userRole)) {
+        return NextResponse.redirect(new URL("/", req.url));
       }
     }
 
@@ -61,11 +51,19 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: () => true,
+      authorized: ({ req, token }) => {
+        const { pathname } = req.nextUrl;
+
+        if (pathname.startsWith("/api")) {
+          return true;
+        }
+
+        return !!token;
+      },
     },
   }
 );
 
 export const config = {
-  matcher: ["/((?!login|register|api/auth|api/register|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/profile/:path*", "/api/:path*"],
 };

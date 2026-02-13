@@ -1,9 +1,6 @@
-import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import prisma from "@/lib/prisma";
-import { existsSync } from "fs";
-import { mkdir, unlink, writeFile } from "fs/promises";
 import { NextRequest } from "next/server";
-import path from "path";
+import { handleApiError, sendResponse } from "@/helpers/response.helper";
+import { getCardById, updateCard, deleteCard } from "@/services/card.service";
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -12,26 +9,15 @@ type RouteParams = {
 export const GET = async (_req: NextRequest, { params }: RouteParams) => {
   try {
     const { id } = await params;
-
-    const card = await prisma.card.findUnique({
-      where: { idCard: parseInt(id) },
-      include: {
-        detail: { include: { image: true } },
-        typeCard: true,
-      },
-    });
+    const card = await getCardById(id);
 
     if (!card) {
-      return sendResponse({
-        success: false,
-        message: "Card not found",
-        status: 404,
-      });
+      return sendResponse({ success: false, message: "Card not found", status: 404 });
     }
 
     return sendResponse({
       success: true,
-      message: "Card detail fetched successfully",
+      message: "Card fetched successfully",
       data: card,
     });
   } catch (err) {
@@ -39,105 +25,74 @@ export const GET = async (_req: NextRequest, { params }: RouteParams) => {
   }
 };
 
-export const PATCH = async (req: NextRequest, { params }: { params: Promise<{ id: string }> }) => {
-  let newFilePath: string | null = null;
-
+export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
   try {
-    const resolvedParams = await params;
-    const idCard = Number(resolvedParams.id);
-
+    const { id } = await params;
     const formData = await req.formData();
-    const name = formData.get("name") as string;
-    const price = formData.has("price") ? Number(formData.get("price")) : undefined;
-    const stock = formData.has("stock") ? Number(formData.get("stock")) : undefined;
-    const idDiscount = formData.has("idDiscount") ? Number(formData.get("idDiscount")) : undefined;
-    const idTypeCard = formData.has("idTypeCard") ? Number(formData.get("idTypeCard")) : undefined;
-    const note = formData.get("note") as string;
+
+    const getNumber = (key: string): number | undefined => {
+      const val = formData.get(key);
+      if (val === null || val.toString().trim() === "") return undefined;
+      const num = Number(val);
+      return isNaN(num) ? undefined : num;
+    };
+
+    const name = formData.get("name") as string | undefined;
+    const price = getNumber("price");
+    const stock = getNumber("stock");
+    const description = formData.get("description") as string | undefined;
+    const sku = formData.get("sku") as string | undefined;
     const file = formData.get("image") as File | null;
 
-    const oldCard = await prisma.card.findUnique({
-      where: { idCard },
-      include: { detail: { include: { image: true } } },
-    });
-
-    if (!oldCard) {
-      return sendResponse({ success: false, message: "Card not found", status: 404 });
+    let categoryIds: string[] | undefined;
+    if (formData.has("categoryIds")) {
+      categoryIds = formData.getAll("categoryIds") as string[];
     }
 
-    let idImage: number | null | undefined = undefined;
+    let discountId: string | null | undefined;
+    if (formData.has("discountId")) {
+      const rawDisc = formData.get("discountId") as string;
+      discountId = rawDisc === "null" || rawDisc === "" ? null : rawDisc;
+    }
+
+    if (price !== undefined && price < 0) {
+      return sendResponse({ success: false, message: "Price cannot be negative", status: 400 });
+    }
+    if (stock !== undefined && stock < 0) {
+      return sendResponse({ success: false, message: "Stock cannot be negative", status: 400 });
+    }
 
     if (file && file.size > 0) {
       const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
       if (!allowedTypes.includes(file.type)) {
-        return sendResponse({
-          success: false,
-          message: "File must be an image (JPG, PNG, or WEBP)",
-          status: 400,
-        });
+        return sendResponse({ success: false, message: "Invalid image type", status: 400 });
       }
-
-      const maxSize = 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        return sendResponse({
-          success: false,
-          message: "Image size must be less than 5MB",
-          status: 400,
-        });
+      if (file.size > 5 * 1024 * 1024) {
+        return sendResponse({ success: false, message: "Image too large (max 5MB)", status: 400 });
       }
-
-      const uploadDir = path.join(process.cwd(), "public", "uploads");
-      if (!existsSync(uploadDir)) await mkdir(uploadDir, { recursive: true });
-
-      const filename = `${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
-      const absolutePath = path.join(uploadDir, filename);
-      newFilePath = absolutePath;
-
-      const buffer = Buffer.from(await file.arrayBuffer());
-      await writeFile(absolutePath, buffer);
-
-      const newImageRecord = await prisma.image.create({
-        data: { name: filename, location: `/uploads/${filename}` },
-      });
-      idImage = newImageRecord.idImage;
     }
 
-    const result = await prisma.$transaction(async (tx) => {
-      await tx.detailCard.update({
-        where: { idDetail: oldCard.idDetail },
-        data: {
-          name,
-          price,
-          stock,
-          idDiscount,
-          note,
-          ...(idImage !== undefined && { idImage }),
-        },
-      });
-
-      return await tx.card.update({
-        where: { idCard },
-        data: { idTypeCard },
-        include: {
-          detail: { include: { image: true } },
-          typeCard: true,
-        },
-      });
+    const updatedCard = await updateCard({
+      id,
+      name,
+      price,
+      stock,
+      categoryIds,
+      discountId,
+      description,
+      sku,
+      file,
     });
 
-    if (idImage !== undefined && oldCard.detail.image) {
-      const oldPath = path.join(process.cwd(), "public", oldCard.detail.image.location);
-      if (existsSync(oldPath)) {
-        await unlink(oldPath);
-        await prisma.image.delete({ where: { idImage: oldCard.detail.image.idImage } });
-      }
+    return sendResponse({
+      success: true,
+      message: "Card updated successfully",
+      data: updatedCard,
+    });
+  } catch (err: any) {
+    if (err.message === "Card not found") {
+      return sendResponse({ success: false, message: err.message, status: 404 });
     }
-
-    return sendResponse({ success: true, message: "Card updated successfully", data: result });
-  } catch (err) {
-    if (newFilePath && existsSync(newFilePath)) {
-      await unlink(newFilePath).catch(console.error);
-    }
-
     return handleApiError(err);
   }
 };
@@ -145,46 +100,17 @@ export const PATCH = async (req: NextRequest, { params }: { params: Promise<{ id
 export const DELETE = async (_req: NextRequest, { params }: RouteParams) => {
   try {
     const { id } = await params;
-    const idCard = parseInt(id);
 
-    const card = await prisma.card.findUnique({
-      where: { idCard },
-      include: {
-        detail: {
-          include: { image: true },
-        },
-      },
-    });
-
-    if (!card) {
-      return sendResponse({ success: false, message: "Card not found", status: 404 });
-    }
-
-    const idDetail = card.idDetail;
-    const imageInfo = card.detail?.image;
-
-    await prisma.$transaction(async (tx) => {
-      await tx.card.delete({ where: { idCard } });
-
-      await tx.detailCard.delete({ where: { idDetail } });
-
-      if (imageInfo) {
-        await tx.image.delete({ where: { idImage: imageInfo.idImage } });
-      }
-    });
-
-    if (imageInfo?.location) {
-      const absolutePath = path.join(process.cwd(), "public", imageInfo.location);
-      if (existsSync(absolutePath)) {
-        await unlink(absolutePath);
-      }
-    }
+    await deleteCard(id);
 
     return sendResponse({
       success: true,
       message: "Card deleted successfully",
     });
-  } catch (err) {
+  } catch (err: any) {
+    if (err.message === "Card not found") {
+      return sendResponse({ success: false, message: err.message, status: 404 });
+    }
     return handleApiError(err);
   }
 };

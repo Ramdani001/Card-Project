@@ -1,20 +1,19 @@
+"use client";
 
-import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { Suspense } from "react";
+import { Center, Loader } from "@mantine/core";
 import MainDashboard from "./MainDashboard";
 
-
-export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
-
-  if (!session) {
-    redirect("/login");
-  }
-
+export default function DashboardPage() {
   return (
-    <>
+    <Suspense
+      fallback={
+        <Center h="100vh">
+          <Loader size="xl" />
+        </Center>
+      }
+    >
       <MainDashboard />
-    </>
+    </Suspense>
   );
 }

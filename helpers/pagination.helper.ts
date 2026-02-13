@@ -8,12 +8,22 @@ export const getQueryPaginationOptions = (req: NextRequest) => {
   const sortBy = searchParams.get("sortBy");
   const sortOrder = searchParams.get("sortOrder") || "desc";
 
-  const options: any = {};
+  const options: any = {
+    where: {},
+  };
 
   if (sortBy) {
-    options.orderBy = {
-      [sortBy]: ["asc", "desc"].includes(sortOrder) ? sortOrder : "desc",
-    };
+    if (sortBy === "role") {
+      options.orderBy = {
+        role: {
+          name: ["asc", "desc"].includes(sortOrder) ? sortOrder : "desc",
+        },
+      };
+    } else {
+      options.orderBy = {
+        [sortBy]: ["asc", "desc"].includes(sortOrder) ? sortOrder : "desc",
+      };
+    }
   }
 
   const page = parseInt(pageParam || "");
@@ -23,6 +33,22 @@ export const getQueryPaginationOptions = (req: NextRequest) => {
     options.skip = (page - 1) * limit;
     options.take = limit;
   }
+
+  const reservedParams = ["page", "limit", "sortBy", "sortOrder"];
+
+  searchParams.forEach((value, key) => {
+    if (!reservedParams.includes(key) && value) {
+      const isNumber = !isNaN(Number(value)) && value.trim() !== "";
+      if (isNumber) {
+        options.where[key] = Number(value);
+      } else {
+        options.where[key] = {
+          contains: value,
+          mode: "insensitive",
+        };
+      }
+    }
+  });
 
   return { options, page, limit };
 };

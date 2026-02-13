@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
-import prisma from "@/lib/prisma";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
+import { deleteDiscount, getDiscountById, updateDiscount } from "@/services/discount.service";
+import { DiscountType } from "@/prisma/generated/prisma/client";
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -9,22 +10,13 @@ type RouteParams = {
 export const GET = async (_req: NextRequest, { params }: RouteParams) => {
   try {
     const { id } = await params;
+    const discount = await getDiscountById(id);
 
-    const discount = await prisma.discount.findUnique({
-      where: { idDiscount: parseInt(id) },
-    });
-
-    if (!discount) {
-      return sendResponse({
-        success: false,
-        message: "Discount not found",
-        status: 404,
-      });
-    }
+    if (!discount) return sendResponse({ success: false, message: "Discount not found", status: 404 });
 
     return sendResponse({
       success: true,
-      message: "Discount detail fetched successfully",
+      message: "Discount fetched successfully",
       data: discount,
     });
   } catch (err) {
@@ -35,22 +27,25 @@ export const GET = async (_req: NextRequest, { params }: RouteParams) => {
 export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
   try {
     const { id } = await params;
-    const { discount, note } = await req.json();
+    const body = await req.json();
 
-    const updated = await prisma.discount.update({
-      where: { idDiscount: parseInt(id) },
-      data: {
-        ...(discount && { discount }),
-        ...(note && { note }),
-      },
+    if (body.type && !Object.values(DiscountType).includes(body.type)) {
+      return sendResponse({ success: false, message: "Invalid Discount Type", status: 400 });
+    }
+
+    const updatedDiscount = await updateDiscount({
+      id,
+      ...body,
+      value: body.value ? Number(body.value) : undefined,
     });
 
     return sendResponse({
       success: true,
       message: "Discount updated successfully",
-      data: updated,
+      data: updatedDiscount,
     });
   } catch (err: any) {
+    if (err.message === "Discount not found") return sendResponse({ success: false, message: err.message, status: 404 });
     return handleApiError(err);
   }
 };
@@ -58,16 +53,10 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
 export const DELETE = async (_req: NextRequest, { params }: RouteParams) => {
   try {
     const { id } = await params;
-
-    await prisma.discount.delete({
-      where: { idDiscount: parseInt(id) },
-    });
-
-    return sendResponse({
-      success: true,
-      message: "Discount deleted successfully",
-    });
+    await deleteDiscount(id);
+    return sendResponse({ success: true, message: "Discount deleted successfully" });
   } catch (err: any) {
+    if (err.message === "Discount not found") return sendResponse({ success: false, message: err.message, status: 404 });
     return handleApiError(err);
   }
 };

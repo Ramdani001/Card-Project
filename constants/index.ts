@@ -1,0 +1,5 @@
+export const CONSTANT = {
+  APP_CONFIG: {
+    DEFAULT_ID_ROLE_CODE: "DEFAULT_ID_ROLE_REGISTER",
+  },
+};

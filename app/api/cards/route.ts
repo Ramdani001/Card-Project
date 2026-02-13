@@ -1,50 +1,24 @@
 import { NextRequest } from "next/server";
-import prisma from "@/lib/prisma";
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { writeFile, mkdir, unlink } from "fs/promises";
-import { existsSync } from "fs";
-import path from "path";
+import { createCard, getCards } from "@/services/card.service";
 
 export const GET = async (req: NextRequest) => {
   try {
     const { options, page, limit } = getQueryPaginationOptions(req);
 
-    options.include = {
-      typeCard: true,
-      detail: {
-        include: {
-          image: true,
-          discount: true,
-        },
-      },
-    };
-
-    if (options.take) {
-      const [cards, total] = await Promise.all([prisma.card.findMany(options), prisma.discount.count()]);
-
-      return sendResponse({
-        success: true,
-        message: "All cards fetched successfully",
-        data: cards,
-        metadata: {
-          total,
-          page: page || 1,
-          limit: limit || 10,
-          totalPages: Math.ceil(total / (limit || 10)),
-        },
-      });
-    }
-
-    const allCard = await prisma.discount.findMany({
-      ...options,
-      orderBy: options.orderBy || { idCard: "desc" },
-    });
+    const { cards, total } = await getCards(options);
 
     return sendResponse({
       success: true,
-      message: "All cards fetched successfully",
-      data: allCard,
+      message: "Cards fetched successfully",
+      data: cards,
+      metadata: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
     });
   } catch (err) {
     return handleApiError(err);
@@ -52,120 +26,68 @@ export const GET = async (req: NextRequest) => {
 };
 
 export const POST = async (req: NextRequest) => {
-  let savedFilePath: string | null = null;
-
   try {
     const formData = await req.formData();
 
     const name = formData.get("name") as string;
-    const price = Number(formData.get("price"));
-    const stock = Number(formData.get("stock"));
-    const idDiscount = formData.get("idDiscount") ? Number(formData.get("idDiscount")) : null;
-    const idTypeCard = Number(formData.get("idTypeCard"));
-    const note = (formData.get("note") as string) || "";
+    const priceRaw = formData.get("price");
+    const stockRaw = formData.get("stock");
+    const description = (formData.get("description") as string) || "";
+    const sku = (formData.get("sku") as string) || undefined;
+    const discountId = formData.get("discountId") as string | null;
     const file = formData.get("image") as File | null;
+    const categoryIds = formData.getAll("categoryIds") as string[];
 
-    let idImage: number | null = null;
-
-    if (file && file.size > 0) {
-      const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
-      if (!allowedTypes.includes(file.type)) {
-        return sendResponse({
-          success: false,
-          message: "File must be an image (JPG, PNG, or WEBP)",
-          status: 400,
-        });
-      }
-
-      const maxSize = 5 * 1024 * 1024;
-      if (file.size > maxSize) {
-        return sendResponse({
-          success: false,
-          message: "Image size must be less than 5MB",
-          status: 400,
-        });
-      }
-
-      const uploadDir = path.join(process.cwd(), "public", "uploads");
-      if (!existsSync(uploadDir)) {
-        await mkdir(uploadDir, { recursive: true });
-      }
-
-      const bytes = await file.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      const filename = `${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
-      const relativePath = `/uploads/${filename}`;
-      const absolutePath = path.join(uploadDir, filename);
-
-      savedFilePath = absolutePath;
-
-      await writeFile(absolutePath, buffer);
-
-      const newImage = await prisma.image.create({
-        data: { name: filename, location: relativePath },
-      });
-      idImage = newImage.idImage;
+    if (!name?.trim()) {
+      return sendResponse({ success: false, message: "Card Name is required", status: 400 });
     }
 
-    const result = await prisma.$transaction(async (tx) => {
-      if (idDiscount) {
-        const discount = await tx.discount.findUnique({
-          where: { idDiscount: idDiscount },
-        });
+    if (!priceRaw || isNaN(Number(priceRaw)) || Number(priceRaw) < 0) {
+      return sendResponse({ success: false, message: "Valid Price is required", status: 400 });
+    }
 
-        if (!discount) {
-          throw new Error("Invalid Discount ID");
-        }
-      }
+    if (!stockRaw || isNaN(Number(stockRaw)) || Number(stockRaw) < 0) {
+      return sendResponse({ success: false, message: "Valid Stock is required", status: 400 });
+    }
 
-      if (idTypeCard) {
-        const typeCard = await tx.typeCard.findUnique({
-          where: { idTypeCard: idTypeCard },
-        });
+    if (!categoryIds || categoryIds.length === 0) {
+      return sendResponse({ success: false, message: "At least one Category is required", status: 400 });
+    }
 
-        if (!typeCard) {
-          throw new Error("Invalid Type Card ID");
-        }
-      }
+    if (!file || file.size === 0) {
+      return sendResponse({ success: false, message: "Image is required", status: 400 });
+    }
 
-      const newCardDetail = await tx.detailCard.create({
-        data: {
-          name,
-          price,
-          stock,
-          idDiscount,
-          note,
-          idImage,
-        },
-      });
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+    if (!allowedTypes.includes(file.type)) {
+      return sendResponse({ success: false, message: "File must be an image (JPG, PNG, WEBP)", status: 400 });
+    }
 
-      return await tx.card.create({
-        data: {
-          idDetail: newCardDetail.idDetail,
-          idTypeCard,
-        },
-        include: {
-          detail: { include: { image: true } },
-          typeCard: true,
-        },
-      });
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return sendResponse({ success: false, message: "Image size must be less than 5MB", status: 400 });
+    }
+
+    const cleanDiscountId = discountId === "null" || discountId === "" ? null : discountId;
+
+    const newCard = await createCard({
+      name,
+      price: Number(priceRaw),
+      stock: Number(stockRaw),
+      categoryIds,
+      discountId: cleanDiscountId,
+      description,
+      sku,
+      file,
     });
 
     return sendResponse({
       success: true,
       message: "Card created successfully",
-      data: result,
+      data: newCard,
       status: 201,
     });
-  } catch (err) {
-    if (savedFilePath && existsSync(savedFilePath)) {
-      try {
-        await unlink(savedFilePath);
-      } catch (unlinkErr) {
-        console.error(unlinkErr);
-      }
-    }
-
+  } catch (err: any) {
     return handleApiError(err);
   }
 };

@@ -43,3 +43,31 @@ a {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--mantine-color-gray-6);
 }
+
+.cardHover {
+  transition: transform 0.5s ease;
+}
+
+.cardHover:hover {
+  transform: scale(1.1);
+}
+
+.bgWhite{
+  background-color: white !important;
+}
+
+/* Swiper Image */
+
+.swiper {
+  width: 100%;
+  height: 100%;
+}
+
+.swiper-slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: bold;
+  color: #fff;
+}
