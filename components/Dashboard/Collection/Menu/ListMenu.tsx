@@ -143,6 +143,8 @@ const ListMenu = () => {
     {
       key: "icon",
       label: "Icon",
+      sortable: true,
+      filterable: true,
       width: 120,
       render: (item) => (item.icon ? <Code>{item.icon}</Code> : <Text c="dimmed">-</Text>),
     },
@@ -150,6 +152,7 @@ const ListMenu = () => {
       key: "order",
       label: "Order",
       sortable: true,
+      filterable: true,
       width: 80,
       render: (item) => (
         <Badge variant="outline" color="gray">
@@ -160,6 +163,8 @@ const ListMenu = () => {
     {
       key: "url",
       label: "URL Path",
+      sortable: true,
+      filterable: true,
       render: (item) =>
         item.url ? (
           <Text size="sm" c="blue">
@@ -172,16 +177,17 @@ const ListMenu = () => {
         ),
     },
     {
-      key: "parentId",
+      key: "parent",
       label: "Parent",
-      sortable: false,
+      sortable: true,
+      filterable: true,
       render: (item) =>
         item.parent ? (
           <Badge color="cyan" variant="light">
             {item.parent.label}
           </Badge>
         ) : (
-          <Badge color="gray" variant="dot">
+          <Badge color="gray" variant="light">
             ROOT
           </Badge>
         ),
@@ -189,7 +195,8 @@ const ListMenu = () => {
     {
       key: "subMenus",
       label: "Children",
-      sortable: false,
+      sortable: true,
+      filterable: false,
       width: 100,
       render: (item) => {
         const count = item.subMenus?.length || 0;

@@ -1,7 +1,7 @@
 "use client";
 
 import { Menu } from "@/types/Menu";
-import { Button, Flex, Modal, NumberInput, Select, TextInput } from "@mantine/core";
+import { Button, Group, Modal, NumberInput, Select, SimpleGrid, Stack, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
@@ -24,18 +24,20 @@ export const MenuForm = ({ opened, onClose, menuToEdit, allMenus, onSuccess }: M
   const [parentId, setParentId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (menuToEdit) {
-      setLabel(menuToEdit.label);
-      setUrl(menuToEdit.url || "");
-      setIcon(menuToEdit.icon || "");
-      setOrder(menuToEdit.order);
-      setParentId(menuToEdit.parentId || null);
-    } else {
-      setLabel("");
-      setUrl("");
-      setIcon("");
-      setOrder("");
-      setParentId(null);
+    if (opened) {
+      if (menuToEdit) {
+        setLabel(menuToEdit.label);
+        setUrl(menuToEdit.url || "");
+        setIcon(menuToEdit.icon || "");
+        setOrder(menuToEdit.order);
+        setParentId(menuToEdit.parentId || null);
+      } else {
+        setLabel("");
+        setUrl("");
+        setIcon("");
+        setOrder(0);
+        setParentId(null);
+      }
     }
   }, [menuToEdit, opened]);
 
@@ -74,8 +76,8 @@ export const MenuForm = ({ opened, onClose, menuToEdit, allMenus, onSuccess }: M
 
       if (json.success) {
         notifications.show({ title: "Success", message: json.message, color: "teal", icon: <IconCheck size={16} /> });
-        onClose();
         onSuccess();
+        onClose();
       } else {
         notifications.show({ title: "Error", message: json.message, color: "red", icon: <IconX size={16} /> });
       }
@@ -88,64 +90,64 @@ export const MenuForm = ({ opened, onClose, menuToEdit, allMenus, onSuccess }: M
   };
 
   return (
-    <Modal opened={opened} onClose={onClose} title={menuToEdit ? "Edit Menu" : "Add New Menu"} centered>
-      <Flex direction="column" gap="md">
-        <TextInput
-          label="Label Name"
-          placeholder="e.g. Dashboard"
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          withAsterisk
-          data-autofocus
-        />
+    <Modal opened={opened} onClose={onClose} title={menuToEdit ? "Edit Menu" : "Create New Menu"} centered size="lg">
+      <Stack gap="md">
+        <SimpleGrid cols={{ base: 1, sm: 2 }}>
+          <TextInput
+            label="Label Name"
+            placeholder="e.g. Dashboard"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            withAsterisk
+            data-autofocus
+          />
+          <NumberInput
+            label="Order Sequence"
+            placeholder="0"
+            value={order}
+            onChange={(val) => setOrder(val === "" ? "" : Number(val))}
+            withAsterisk
+            min={0}
+          />
+        </SimpleGrid>
 
-        <TextInput
-          label="URL Path"
-          placeholder="e.g. /dashboard"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          description="Leave empty if this is a parent menu without link"
-        />
-
-        <Flex gap="md">
+        <SimpleGrid cols={{ base: 1, sm: 2 }}>
+          <TextInput
+            label="URL Path"
+            placeholder="e.g. /dashboard"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            description="Empty for folder/parent"
+          />
           <TextInput
             label="Icon Name"
             placeholder="e.g. IconHome"
             value={icon}
             onChange={(e) => setIcon(e.target.value)}
-            style={{ flex: 1 }}
-            description="Tabler Icon name"
+            description="Tabler Icon string"
           />
-          <NumberInput
-            label="Order"
-            placeholder="0"
-            value={order}
-            onChange={(val) => setOrder(val === "" ? "" : Number(val))}
-            style={{ width: 100 }}
-            withAsterisk
-            min={0}
-          />
-        </Flex>
+        </SimpleGrid>
 
         <Select
-          label="Parent Menu (Optional)"
-          placeholder="Select Parent or Leave as Root"
+          label="Parent Menu"
+          placeholder="Select Parent or Leave Empty for Root"
           data={parentOptions}
           value={parentId}
           onChange={setParentId}
           clearable
           searchable
+          checkIconPosition="right"
         />
 
-        <Flex justify="flex-end" gap="sm" mt="lg">
+        <Group justify="flex-end" mt="md">
           <Button variant="default" onClick={onClose} disabled={loading}>
             Cancel
           </Button>
           <Button onClick={handleSubmit} loading={loading}>
-            {menuToEdit ? "Update" : "Create"}
+            {menuToEdit ? "Save Changes" : "Create Menu"}
           </Button>
-        </Flex>
-      </Flex>
+        </Group>
+      </Stack>
     </Modal>
   );
 };
