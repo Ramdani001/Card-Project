@@ -12,8 +12,6 @@ import { useState } from "react";
 
 export default function TcgCornerClone() {
 
-  const [loadingProducts, setLoadingProducts] = useState(true);
-
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [search, setSearch] = useState("");
