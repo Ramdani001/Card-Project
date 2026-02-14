@@ -1,5 +1,6 @@
 "use client";
 
+import { ArticleMain } from "@/components/LandingPage/Article/ArticleMain";
 import { CaseBoxCard } from "@/components/LandingPage/feature/CaseBoxCard";
 import { SingleCard } from "@/components/LandingPage/feature/SingleCard";
 import { HeaderSection } from "@/components/LandingPage/HeaderSection";
@@ -25,6 +26,7 @@ export default function TcgCornerClone() {
       <SingleCard />
       <PreOrder />
       <CaseBoxCard />
+      <ArticleMain />
     </Box>
   );
 }

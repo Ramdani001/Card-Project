@@ -44,7 +44,7 @@ export const CaseBoxCard = () => {
               {products
                 .filter((product) => product.categories.some((cat) => cat.category.slug === "case-box"))
                 .map((item) => (
-                  <Box key={item.id} miw={0} className="cardHover">
+                  <Box key={item.id} miw={350} className="cardHover">
                     <BoxCard data={item} />
                   </Box>
                 ))}
