@@ -62,7 +62,7 @@ a {
   width: 100%;
   height: 100%;
 }
-
+/* 
 .swiper-slide {
   display: flex;
   align-items: center;
@@ -70,8 +70,42 @@ a {
   font-size: 22px;
   font-weight: bold;
   color: #fff;
-}
+} */
 
 .textHov:hover .textHov2{
   color: white;
+}
+
+.swiper-slide {
+  text-align: center;
+  font-size: 18px;
+  background: #444;
+
+  /* Center slide text vertically */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.swiper-slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+.blue-title {
+  font-size: 100px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+
+  background: linear-gradient(90deg, #00c6ff, #0072ff, #0052cc);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  text-shadow:
+    0 0 8px rgba(0, 114, 255, 0.7),
+    0 0 20px rgba(0, 114, 255, 0.5);
 }
