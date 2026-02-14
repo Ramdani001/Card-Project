@@ -1,10 +1,10 @@
 import { CardData } from "@/types/CardData";
 import { Badge, Button, Card, Group, Image, Text, Box } from "@mantine/core";
-interface CardSingleProps {
+interface BoxCardProps {
   data: CardData;
 }
 
-export const BoxCard: React.FC<CardSingleProps> = ({ data }) => {
+export const BoxCard: React.FC<BoxCardProps> = ({ data }) => {
   const priceNumber = Number(data.price);
 
   const discountValue = data.discount ? Number(data.discount.value) : 0;

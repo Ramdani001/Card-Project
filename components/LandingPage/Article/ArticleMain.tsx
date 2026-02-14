@@ -3,33 +3,30 @@ import { Event } from "@/types/Event";
 import { Badge, Button, Card, Group, Image, Text, Box, Container, Center } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useEffect, useState } from "react";
-interface CardSingleProps {
-  data: CardData;
-}
 
-export const ArticleMain: React.FC<CardSingleProps> = ({ data }) => {
-            const [events, setEvents] = useState<Event[]>([]);
-            const [loadingEvents, setLoadingEvents] = useState(true);
+export const ArticleMain = () => {
+    const [events, setEvents] = useState<Event[]>([]);
+    const [loadingEvents, setLoadingEvents] = useState(true);
 
-            useEffect(() => {
-                const fetchPreOrder = async () => {
-                try {
-                    const res = await fetch("/api/events");
-                    const json = await res.json();
-                    if (json.success && Array.isArray(json.data)) {
-                    setEvents(json.data);
-                    } else {
-                    setEvents([]);
-                    }
-                } catch (error) {
-                    console.error("Error fetch events:", error);
-                    notifications.show({ title: "Error", message: "Gagal mengambil data events.", color: "red" });
-                } finally {
-                    setLoadingEvents(false);
-                }
-                };
-                fetchPreOrder();
-            }, []);
+    useEffect(() => {
+        const fetchPreOrder = async () => {
+        try {
+            const res = await fetch("/api/events");
+            const json = await res.json();
+            if (json.success && Array.isArray(json.data)) {
+            setEvents(json.data);
+            } else {
+            setEvents([]);
+            }
+        } catch (error) {
+            console.error("Error fetch events:", error);
+            notifications.show({ title: "Error", message: "Gagal mengambil data events.", color: "red" });
+        } finally {
+            setLoadingEvents(false);
+        }
+        };
+        fetchPreOrder();
+    }, []);
 
   return (
    <>
