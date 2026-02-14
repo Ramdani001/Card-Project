@@ -253,7 +253,6 @@ export const getTransactions = async (userId: string, params: GetTransactionPara
   const { skip, take, orderBy, where } = params;
 
   const whereClause: Prisma.TransactionWhereInput = {
-    userId,
     ...where,
   };
 
