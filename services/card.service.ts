@@ -66,7 +66,6 @@ export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string
           },
         },
       };
-
       delete baseWhere.categories;
     }
   }
@@ -87,11 +86,16 @@ export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string
       const allowedCategoryIds = user.role.cardCategoryRoleAccesses.map((access) => access.categoryId);
 
       roleSecurityFilter = {
-        categories: {
-          some: {
-            categoryId: { in: allowedCategoryIds },
+        OR: [
+          {
+            categories: {
+              some: { categoryId: { in: allowedCategoryIds } },
+            },
           },
-        },
+          {
+            categories: { none: {} },
+          },
+        ],
       };
     }
   } else {
@@ -101,12 +105,21 @@ export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string
 
     if (singleCardCategory) {
       roleSecurityFilter = {
-        categories: {
-          some: { categoryId: singleCardCategory.id },
-        },
+        OR: [
+          {
+            categories: {
+              some: { categoryId: singleCardCategory.id },
+            },
+          },
+          {
+            categories: { none: {} },
+          },
+        ],
       };
     } else {
-      roleSecurityFilter = { id: { in: [] } };
+      roleSecurityFilter = {
+        categories: { none: {} },
+      };
     }
   }
 
@@ -117,7 +130,10 @@ export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string
   const finalOptions: Prisma.CardFindManyArgs = {
     ...options,
     where: finalWhereClause,
-    include: { ...defaultInclude, ...((options.include as Prisma.CardInclude) || {}) },
+    include: {
+      ...defaultInclude,
+      ...((options.include as Prisma.CardInclude) || {}),
+    },
   };
 
   const [cards, total] = await Promise.all([prisma.card.findMany(finalOptions), prisma.card.count({ where: finalOptions.where })]);
