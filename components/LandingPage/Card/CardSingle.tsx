@@ -1,28 +1,22 @@
+import { CardData } from "@/types/CardData";
 import { Badge, Button, Card, Group, Image, Text, Box } from "@mantine/core";
-import { Product } from "./types";
-
 interface CardSingleProps {
-  data: Product;
+  data: CardData;
 }
 
 export const CardSingle: React.FC<CardSingleProps> = ({ data }) => {
   const priceNumber = Number(data.price);
 
-  const discountValue = data.discount
-    ? Number(data.discount.value)
-    : 0;
+  const discountValue = data.discount ? Number(data.discount.value) : 0;
 
   const finalPrice =
     data.discount?.type === "PERCENTAGE"
       ? priceNumber - (priceNumber * discountValue) / 100
-      : data.discount?.type === "FIXED"
-      ? priceNumber - discountValue
-      : priceNumber;
+      : data.discount?.type === "NOMINAL"
+        ? priceNumber - discountValue
+        : priceNumber;
 
-  const primaryImage =
-    data.images.find((img) => img.isPrimary)?.url ||
-    data.images[0]?.url ||
-    "/no-image.png";
+  const primaryImage = data.images.find((img) => img.isPrimary)?.url || data.images[0]?.url || "/no-image.png";
 
   const isSoldOut = data.stock === 0;
 
@@ -39,11 +33,7 @@ export const CardSingle: React.FC<CardSingleProps> = ({ data }) => {
         }}
       >
         <Card.Section>
-          <Image
-            src={primaryImage}
-            height={160}
-            alt={data.name}
-          />
+          <Image src={primaryImage} height={160} alt={data.name} />
         </Card.Section>
 
         <Group justify="space-between" mt="md" mb="xs">
@@ -51,13 +41,7 @@ export const CardSingle: React.FC<CardSingleProps> = ({ data }) => {
             {data.name}
           </Text>
 
-          {data.discount && (
-            <Badge color="pink">
-              {data.discount.type === "PERCENTAGE"
-                ? `${discountValue}%`
-                : "Discount"}
-            </Badge>
-          )}
+          {data.discount && <Badge color="pink">{data.discount.type === "PERCENTAGE" ? `${discountValue}%` : "Discount"}</Badge>}
         </Group>
 
         {data.discount ? (
@@ -70,18 +54,10 @@ export const CardSingle: React.FC<CardSingleProps> = ({ data }) => {
             </Text>
           </>
         ) : (
-          <Text fw={600}>
-            Rp {priceNumber.toLocaleString("id-ID")}
-          </Text>
+          <Text fw={600}>Rp {priceNumber.toLocaleString("id-ID")}</Text>
         )}
 
-        <Button
-          color="blue"
-          fullWidth
-          mt="md"
-          radius="md"
-          disabled={isSoldOut}
-        >
+        <Button color="blue" fullWidth mt="md" radius="md" disabled={isSoldOut}>
           {isSoldOut ? "Out of Stock" : "Add To Cart"}
         </Button>
       </Card>

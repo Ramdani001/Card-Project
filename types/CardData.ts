@@ -1,3 +1,5 @@
+import { Discount } from "./Discount";
+
 export interface CardData {
   id: string;
   name: string;
@@ -6,6 +8,7 @@ export interface CardData {
   stock: number;
   sku?: string;
   discountId?: string;
+  discount?: Discount;
   description?: string;
   images: { id: string; url: string; isPrimary: boolean }[];
   categories: {
