@@ -38,10 +38,10 @@ export const FilterSection = ({ categories, selectedCategoryIds, setSelectedCate
         {categories.length > 0 ? (
           categories.map((cat) => (
             <Checkbox
-              key={cat.id}
+              key={cat.name}
               label={cat.name}
-              checked={selectedCategoryIds.includes(cat.id)}
-              onChange={() => handleToggle(cat.id)}
+              checked={selectedCategoryIds.includes(cat.name)}
+              onChange={() => handleToggle(cat.name)}
               styles={{
                 label: { fontSize: 14, color: "#495057", cursor: "pointer" },
                 input: { cursor: "pointer" },
