@@ -1,6 +1,6 @@
 "use client";
 
-import { caseBoxCard } from "@/components/LandingPage/feature/CaseBoxCard";
+import { CaseBoxCard } from "@/components/LandingPage/feature/CaseBoxCard";
 import { SingleCard } from "@/components/LandingPage/feature/SingleCard";
 import { HeaderSection } from "@/components/LandingPage/HeaderSection";
 import { HeroSection } from "@/components/LandingPage/HeroSection";
