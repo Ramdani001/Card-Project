@@ -36,7 +36,7 @@ const generateSlug = (name: string) => {
     .replace(/^-+|-+$/g, "");
 };
 
-export const getCards = async (options: Prisma.CardFindManyArgs) => {
+export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string) => {
   const defaultInclude: Prisma.CardInclude = {
     images: true,
     discount: true,
@@ -45,9 +45,58 @@ export const getCards = async (options: Prisma.CardFindManyArgs) => {
     },
   };
 
+  let whereClause: Prisma.CardWhereInput = { ...options.where };
+
+  if (userId) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        role: {
+          include: { cardCategoryRoleAccesses: true },
+        },
+      },
+    });
+
+    if (user && user.role) {
+      const allowedCategoryIds = user.role.cardCategoryRoleAccesses.map((access) => access.categoryId);
+
+      whereClause = {
+        ...whereClause,
+        categories: {
+          some: {
+            categoryId: {
+              in: allowedCategoryIds,
+            },
+          },
+        },
+      };
+    }
+  } else {
+    const singleCardCategory = await prisma.category.findFirst({
+      where: { name: "Single Card" },
+    });
+
+    if (singleCardCategory) {
+      whereClause = {
+        ...whereClause,
+        categories: {
+          some: {
+            categoryId: singleCardCategory.id,
+          },
+        },
+      };
+    } else {
+      whereClause = {
+        ...whereClause,
+        id: { in: [] },
+      };
+    }
+  }
+
   const finalOptions: Prisma.CardFindManyArgs = {
     ...options,
-    include: { ...defaultInclude, ...(options.include || {}) },
+    where: whereClause,
+    include: { ...defaultInclude, ...((options.include as Prisma.CardInclude) || {}) },
   };
 
   const [cards, total] = await Promise.all([prisma.card.findMany(finalOptions), prisma.card.count({ where: finalOptions.where })]);

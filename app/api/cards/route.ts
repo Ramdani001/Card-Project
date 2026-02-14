@@ -7,9 +7,11 @@ import { authOptions } from "@/lib/auth";
 
 export const GET = async (req: NextRequest) => {
   try {
+    const session = await getServerSession(authOptions);
+
     const { options, page, limit } = getQueryPaginationOptions(req);
 
-    const { cards, total } = await getCards(options);
+    const { cards, total } = await getCards(options, session?.user?.id);
 
     return sendResponse({
       success: true,
