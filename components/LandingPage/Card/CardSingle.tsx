@@ -56,10 +56,6 @@ export const CardSingle: React.FC<CardSingleProps> = ({ data }) => {
         ) : (
           <Text fw={600}>Rp {priceNumber.toLocaleString("id-ID")}</Text>
         )}
-
-        <Button color="blue" fullWidth mt="md" radius="md" disabled={isSoldOut}>
-          {isSoldOut ? "Out of Stock" : "Add To Cart"}
-        </Button>
       </Card>
 
       {/* Overlay SOLD OUT */}

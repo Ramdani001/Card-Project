@@ -33,6 +33,9 @@ export const SingleCard = () => {
   return (
     <>
         <Box mb={30} mt={50} px={30}>
+            <Center mb={20}>
+                <h1>FEATURED SINGLE CARD</h1>
+            </Center>
             <Center>
                 <ScrollArea
                 scrollbars="x"

@@ -40,23 +40,6 @@ export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen, c
 
   return (
     <>
-      <Box bg="#212529" c="gray.4" py={8} style={{ fontSize: 12 }}>
-        <Container size="xl">
-          <Group justify="space-between">
-            <Text size="xs">Indonesia&apos;s Premier TCG Store | 100% Authentic Cards</Text>
-            <Group gap="md" visibleFrom="xs">
-              <Text size="xs" style={{ cursor: "pointer" }} c="dimmed">
-                Help Center
-              </Text>
-              <Divider orientation="vertical" color="gray.7" />
-              <Text size="xs" style={{ cursor: "pointer" }} c="dimmed" onClick={() => router.push("/transactions")}>
-                Track Order
-              </Text>
-            </Group>
-          </Group>
-        </Container>
-      </Box>
-
       <Box
         component="header"
         py="md"
@@ -79,20 +62,40 @@ export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen, c
               </Title>
             </Group>
 
-            <Box w={500} visibleFrom="md">
-              <TextInput
-                placeholder="Search for cards, sets, or products..."
-                rightSection={
-                  <ActionIcon variant="filled" color="blue" radius="xs" size="lg">
-                    <IconSearch size={18} />
-                  </ActionIcon>
-                }
-                radius="xs"
-                size="sm"
-                value={search}
-                onChange={(e) => setSearch(e.currentTarget.value)}
-                styles={{ input: { backgroundColor: "#f8f9fa", border: "1px solid #ced4da" } }}
-              />
+            <Box visibleFrom="md">
+              <Container size="xl">
+                <Group gap={0}>
+                  {["New Arrivals", "Single Cards", "Sealed Products", "Accessories", "Sale"].map((item) => (
+                    <Menu key={item} trigger="hover" openDelay={100} closeDelay={200}>
+                      <Menu.Target>
+                        <Box
+                          px="lg"
+                          py="sm"
+                          style={{ cursor: "pointer", transition: "background 0.2s", fontSize: 13, fontWeight: 700, letterSpacing: 0.5 }}
+                          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#004494")}
+                          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
+                          className="textHov"
+                        >
+                          <Group gap={4}>
+                            <Text size="sm" fw={700} style={{ textTransform: "uppercase" }}
+                            className="textHov2"
+                            >
+                              {item}
+                            </Text>
+                            <IconChevronDown size={14} style={{ opacity: 0.8 }} />
+                          </Group>
+                        </Box>
+                      </Menu.Target>
+                      <Menu.Dropdown style={{ borderRadius: 0, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
+                        <Menu.Item fw={600}>View All {item}</Menu.Item>
+                        <Menu.Divider />
+                        <Menu.Item>Top Rated</Menu.Item>
+                        <Menu.Item>Trending Now</Menu.Item>
+                      </Menu.Dropdown>
+                    </Menu>
+                  ))}
+                </Group>
+              </Container>
             </Box>
 
             <Group gap="lg">
@@ -150,39 +153,6 @@ export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen, c
                 </ActionIcon>
               </Indicator>
             </Group>
-          </Group>
-        </Container>
-      </Box>
-
-      <Box bg="#0056b3" c="white" visibleFrom="md" style={{ borderBottom: "4px solid #004494" }}>
-        <Container size="xl">
-          <Group gap={0}>
-            {["New Arrivals", "Single Cards", "Sealed Products", "Accessories", "Sale"].map((item) => (
-              <Menu key={item} trigger="hover" openDelay={100} closeDelay={200}>
-                <Menu.Target>
-                  <Box
-                    px="lg"
-                    py="sm"
-                    style={{ cursor: "pointer", transition: "background 0.2s", fontSize: 13, fontWeight: 700, letterSpacing: 0.5 }}
-                    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#004494")}
-                    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "transparent")}
-                  >
-                    <Group gap={4}>
-                      <Text size="sm" fw={700} style={{ textTransform: "uppercase" }}>
-                        {item}
-                      </Text>
-                      <IconChevronDown size={14} style={{ opacity: 0.8 }} />
-                    </Group>
-                  </Box>
-                </Menu.Target>
-                <Menu.Dropdown style={{ borderRadius: 0, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)" }}>
-                  <Menu.Item fw={600}>View All {item}</Menu.Item>
-                  <Menu.Divider />
-                  <Menu.Item>Top Rated</Menu.Item>
-                  <Menu.Item>Trending Now</Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-            ))}
           </Group>
         </Container>
       </Box>

@@ -3,6 +3,7 @@
 import { SingleCard } from "@/components/LandingPage/feature/SingleCard";
 import { HeaderSection } from "@/components/LandingPage/HeaderSection";
 import { HeroSection } from "@/components/LandingPage/HeroSection";
+import { PreOrder } from "@/components/LandingPage/PreOrder/PreOrder";
 import { SwiperCard } from "@/components/LandingPage/swiper/SwiperCard";
 import { CartItem } from "@/types/CartItem";
 import { Box } from "@mantine/core";
@@ -22,6 +23,7 @@ export default function TcgCornerClone() {
       <HeroSection />
       <SwiperCard />
       <SingleCard />
+      <PreOrder />
     </Box>
   );
 }
