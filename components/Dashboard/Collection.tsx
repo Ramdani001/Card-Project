@@ -7,6 +7,7 @@ import ListMenu from "@/components/Dashboard/Collection/Menu/ListMenu";
 import ListTypeCard from "@/components/Dashboard/Collection/Category/ListCategory";
 import { Paper, Tabs, rem, Text } from "@mantine/core";
 import { IconCalendarEvent, IconCardboards, IconCards, IconDiscount, IconList } from "@tabler/icons-react";
+import ListBanner from "./Collection/Banner/ListBanner";
 
 const Collection = () => {
   const iconStyle = { width: rem(20), height: rem(20) };
@@ -25,7 +26,7 @@ const Collection = () => {
         >
           <Tabs.Tab value="card" leftSection={<IconCards style={iconStyle} />}>
             <Text span visibleFrom="sm">
-              Card Management
+              Card
             </Text>
           </Tabs.Tab>
 
@@ -37,19 +38,25 @@ const Collection = () => {
 
           <Tabs.Tab value="event" leftSection={<IconCalendarEvent style={iconStyle} />}>
             <Text span visibleFrom="sm">
-              Event Management
+              Event
             </Text>
           </Tabs.Tab>
 
           <Tabs.Tab value="discount" leftSection={<IconDiscount style={iconStyle} />}>
             <Text span visibleFrom="sm">
-              Discount Management
+              Discount
             </Text>
           </Tabs.Tab>
 
           <Tabs.Tab value="menu" leftSection={<IconList style={iconStyle} />}>
             <Text span visibleFrom="sm">
-              Menu Management
+              Menu
+            </Text>
+          </Tabs.Tab>
+
+          <Tabs.Tab value="banner" leftSection={<IconList style={iconStyle} />}>
+            <Text span visibleFrom="sm">
+              Banner
             </Text>
           </Tabs.Tab>
         </Tabs.List>
@@ -68,6 +75,9 @@ const Collection = () => {
         </Tabs.Panel>
         <Tabs.Panel value="type-card">
           <ListTypeCard />
+        </Tabs.Panel>
+        <Tabs.Panel value="banner">
+          <ListBanner />
         </Tabs.Panel>
       </Tabs>
     </Paper>
