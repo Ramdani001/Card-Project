@@ -1,171 +1,134 @@
-import { Badge, Box, Button, Card, Center, Container, Grid, Group, Image, SimpleGrid, Text} from "@mantine/core";
-import { Calendar } from "@mantine/dates";
+import { Event } from "@/types/Event";
+import { Box, Button, Card, Center, Container, Grid, Image, Text, Loader, Indicator } from "@mantine/core";
+import { DatePicker } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
+import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 
-
 export const PreOrder = () => {
+  const [preOrder, setPreOrder] = useState<Event[]>([]);
+  const [loadingPreOrder, setLoadingPreOrder] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
- const [PreOrder, setPreOrder] = useState<Event[]>([]);
-          const [loadingPreOrder, setLoadingPreOrder] = useState(true);
-          const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-    
-        useEffect(() => {
-            const fetchPreOrder = async () => {
-              try {
-                const res = await fetch("/api/events");
-                const json = await res.json();
-                if (json.success && Array.isArray(json.data)) {
-                  setPreOrder(json.data);
-                } else {
-                  setPreOrder([]);
-                }
-              } catch (error) {
-                console.error("Error fetch PreOrder:", error);
-                notifications.show({ title: "Error", message: "Gagal mengambil data PreOrder.", color: "red" });
-              } finally {
-                setLoadingPreOrder(false);
-              }
-            };
-            console.log(fetchPreOrder());
-          }, []);
+  useEffect(() => {
+    const fetchPreOrder = async () => {
+      try {
+        const res = await fetch("/api/events");
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data)) {
+          setPreOrder(json.data);
+        } else {
+          setPreOrder([]);
+        }
+      } catch (error) {
+        console.error("Error fetch PreOrder:", error);
+        notifications.show({ title: "Error", message: "Gagal mengambil data PreOrder.", color: "red" });
+      } finally {
+        setLoadingPreOrder(false);
+      }
+    };
+    fetchPreOrder();
+  }, []);
 
-      const filteredPreOrder = selectedDate
-      ? PreOrder.filter((item) => {
-          const itemDate = new Date(item.startDate);
-
-          return (
-            itemDate.getFullYear() === selectedDate.getFullYear() &&
-            itemDate.getMonth() === selectedDate.getMonth() &&
-            itemDate.getDate() === selectedDate.getDate()
-          );
-        })
-      : PreOrder;
-
-      const handleDateChange = (value: Date | null) => {
-        setSelectedDate(value);
-        console.log(value);
-      };
+  const filteredPreOrder = selectedDate ? preOrder.filter((item) => dayjs(item.startDate).isSame(selectedDate, "day")) : preOrder;
 
   return (
-    <>
-      <Container mb={30}>
-        <Box 
-        w={"63vw"}
-        h={800}
-        bg={"#f5f6fa"}
-        >
-          <Center>
-            <h1 style={{color: "#05004f"}}>Pre Order</h1>
+    <Container mb={30} size="xl">
+      <Box style={{ minHeight: 800 }} bg={"#f5f6fa"} p="md" mt="xl">
+        <Center mb="xl">
+          <h1 style={{ color: "#05004f", margin: 0 }}>Pre Order Event</h1>
         </Center>
 
-        <Box>
-          <Grid>
-            <Grid.Col span={5}>
-              <Center>
-                <Card shadow="sm" padding="lg" radius="md" withBorder>
-                  <Calendar
-                    bg="#fff"
-                    value={selectedDate}          // ✅ HARUS state
-                    onChange={handleDateChange}
+        {loadingPreOrder ? (
+          <Center h={200}>
+            <Loader size="lg" />
+          </Center>
+        ) : (
+          <Grid gutter="xl">
+            <Grid.Col span={{ base: 12, md: 5 }}>
+              <Card shadow="sm" padding="lg" radius="md" withBorder>
+                <Center>
+                  <DatePicker
+                    value={selectedDate}
+                    onChange={(val) => setSelectedDate(val ? new Date(val) : null)}
+                    size="md"
+                    renderDay={(date) => {
+                      const day = dayjs(date);
+                      const dayNum = day.date();
+
+                      const hasEvent = preOrder.some((event) => dayjs(event.startDate).isSame(date, "day"));
+
+                      const isSelected = selectedDate && day.isSame(selectedDate, "day");
+
+                      const isToday = day.isSame(new Date(), "day");
+
+                      return (
+                        <Indicator size={6} color="red" offset={-5} disabled={!hasEvent} withBorder processing>
+                          <div
+                            style={{
+                              fontWeight: isToday || isSelected ? 1000 : 200,
+                            }}
+                          >
+                            {dayNum}
+                          </div>
+                        </Indicator>
+                      );
+                    }}
                   />
-                  <Button
-                  variant="light"
-                  fullWidth
-                  mt="md"
-                  onClick={() => setSelectedDate(null)}
-                >
-                  Clear Date
+                </Center>
+                <Button variant="light" fullWidth mt="md" onClick={() => setSelectedDate(null)} disabled={!selectedDate}>
+                  Tampilkan Semua Tanggal
                 </Button>
-                </Card>
-              </Center>
+              </Card>
             </Grid.Col>
-            <Grid.Col span={7}>
-               {filteredPreOrder.length === 0 && (
-                <Text c="dimmed">
-                  Tidak ada event pada tanggal ini
-                </Text>
-                )}
 
-                 {filteredPreOrder.map((item) => {
+            <Grid.Col span={{ base: 12, md: 7 }}>
+              {filteredPreOrder.length === 0 && (
+                <Center h={100} bg="white" style={{ borderRadius: 8 }}>
+                  <Text c="dimmed">Tidak ada event pada tanggal ini</Text>
+                </Center>
+              )}
+
+              {filteredPreOrder.map((item) => {
                 const startDate = new Date(item.startDate);
-
                 const dayNum = startDate.getDate();
-                const monthShort = startDate.toLocaleString("en-US", {
-                  month: "short",
-                });
-
-                const dayName = startDate.toLocaleString("en-US", {
-                  weekday: "short",
-                });
-
-                const hours = startDate
-                  .getHours()
-                  .toString()
-                  .padStart(2, "0");
-
-                const minutes = startDate
-                  .getMinutes()
-                  .toString()
-                  .padStart(2, "0");
-
-                const description = `${dayName}, ${dayNum} ${monthShort}, ${hours}:${minutes}`;
+                const monthShort = startDate.toLocaleString("id-ID", { month: "short" });
+                const dayName = startDate.toLocaleString("id-ID", { weekday: "long" });
+                const hours = startDate.getHours().toString().padStart(2, "0");
+                const minutes = startDate.getMinutes().toString().padStart(2, "0");
 
                 return (
                   <Card key={item.id} shadow="sm" p="lg" radius="md" withBorder mb="md">
-                    <Box
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                      }}
-                    >
-                      <Box style={{ textAlign: "center", marginRight: 16 }}>
-                        <Text size="lg" fw={700}>
+                    <Box style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                      <Box style={{ textAlign: "center", minWidth: 60 }}>
+                        <Text size="xl" fw={800} style={{ lineHeight: 1, fontSize: "2rem" }} c="blue">
                           {dayNum}
                         </Text>
-                        <Text size="sm" c="dimmed">
+                        <Text size="sm" tt="uppercase" fw={700} c="dimmed">
                           {monthShort}
                         </Text>
                       </Box>
-
-                      <Box style={{ flex: 1, paddingRight: 16 }}>
-                        <Text size="sm" fw={500}>
+                      <Box style={{ flex: 1 }}>
+                        <Text size="lg" fw={600} lineClamp={2}>
                           {item.title}
                         </Text>
                         <Text size="sm" c="dimmed" mt={4}>
-                          {description}
+                          {dayName}, {hours}:{minutes} WIB
                         </Text>
                       </Box>
-
                       {item.images?.length > 0 && (
-                        <Box
-                          style={{
-                            width: 100,
-                            height: 100,
-                            borderRadius: 8,
-                            overflow: "hidden",
-                          }}
-                        >
-                          <Image
-                            src={item.images[0].url}
-                            alt={item.title}
-                            w="100%"
-                            h="100%"
-                            fit="cover"
-                          />
+                        <Box style={{ width: 80, height: 80, borderRadius: 8, overflow: "hidden", flexShrink: 0 }}>
+                          <Image src={item.images[0].url} alt={item.title} w="100%" h="100%" fit="cover" />
                         </Box>
                       )}
                     </Box>
                   </Card>
                 );
               })}
-              </Grid.Col>
+            </Grid.Col>
           </Grid>
-        </Box>
-
-        </Box>
-      </Container>
-    </>
+        )}
+      </Box>
+    </Container>
   );
 };
