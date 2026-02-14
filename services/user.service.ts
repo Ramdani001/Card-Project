@@ -66,7 +66,7 @@ export const createUser = async (data: CreateUserParams) => {
   try {
     if (file && file.size > 0) {
       const uploadResult = await saveFile(file);
-      avatarUrl = uploadResult.relativePath;
+      avatarUrl = uploadResult.path;
     }
 
     return await prisma.user.create({
@@ -108,7 +108,7 @@ export const updateUser = async ({ id, name, email, phone, password, roleId, fil
   try {
     if (file && file.size > 0) {
       const uploadResult = await saveFile(file);
-      newAvatarUrl = uploadResult.relativePath;
+      newAvatarUrl = uploadResult.path;
       updateData.avatar = newAvatarUrl;
     }
 

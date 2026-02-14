@@ -36,7 +36,7 @@ export const register = async ({ email, password, name, phone, file }: RegisterP
   try {
     if (file && file.size > 0) {
       const uploadResult = await saveFile(file);
-      avatarUrl = uploadResult.relativePath;
+      avatarUrl = uploadResult.path;
     }
 
     const newUser = await prisma.user.create({
