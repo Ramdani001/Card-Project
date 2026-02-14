@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { createPaymentToken } from "./payment.service";
 import { Prisma, TransactionStatus } from "@/prisma/generated/prisma/client";
+import { sendTransactionReceipt } from "./email.service";
 
 interface CreateTransactionParams {
   userId: string;
@@ -9,6 +10,13 @@ interface CreateTransactionParams {
   voucherCode?: string;
   address: string;
   paymentMethod?: string;
+}
+
+interface GetTransactionParams {
+  skip?: number;
+  take?: number;
+  orderBy?: Prisma.TransactionOrderByWithRelationInput;
+  where?: Prisma.TransactionWhereInput;
 }
 
 export const checkout = async (params: CreateTransactionParams) => {
@@ -26,15 +34,14 @@ export const checkout = async (params: CreateTransactionParams) => {
   }
 
   let subTotal = 0;
-
   const prismaItemsPayload: Prisma.TransactionItemCreateWithoutTransactionInput[] = [];
-
   const midtransItemsPayload: any[] = [];
 
   for (const item of cart.items) {
-    if (!item.card) throw new Error("Product data missing");
+    if (!item.card) throw new Error(`Product data missing for item ID: ${item.id}`);
+
     if (item.card.stock < item.quantity) {
-      throw new Error(`Insufficient stock for: ${item.card.name}`);
+      throw new Error(`Insufficient stock for: ${item.card.name}. Available: ${item.card.stock}`);
     }
 
     const itemTotal = Number(item.card.price) * item.quantity;
@@ -50,10 +57,10 @@ export const checkout = async (params: CreateTransactionParams) => {
     });
 
     midtransItemsPayload.push({
-      id: item.card.id,
+      id: item.card.id.substring(0, 20),
       price: Number(item.card.price),
       quantity: item.quantity,
-      name: item.card.name,
+      name: item.card.name.substring(0, 50),
     });
   }
 
@@ -62,16 +69,17 @@ export const checkout = async (params: CreateTransactionParams) => {
   let finalTotal = subTotal;
 
   if (voucherCode) {
-    const voucher = await prisma.voucher.findUnique({
-      where: { code: voucherCode },
-    });
-
+    const voucher = await prisma.voucher.findUnique({ where: { code: voucherCode } });
     if (!voucher) throw new Error("Invalid voucher code");
 
     const now = new Date();
-    if (now < voucher.startDate || now > voucher.endDate) throw new Error("Voucher expired or not started");
-    if (voucher.stock !== null && voucher.usedCount >= voucher.stock) throw new Error("Voucher limit reached");
-    if (voucher.minPurchase && subTotal < Number(voucher.minPurchase)) throw new Error(`Min purchase is ${voucher.minPurchase}`);
+    if (now < voucher.startDate || now > voucher.endDate) throw new Error("Voucher is expired or not started yet");
+
+    if (voucher.stock !== null && voucher.usedCount >= voucher.stock) throw new Error("Voucher usage limit reached");
+
+    if (voucher.minPurchase && subTotal < Number(voucher.minPurchase)) {
+      throw new Error(`Minimum purchase for this voucher is Rp ${Number(voucher.minPurchase).toLocaleString()}`);
+    }
 
     if (voucher.type === "NOMINAL") {
       voucherAmount = Number(voucher.value);
@@ -89,80 +97,93 @@ export const checkout = async (params: CreateTransactionParams) => {
 
     if (voucherAmount > 0) {
       midtransItemsPayload.push({
-        id: "VOUCHER",
-        price: -voucherAmount,
+        id: "VOUCHER-DISC",
+        price: -Math.floor(voucherAmount),
         quantity: 1,
         name: `Voucher: ${voucherCode}`,
       });
     }
   }
 
-  const invoiceNumber = `INV/${new Date().getFullYear()}/${Date.now()}`;
+  const randomStr = Math.floor(1000 + Math.random() * 9000);
+  const invoiceNumber = `INV/${new Date().getFullYear()}/${Date.now()}-${randomStr}`;
 
-  return await prisma.$transaction(async (tx) => {
-    const newTransaction = await tx.transaction.create({
-      data: {
-        userId,
-        invoice: invoiceNumber,
-        subTotal: new Prisma.Decimal(subTotal),
-        voucherAmount: new Prisma.Decimal(voucherAmount),
-        totalPrice: new Prisma.Decimal(finalTotal),
-        status: "PENDING",
+  return await prisma.$transaction(
+    async (tx) => {
+      const newTransaction = await tx.transaction.create({
+        data: {
+          userId,
+          invoice: invoiceNumber,
+          subTotal: new Prisma.Decimal(subTotal),
+          voucherAmount: new Prisma.Decimal(voucherAmount),
+          totalPrice: new Prisma.Decimal(finalTotal < 0 ? 0 : finalTotal),
+          status: "PENDING",
+          customerName,
+          customerEmail,
+          address,
+          voucherId,
+          paymentMethod: paymentMethod || "MIDTRANS",
+          statusLogs: {
+            create: { status: "PENDING", note: "Checkout initiated", createdBy: "SYSTEM" },
+          },
+          items: {
+            create: prismaItemsPayload,
+          },
+        },
+      });
+
+      for (const item of cart.items) {
+        const updatedBatch = await tx.card.updateMany({
+          where: {
+            id: item.cardId,
+            stock: { gte: item.quantity },
+          },
+          data: {
+            stock: { decrement: item.quantity },
+          },
+        });
+
+        if (updatedBatch.count === 0) {
+          throw new Error(`Checkout Failed: Stock for product '${item.card?.name}' is no longer available.`);
+        }
+      }
+
+      if (voucherId) {
+        await tx.voucher.update({
+          where: { id: voucherId },
+          data: { usedCount: { increment: 1 } },
+        });
+      }
+
+      await tx.cartItem.deleteMany({
+        where: { cartId: cart.id },
+      });
+
+      const payment = await createPaymentToken({
+        id: newTransaction.id,
+        totalPrice: Math.max(1, Math.floor(finalTotal)),
         customerName,
         customerEmail,
-        address: address,
-        voucherId,
-        statusLogs: {
-          create: { status: "PENDING", note: "Checkout initiated", createdBy: "SYSTEM" },
-        },
-        items: {
-          create: prismaItemsPayload,
-        },
-        paymentMethod: paymentMethod,
-      },
-    });
-
-    await Promise.all(
-      cart.items.map((item) =>
-        tx.card.update({
-          where: { id: item.cardId },
-          data: { stock: { decrement: item.quantity } },
-        })
-      )
-    );
-
-    if (voucherId) {
-      await tx.voucher.update({
-        where: { id: voucherId },
-        data: { usedCount: { increment: 1 } },
+        items: midtransItemsPayload,
       });
+
+      return await tx.transaction.update({
+        where: { id: newTransaction.id },
+        data: {
+          snapToken: payment.token,
+          snapRedirect: payment.redirect_url,
+        },
+        include: { items: true },
+      });
+    },
+    {
+      timeout: 10000,
     }
-
-    await tx.cartItem.deleteMany({
-      where: { cartId: cart.id },
-    });
-
-    const payment = await createPaymentToken({
-      id: newTransaction.id,
-      totalPrice: finalTotal,
-      customerName,
-      customerEmail,
-      items: midtransItemsPayload,
-    });
-
-    return await tx.transaction.update({
-      where: { id: newTransaction.id },
-      data: {
-        snapToken: payment.token,
-        snapRedirect: payment.redirect_url,
-      },
-      include: { items: true },
-    });
-  });
+  );
 };
 
 export const updateTransactionStatus = async (transactionId: string, status: TransactionStatus, note?: string) => {
-  return await prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     const oldTransaction = await tx.transaction.findUnique({
       where: { id: transactionId },
       select: { status: true, voucherId: true },
@@ -170,9 +191,14 @@ export const updateTransactionStatus = async (transactionId: string, status: Tra
 
     if (!oldTransaction) throw new Error("Transaction not found");
 
-    const updated = await tx.transaction.update({
+    const updatedTransaction = await tx.transaction.update({
       where: { id: transactionId },
       data: { status },
+      include: {
+        items: true,
+        user: true,
+        voucher: true,
+      },
     });
 
     await tx.transactionStatusLog.create({
@@ -185,8 +211,8 @@ export const updateTransactionStatus = async (transactionId: string, status: Tra
       },
     });
 
-    const isCancelled = status === "CANCELLED" || status === "FAILED";
-    const wasAlreadyCancelled = oldTransaction.status === "CANCELLED" || oldTransaction.status === "FAILED";
+    const isCancelled = ["CANCELLED", "FAILED", "EXPIRED"].includes(status);
+    const wasAlreadyCancelled = ["CANCELLED", "FAILED", "EXPIRED"].includes(oldTransaction.status);
 
     if (isCancelled && !wasAlreadyCancelled) {
       const items = await tx.transactionItem.findMany({
@@ -194,17 +220,14 @@ export const updateTransactionStatus = async (transactionId: string, status: Tra
         select: { cardId: true, quantity: true },
       });
 
-      await Promise.all(
-        items.map((item) => {
-          if (item.cardId) {
-            return tx.card.update({
-              where: { id: item.cardId },
-              data: { stock: { increment: item.quantity } },
-            });
-          }
-          return Promise.resolve();
-        })
-      );
+      for (const item of items) {
+        if (item.cardId) {
+          await tx.card.update({
+            where: { id: item.cardId },
+            data: { stock: { increment: item.quantity } },
+          });
+        }
+      }
 
       if (oldTransaction.voucherId) {
         await tx.voucher.update({
@@ -214,16 +237,17 @@ export const updateTransactionStatus = async (transactionId: string, status: Tra
       }
     }
 
-    return updated;
+    return updatedTransaction;
   });
-};
 
-interface GetTransactionParams {
-  skip?: number;
-  take?: number;
-  orderBy?: Prisma.TransactionOrderByWithRelationInput;
-  where?: Prisma.TransactionWhereInput;
-}
+  if (status === "PAID" && result) {
+    sendTransactionReceipt(result).catch((err) => {
+      console.error("Background task error: Failed to send email receipt.", err);
+    });
+  }
+
+  return result;
+};
 
 export const getTransactions = async (userId: string, params: GetTransactionParams) => {
   const { skip, take, orderBy, where } = params;
@@ -255,7 +279,9 @@ export const getTransactionById = async (id: string, userId: string) => {
   const transaction = await prisma.transaction.findUnique({
     where: { id },
     include: {
-      items: true,
+      items: {
+        include: { card: { select: { name: true, images: { take: 1 } } } },
+      },
       voucher: true,
       statusLogs: { orderBy: { createdAt: "desc" } },
       user: { select: { name: true, email: true } },
@@ -263,7 +289,10 @@ export const getTransactionById = async (id: string, userId: string) => {
   });
 
   if (!transaction) return null;
-  if (transaction.userId !== userId) throw new Error("Unauthorized");
+
+  if (transaction.userId !== userId) {
+    throw new Error("Unauthorized Access to Transaction");
+  }
 
   return transaction;
 };

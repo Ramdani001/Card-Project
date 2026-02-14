@@ -1,7 +1,31 @@
 import midtransClient from "midtrans-client";
-import prisma from "@/lib/prisma";
-import { TransactionStatus } from "@/prisma/generated/prisma/enums";
-import { Prisma } from "@/prisma/generated/prisma/client";
+import { createHash } from "crypto";
+
+export interface MidtransItem {
+  id: string;
+  price: number;
+  quantity: number;
+  name: string;
+}
+
+export interface PaymentTokenParams {
+  id: string;
+  totalPrice: number;
+  customerName?: string;
+  customerEmail?: string;
+  items: MidtransItem[];
+}
+
+export interface MidtransNotificationDto {
+  transaction_status: string;
+  fraud_status?: string;
+  order_id: string;
+  gross_amount: string;
+  status_code: string;
+  signature_key: string;
+  payment_type?: string;
+  [key: string]: any;
+}
 
 const snap = new midtransClient.Snap({
   isProduction: process.env.MIDTRANS_IS_PRODUCTION === "true",
@@ -9,108 +33,61 @@ const snap = new midtransClient.Snap({
   clientKey: process.env.MIDTRANS_CLIENT_KEY || "",
 });
 
-export const createPaymentToken = async (transaction: any) => {
-  const itemDetails = transaction.items.map((item: any) => ({
-    id: item.id || "ITEM",
-    price: Number(item.price),
+export const createPaymentToken = async (params: PaymentTokenParams) => {
+  const itemDetails = params.items.map((item) => ({
+    id: item.id.substring(0, 50),
+    price: Math.floor(item.price),
     quantity: item.quantity,
-    name: item.name ? item.name.substring(0, 50) : "Unknown Item",
+    name: item.name.substring(0, 50),
   }));
 
   const parameter = {
     transaction_details: {
-      order_id: transaction.id,
-      gross_amount: Number(transaction.totalPrice),
+      order_id: params.id,
+      gross_amount: Math.floor(params.totalPrice),
     },
     customer_details: {
-      first_name: transaction.customerName || "Customer",
-      email: transaction.customerEmail || "guest@example.com",
+      first_name: params.customerName || "Customer",
+      email: params.customerEmail || "guest@example.com",
     },
     item_details: itemDetails,
+    credit_card: {
+      secure: true,
+    },
   };
 
-  const token = await snap.createTransaction(parameter);
-  return token;
+  try {
+    const token = await snap.createTransaction(parameter);
+    return token;
+  } catch (error) {
+    console.error("Midtrans Error:", error);
+    throw new Error("Failed to create payment token");
+  }
 };
 
-export const handlePaymentNotification = async (notificationBody: any) => {
-  const statusResponse = await (snap as any).transaction.notification(notificationBody);
+export const verifyMidtransSignature = (notification: MidtransNotificationDto): boolean => {
+  const serverKey = process.env.MIDTRANS_SERVER_KEY || "";
+  const { order_id, status_code, gross_amount, signature_key } = notification;
 
-  const orderId = statusResponse.order_id;
-  const transactionStatus = statusResponse.transaction_status;
-  const fraudStatus = statusResponse.fraud_status;
+  const input = order_id + status_code + gross_amount + serverKey;
+  const signature = createHash("sha512").update(input).digest("hex");
 
-  let newStatus: TransactionStatus = "PENDING";
+  return signature === signature_key;
+};
 
-  if (transactionStatus == "capture") {
-    if (fraudStatus == "challenge") {
-      newStatus = "PENDING";
-    } else if (fraudStatus == "accept") {
-      newStatus = "PAID";
+export const mapMidtransStatus = (transactionStatus: string, fraudStatus?: string): "PAID" | "PENDING" | "FAILED" | "CANCELLED" => {
+  if (transactionStatus === "capture") {
+    if (fraudStatus === "challenge") {
+      return "PENDING";
     }
-  } else if (transactionStatus == "settlement") {
-    newStatus = "PAID";
-  } else if (transactionStatus == "cancel" || transactionStatus == "expire") {
-    newStatus = "CANCELLED";
-  } else if (transactionStatus == "deny" || transactionStatus == "failure") {
-    newStatus = "FAILED";
-  } else {
-    newStatus = "PENDING";
+    return "PAID";
+  } else if (transactionStatus === "settlement") {
+    return "PAID";
+  } else if (transactionStatus === "cancel" || transactionStatus === "deny" || transactionStatus === "expire") {
+    return "FAILED";
+  } else if (transactionStatus === "pending") {
+    return "PENDING";
   }
 
-  const transaction = await prisma.transaction.findUnique({
-    where: { id: orderId },
-    select: {
-      id: true,
-      status: true,
-      voucherId: true,
-    },
-  });
-
-  if (!transaction) {
-    return { status: "not found" };
-  }
-
-  if (transaction.status !== newStatus) {
-    await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      await tx.transaction.update({
-        where: { id: orderId },
-        data: { status: newStatus },
-      });
-
-      await tx.transactionStatusLog.create({
-        data: {
-          transactionId: orderId,
-          status: newStatus,
-          note: `Midtrans status: ${transactionStatus}`,
-          createdBy: "MIDTRANS_WEBHOOK",
-        },
-      });
-
-      const isCancelled = newStatus === "CANCELLED" || newStatus === "FAILED";
-      const wasAlreadyCancelled = transaction.status === "CANCELLED" || transaction.status === "FAILED";
-
-      if (isCancelled && !wasAlreadyCancelled) {
-        const items = await tx.transactionItem.findMany({ where: { transactionId: orderId } });
-
-        for (const item of items) {
-          if (item.cardId) {
-            await tx.card.update({
-              where: { id: item.cardId },
-              data: { stock: { increment: item.quantity } },
-            });
-          }
-        }
-
-        if (transaction.voucherId) {
-          await tx.voucher.update({
-            where: { id: transaction.voucherId },
-            data: { usedCount: { decrement: 1 } },
-          });
-        }
-      }
-    });
-  }
-
-  return { orderId, status: newStatus };
+  return "FAILED";
 };
