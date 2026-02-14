@@ -45,7 +45,33 @@ export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string
     },
   };
 
-  let whereClause: Prisma.CardWhereInput = { ...options.where };
+  const baseWhere: Prisma.CardWhereInput = { ...options.where };
+
+  let categorySearchFilter: Prisma.CardWhereInput = {};
+
+  if (baseWhere.categories) {
+    const categoryFilter = baseWhere.categories as any;
+    const keyword = categoryFilter.contains || categoryFilter;
+
+    if (typeof keyword === "string") {
+      categorySearchFilter = {
+        categories: {
+          some: {
+            category: {
+              name: {
+                contains: keyword,
+                mode: "insensitive",
+              },
+            },
+          },
+        },
+      };
+
+      delete baseWhere.categories;
+    }
+  }
+
+  let roleSecurityFilter: Prisma.CardWhereInput = {};
 
   if (userId) {
     const user = await prisma.user.findUnique({
@@ -60,13 +86,10 @@ export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string
     if (user && user.role) {
       const allowedCategoryIds = user.role.cardCategoryRoleAccesses.map((access) => access.categoryId);
 
-      whereClause = {
-        ...whereClause,
+      roleSecurityFilter = {
         categories: {
           some: {
-            categoryId: {
-              in: allowedCategoryIds,
-            },
+            categoryId: { in: allowedCategoryIds },
           },
         },
       };
@@ -77,25 +100,23 @@ export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string
     });
 
     if (singleCardCategory) {
-      whereClause = {
-        ...whereClause,
+      roleSecurityFilter = {
         categories: {
-          some: {
-            categoryId: singleCardCategory.id,
-          },
+          some: { categoryId: singleCardCategory.id },
         },
       };
     } else {
-      whereClause = {
-        ...whereClause,
-        id: { in: [] },
-      };
+      roleSecurityFilter = { id: { in: [] } };
     }
   }
 
+  const finalWhereClause: Prisma.CardWhereInput = {
+    AND: [baseWhere, categorySearchFilter, roleSecurityFilter],
+  };
+
   const finalOptions: Prisma.CardFindManyArgs = {
     ...options,
-    where: whereClause,
+    where: finalWhereClause,
     include: { ...defaultInclude, ...((options.include as Prisma.CardInclude) || {}) },
   };
 
