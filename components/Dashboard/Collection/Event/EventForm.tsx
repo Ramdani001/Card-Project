@@ -150,7 +150,7 @@ export const EventForm = ({ opened, onClose, eventToEdit, onSuccess }: EventForm
         />
 
         {(existingImages.length > 0 || previews.length > 0) && (
-          <Paper withBorder p="sm" bg="gray.0" radius="md">
+          <Paper withBorder p="sm" radius="md">
             <Text size="xs" c="dimmed" mb="xs">
               {eventToEdit && files.length > 0 ? "Note: Gambar baru akan menggantikan gambar lama." : "Image Previews"}
             </Text>
