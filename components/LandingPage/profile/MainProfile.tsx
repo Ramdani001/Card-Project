@@ -5,9 +5,7 @@ import { CardData } from "@/types/CardData";
 import { notifications } from "@mantine/notifications";
 import { HeaderSection } from "../HeaderSection";
 import { CartItem } from "@/types/CartItem";
-import { FilterSection } from "../FilterSection";
 import { PageProfile } from "./PageProfile";
-import { log } from "console";
 import { PageTransaction } from "./PageTransaction";
 
 export const MainProfile = () => {
@@ -41,9 +39,9 @@ export const MainProfile = () => {
         };
       }, []);
 
-      const handleMenu = (e) => {
+      const handleMenu = (e: string) => {
         setmenu(e);
-      }
+      };
 
   return (
     <>
