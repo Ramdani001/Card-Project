@@ -8,7 +8,6 @@ import {
   IconLayoutDashboard,
   IconLogin,
   IconLogout,
-  IconSearch,
   IconShoppingCart,
   IconUser,
   IconReceipt2,
@@ -119,7 +118,7 @@ export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen, c
 
                   <Menu.Dropdown>
                     <Menu.Label>My Account</Menu.Label>
-                    <Menu.Item leftSection={<IconUser size={14} />}>Profile</Menu.Item>
+                    <Menu.Item leftSection={<IconUser size={14} />}  onClick={() => router.push("/profile")}>Profile</Menu.Item>
                     <Menu.Item leftSection={<IconReceipt2 size={14} />} onClick={() => router.push("/transactions")}>
                       My Transactions
                     </Menu.Item>
