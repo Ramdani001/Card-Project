@@ -256,7 +256,6 @@ export const CartSection = ({
               placeholder="Select payment"
               data={[
                 { value: "TRANSFER", label: "Bank Transfer" },
-                { value: "CREDIT_CARD", label: "Credit Card" },
                 { value: "CASH", label: "Cash on Delivery" },
               ]}
               value={paymentMethod}

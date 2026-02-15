@@ -3,11 +3,11 @@
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
 import { Event } from "@/types/Event";
 import { PaginationMetaData } from "@/types/PaginationMetaData";
-import { ActionIcon, Avatar, Badge, Box, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Avatar, Badge, Box, Button, Flex, Group, Paper, Text, ThemeIcon, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
-import { IconCalendarEvent, IconCheck, IconPencil, IconPhoto, IconPlus, IconRefresh, IconTrash, IconX } from "@tabler/icons-react";
+import { IconArrowRight, IconCalendarEvent, IconCheck, IconPencil, IconPhoto, IconPlus, IconRefresh, IconTrash, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { EventForm } from "./EventForm";
 
@@ -161,20 +161,19 @@ const ListEvent = () => {
       label: "Schedule",
       sortable: true,
       render: (item) => (
-        <Flex direction="column">
-          <Text size="xs" c="dimmed">
-            Start:{" "}
-            <Text span c="dark" fw={500}>
-              {formatDate(item.startDate)}
-            </Text>
+        <Group gap={6} wrap="nowrap">
+          <Text size="sm" fw={500}>
+            {formatDate(item.startDate)}
           </Text>
-          <Text size="xs" c="dimmed">
-            End:{" "}
-            <Text span c="dark" fw={500}>
-              {formatDate(item.endDate)}
-            </Text>
+
+          <ThemeIcon variant="transparent" c="dimmed" size="xs">
+            <IconArrowRight size={14} />
+          </ThemeIcon>
+
+          <Text size="sm" c="dimmed">
+            {formatDate(item.endDate)}
           </Text>
-        </Flex>
+        </Group>
       ),
     },
     {

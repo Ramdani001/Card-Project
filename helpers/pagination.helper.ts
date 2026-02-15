@@ -13,17 +13,9 @@ export const getQueryPaginationOptions = (req: NextRequest) => {
   };
 
   if (sortBy) {
-    if (sortBy === "role") {
-      options.orderBy = {
-        role: {
-          name: ["asc", "desc"].includes(sortOrder) ? sortOrder : "desc",
-        },
-      };
-    } else {
-      options.orderBy = {
-        [sortBy]: ["asc", "desc"].includes(sortOrder) ? sortOrder : "desc",
-      };
-    }
+    options.orderBy = {
+      [sortBy]: ["asc", "desc"].includes(sortOrder) ? sortOrder : "desc",
+    };
   }
 
   const page = parseInt(pageParam || "");

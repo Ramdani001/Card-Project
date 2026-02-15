@@ -1,30 +1,60 @@
 "use client";
 
-import UserManagement from "@/components/Dashboard/UserManagement";
-import ListTransaction from "@/components/Transaction/ListTransaction";
-import { AppShell, Burger, Drawer, Group, ScrollArea, Text } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { useState } from "react";
-import Collection from "../../../components/Dashboard/Collection";
-import Dashboard from "../../../components/Dashboard/Dashboard/Dashboard";
+import { AppShell, Burger, Center, Drawer, Group, Loader, ScrollArea, Text } from "@mantine/core";
+import { useDisclosure, useLocalStorage } from "@mantine/hooks";
+import { useEffect, useState } from "react";
 import Sidebar from "../../../components/Dashboard/Sidebar";
 import Topbar from "../../../components/Dashboard/Topbar";
+import { COMPONENT_MAP } from "@/config/menuMapping";
 
-const MENU_COMPONENTS: Record<string, React.ReactNode> = {
-  Dashboard: <Dashboard />,
-  Transactions: <ListTransaction />,
-  Collection: <Collection />,
-  UserManagement: <UserManagement />,
-};
+interface MenuData {
+  id: string;
+  label: string;
+  url: string | null;
+  icon: string | null;
+  subMenus: MenuData[];
+}
 
 const MainDashboard = () => {
-  const [activeMenu, setActiveMenu] = useState<string>("Dashboard");
+  const [isMounted, setIsMounted] = useState(false);
+
+  const [menus, setMenus] = useState<MenuData[]>([]);
+  const [loadingMenu, setLoadingMenu] = useState(true);
+
+  const [activeUrl, setActiveUrl] = useLocalStorage({
+    key: "active-dashboard-url",
+    defaultValue: "/dashboard",
+  });
+
   const [mobileOpened, { toggle: toggleMobile, close: closeMobile }] = useDisclosure();
   const [desktopOpened, { toggle: toggleDesktop }] = useDisclosure(true);
 
-  const handleMenuChange = (menuName: string) => {
-    setActiveMenu(menuName);
-  };
+  useEffect(() => {
+    setIsMounted(true);
+    const fetchMenus = async () => {
+      try {
+        const res = await fetch("/api/menus/users");
+        const json = await res.json();
+        if (json.success) {
+          setMenus(json.data);
+        }
+      } catch (error) {
+        console.error("Gagal ambil menu:", error);
+      } finally {
+        setLoadingMenu(false);
+      }
+    };
+
+    fetchMenus();
+  }, []);
+
+  if (!isMounted || loadingMenu) {
+    return (
+      <Center h="100vh">
+        <Loader size="lg" />
+      </Center>
+    );
+  }
 
   return (
     <AppShell
@@ -32,7 +62,7 @@ const MainDashboard = () => {
       navbar={{
         width: 250,
         breakpoint: "sm",
-        collapsed: { mobile: true, desktop: !desktopOpened },
+        collapsed: { mobile: !mobileOpened, desktop: !desktopOpened },
       }}
       padding="md"
       layout="alt"
@@ -49,7 +79,7 @@ const MainDashboard = () => {
 
       <AppShell.Navbar p="md" bg="#0f1536" c="white" visibleFrom="sm">
         <AppShell.Section grow component={ScrollArea}>
-          <Sidebar onMenuClick={handleMenuChange} activeMenu={activeMenu} />
+          <Sidebar menus={menus} activeMenu={activeUrl} onMenuClick={setActiveUrl} />
         </AppShell.Section>
       </AppShell.Navbar>
 
@@ -66,10 +96,24 @@ const MainDashboard = () => {
         }}
         zIndex={1000}
       >
-        <Sidebar onMenuClick={handleMenuChange} activeMenu={activeMenu} onClose={closeMobile} />
+        <Sidebar
+          menus={menus}
+          activeMenu={activeUrl}
+          onMenuClick={(url) => {
+            setActiveUrl(url);
+            closeMobile();
+          }}
+          onClose={closeMobile}
+        />
       </Drawer>
 
-      <AppShell.Main>{MENU_COMPONENTS[activeMenu] || <Text>Menu Not Found</Text>}</AppShell.Main>
+      <AppShell.Main>
+        {COMPONENT_MAP[activeUrl] || (
+          <Center h="100%">
+            <Text c="dimmed">404 - Page Not Found or Access Denied</Text>
+          </Center>
+        )}
+      </AppShell.Main>
     </AppShell>
   );
 };
