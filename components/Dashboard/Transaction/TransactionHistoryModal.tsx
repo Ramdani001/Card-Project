@@ -9,6 +9,11 @@ interface LogItem {
   note: string;
   createdBy: string;
   createdAt: string;
+  user?: {
+    name: string;
+    email: string;
+    role: string;
+  } | null;
 }
 
 interface HistoryModalProps {
@@ -65,19 +70,29 @@ export const TransactionHistoryModal = ({ opened, onClose, transactionId, invoic
     }
   };
 
-  const getActorInfo = (createdBy: string | null | undefined) => {
-    if (!createdBy) {
-      return { icon: <IconUser size={14} />, name: "Unknown / System" };
+  const getActorInfo = (log: LogItem) => {
+    if (log.user && log.user.name) {
+      return {
+        icon: <IconUser size={14} />,
+        name: log.user.name,
+      };
     }
 
-    if (createdBy === "SYSTEM") {
-      return { icon: <IconRobot size={14} />, name: "System" };
+    const creator = log.createdBy;
+
+    if (creator === "SYSTEM") {
+      return { icon: <IconRobot size={14} />, name: "System Automation" };
     }
-    if (createdBy === "MIDTRANS_WEBHOOK") {
+
+    if (creator === "SYSTEM_WEBHOOK") {
       return { icon: <IconCreditCard size={14} />, name: "Midtrans Payment" };
     }
 
-    return { icon: <IconUser size={14} />, name: createdBy.length > 10 ? "User / Admin" : createdBy };
+    if (!creator) {
+      return { icon: <IconUser size={14} />, name: "Unknown" };
+    }
+
+    return { icon: <IconUser size={14} />, name: "User (Deleted)" };
   };
 
   return (
@@ -89,7 +104,7 @@ export const TransactionHistoryModal = ({ opened, onClose, transactionId, invoic
       ) : (
         <Timeline active={0} bulletSize={24} lineWidth={2}>
           {logs.map((log) => {
-            const actor = getActorInfo(log.createdBy);
+            const actor = getActorInfo(log);
             return (
               <Timeline.Item
                 key={log.id}

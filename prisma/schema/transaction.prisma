@@ -17,6 +17,10 @@ model Transaction {
     customerEmail String?
     address       String?
 
+    shippingCost Decimal @default(0) @db.Decimal(15, 2)
+    resi         String?
+    expedition   String?
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
@@ -59,14 +63,14 @@ model TransactionStatusLog {
 }
 
 model PaymentLog {
-  id          String   @id @default(uuid())
-  orderId     String? 
-  provider    String   @default("MIDTRANS")
-  status      String? 
-  rawPayload  Json   
-  createdAt   DateTime @default(now())
+    id         String   @id @default(uuid())
+    orderId    String?
+    provider   String   @default("MIDTRANS")
+    status     String?
+    rawPayload Json
+    createdAt  DateTime @default(now())
 
-  @@index([orderId])
+    @@index([orderId])
 }
 
 enum TransactionStatus {

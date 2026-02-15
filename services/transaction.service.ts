@@ -19,6 +19,12 @@ interface GetTransactionParams {
   where?: Prisma.TransactionWhereInput;
 }
 
+interface ShipTransactionParams {
+  resi: string;
+  expedition: string;
+  shippingCost?: number;
+}
+
 export const checkout = async (params: CreateTransactionParams) => {
   const { userId, customerName, customerEmail, voucherCode, address, paymentMethod } = params;
 
@@ -267,6 +273,7 @@ export const getTransactions = async (params: GetTransactionParams) => {
         items: true,
         voucher: true,
         statusLogs: { orderBy: { createdAt: "desc" }, take: 1 },
+        user: { select: { email: true, name: true } },
       },
     }),
   ]);
@@ -293,6 +300,7 @@ export const getUserTransactions = async (userId: string, params: GetTransaction
         items: true,
         voucher: true,
         statusLogs: { orderBy: { createdAt: "desc" }, take: 1 },
+        user: { select: { email: true, name: true } },
       },
     }),
   ]);
@@ -326,7 +334,40 @@ export const getHistoryTransactions = async (
     }),
   ]);
 
-  return { logs, total };
+  const userIds = logs
+    .map((log) => log.createdBy)
+    .filter((id): id is string => {
+      if (!id) return false;
+
+      return true;
+    });
+
+  const uniqueUserIds = Array.from(new Set(userIds));
+
+  const users = await prisma.user.findMany({
+    where: {
+      id: { in: uniqueUserIds },
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+    },
+  });
+
+  // 4. Gabungkan (Enrich)
+  const enrichedLogs = logs.map((log) => {
+    // Safety check saat find user
+    const userDetail = log.createdBy ? users.find((u) => u.id === log.createdBy) : null;
+
+    return {
+      ...log,
+      user: userDetail || null,
+    };
+  });
+
+  return { logs: enrichedLogs, total };
 };
 
 export const getTransactionById = async (id: string, userId?: string) => {
@@ -353,4 +394,75 @@ export const getTransactionById = async (id: string, userId?: string) => {
   }
 
   return transaction;
+};
+
+export const markTransactionStatus = async (id: string, status: TransactionStatus, userId: string = "ADMIN") => {
+  return await prisma.$transaction(async (tx) => {
+    const updated = await tx.transaction.update({
+      where: { id },
+      data: { status },
+    });
+
+    await tx.transactionStatusLog.create({
+      data: {
+        transactionId: id,
+        status,
+        note: `Status updated to ${status}`,
+        createdBy: userId,
+      },
+    });
+
+    return updated;
+  });
+};
+
+export const shipTransaction = async (id: string, data: ShipTransactionParams, userId: string = "ADMIN") => {
+  return await prisma.$transaction(async (tx) => {
+    const oldData = await tx.transaction.findUniqueOrThrow({ where: { id } });
+
+    const newShippingCost = data.shippingCost || 0;
+    const newTotalPrice = Number(oldData.subTotal) - Number(oldData.voucherAmount) + newShippingCost;
+
+    const updated = await tx.transaction.update({
+      where: { id },
+      data: {
+        status: "SHIPPED",
+        resi: data.resi,
+        expedition: data.expedition,
+        shippingCost: newShippingCost,
+        totalPrice: newTotalPrice,
+      },
+    });
+
+    await tx.transactionStatusLog.create({
+      data: {
+        transactionId: id,
+        status: "SHIPPED",
+        note: `Barang dikirim via ${data.expedition}. Resi: ${data.resi}`,
+        createdBy: userId,
+      },
+    });
+
+    return updated;
+  });
+};
+
+export const cancelTransaction = async (id: string, reason: string, userId: string = "ADMIN") => {
+  return await prisma.$transaction(async (tx) => {
+    const updated = await tx.transaction.update({
+      where: { id },
+      data: { status: "CANCELLED" },
+    });
+
+    await tx.transactionStatusLog.create({
+      data: {
+        transactionId: id,
+        status: "CANCELLED",
+        note: `Transaction cancelled. Reason: ${reason}`,
+        createdBy: userId,
+      },
+    });
+
+    return updated;
+  });
 };

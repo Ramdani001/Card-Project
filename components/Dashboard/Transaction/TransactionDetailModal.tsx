@@ -1,9 +1,27 @@
 "use client";
 
+import { ALLOWED_NEXT_STATUS } from "@/constants";
 import { formatDate, formatRupiah } from "@/utils";
-import { Badge, Button, Divider, Grid, Group, Loader, Modal, Paper, ScrollArea, Select, Stack, Table, Text, ThemeIcon } from "@mantine/core";
+import {
+  Badge,
+  Button,
+  Divider,
+  Grid,
+  Group,
+  Loader,
+  Modal,
+  NumberInput,
+  Paper,
+  ScrollArea,
+  Select,
+  Stack,
+  Table,
+  Text,
+  TextInput,
+  ThemeIcon,
+} from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconPrinter, IconReceipt2, IconX } from "@tabler/icons-react";
+import { IconCheck, IconPrinter, IconReceipt2, IconTruck, IconX } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 
@@ -16,11 +34,22 @@ interface TransactionDetailProps {
 
 export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateSuccess }: TransactionDetailProps) => {
   const [loading, setLoading] = useState(false);
+
   const [status, setStatus] = useState<string | null>(transaction?.status || null);
   const [statusOptions, setStatusOptions] = useState<string[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
 
+  const [resi, setResi] = useState("");
+  const [expedition, setExpedition] = useState("");
+  const [shippingCost, setShippingCost] = useState<number | string>(0);
+
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const isDirty =
+    status !== transaction?.status ||
+    resi !== (transaction?.resi || "") ||
+    expedition !== (transaction?.expedition || "") ||
+    Number(shippingCost) !== Number(transaction?.shippingCost || 0);
 
   const handlePrint = useReactToPrint({
     contentRef: contentRef,
@@ -31,6 +60,11 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
   useEffect(() => {
     if (opened && transaction) {
       setStatus(transaction.status);
+
+      setResi(transaction.resi || "");
+      setExpedition(transaction.expedition || "");
+      setShippingCost(transaction.shippingCost || 0);
+
       fetchNextStatusOptions(transaction.id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -53,19 +87,46 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
     }
   };
 
+  const handleStatusChange = (value: string | null) => {
+    setStatus(value);
+
+    const shippingStatuses = ["SHIPPED", ...ALLOWED_NEXT_STATUS.SHIPPED];
+
+    if (value && shippingStatuses.includes(value)) {
+      setResi(transaction.resi || "");
+      setExpedition(transaction.expedition || "");
+      setShippingCost(transaction.shippingCost || 0);
+    } else {
+      setResi("");
+      setExpedition("");
+      setShippingCost(0);
+    }
+  };
+
   const handleUpdateStatus = async () => {
     if (!status) return;
+
+    if (status === "SHIPPED" && !resi) {
+      notifications.show({ message: "Harap isi Nomor Resi untuk status SHIPPED", color: "orange" });
+      return;
+    }
+
     setLoading(true);
     try {
       const res = await fetch(`/api/transactions/${transaction.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({
+          status,
+          resi,
+          expedition,
+          shippingCost: Number(shippingCost),
+        }),
       });
 
       const json = await res.json();
       if (json.success) {
-        notifications.show({ title: "Updated", message: "Transaction status updated", color: "teal", icon: <IconCheck size={16} /> });
+        notifications.show({ title: "Updated", message: "Transaction updated successfully", color: "teal", icon: <IconCheck size={16} /> });
         onUpdateSuccess();
         onClose();
       } else {
@@ -139,7 +200,7 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
             <Text size="xs" c="dimmed" tt="uppercase" fw={700} mb={5}>
               Billed To
             </Text>
-            <Text fw={600}>{transaction.customerName || transaction.user?.name || "Guest"}</Text>
+            <Text fw={600}>{transaction.user?.name || "Guest"}</Text>
             <Text size="sm" c="dimmed">
               {transaction.customerEmail || transaction.user?.email}
             </Text>
@@ -149,19 +210,25 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
           </Grid.Col>
           <Grid.Col span={6} style={{ textAlign: "right" }}>
             <Text size="xs" c="dimmed" tt="uppercase" fw={700} mb={5}>
-              Payment Details
+              Delivery & Payment
             </Text>
             <Text size="sm">
               <Text span c="dimmed">
-                Method:
+                Expedition:
+              </Text>{" "}
+              {expedition || transaction.expedition || "-"}
+            </Text>
+            <Text size="sm">
+              <Text span c="dimmed">
+                Resi:
+              </Text>{" "}
+              {resi || transaction.resi || "-"}
+            </Text>
+            <Text size="sm" mt={4}>
+              <Text span c="dimmed">
+                Payment:
               </Text>{" "}
               {transaction.paymentMethod || "Midtrans"}
-            </Text>
-            <Text size="sm">
-              <Text span c="dimmed">
-                Date:
-              </Text>{" "}
-              {new Date(transaction.updatedAt).toLocaleDateString("id-ID")}
             </Text>
           </Grid.Col>
         </Grid>
@@ -206,10 +273,21 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
             </Text>
           </Group>
 
+          {Number(shippingCost) > 0 && (
+            <Group w={250} justify="space-between">
+              <Text size="sm" c="dimmed">
+                Shipping Cost
+              </Text>
+              <Text size="sm" fw={500}>
+                {formatRupiah(Number(shippingCost))}
+              </Text>
+            </Group>
+          )}
+
           {Number(transaction.voucherAmount) > 0 && (
             <Group w={250} justify="space-between">
               <Text size="sm" c="red">
-                Discount (Voucher)
+                Discount
               </Text>
               <Text size="sm" c="red">
                 - {formatRupiah(Number(transaction.voucherAmount))}
@@ -224,17 +302,47 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
               Total
             </Text>
             <Text size="lg" fw={700} c="blue">
-              {formatRupiah(Number(transaction.totalPrice))}
+              {formatRupiah(Number(transaction.totalPrice) + (Number(shippingCost) - (transaction.shippingCost || 0)))}
             </Text>
           </Group>
         </Stack>
-
-        <Text size="xs" c="dimmed" mt={50} ta="center">
-          Thank you for your business. This is a computer-generated invoice.
-        </Text>
       </Paper>
 
-      <Paper p="md" radius="md">
+      {status === "SHIPPED" && (
+        <Paper p="md" radius="md" withBorder mb="md">
+          <Group gap="xs" mb="sm">
+            <IconTruck size={18} />
+            <Text fw={600} size="sm">
+              Shipping Information
+            </Text>
+          </Group>
+          <Grid>
+            <Grid.Col span={4}>
+              <TextInput
+                label="Expedition Name"
+                placeholder="e.g. JNE, J&T"
+                value={expedition}
+                disabled={status !== "SHIPPED"}
+                onChange={(e) => setExpedition(e.currentTarget.value)}
+              />
+            </Grid.Col>
+            <Grid.Col span={4}>
+              <TextInput
+                label="Receipt Number (Resi)"
+                placeholder="Input Resi"
+                value={resi}
+                onChange={(e) => setResi(e.currentTarget.value)}
+                disabled={status !== "SHIPPED"}
+              />
+            </Grid.Col>
+            <Grid.Col span={4}>
+              <NumberInput label="Shipping Cost (Ongkir)" value={shippingCost} disabled={status !== "SHIPPED"} onChange={setShippingCost} min={0} />
+            </Grid.Col>
+          </Grid>
+        </Paper>
+      )}
+
+      <Paper p="md" radius="md" withBorder>
         <Group justify="space-between">
           <Stack gap={2}>
             <Text size="sm" fw={600}>
@@ -252,16 +360,16 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
 
             <Group gap="xs">
               <Select
+                onChange={handleStatusChange}
                 data={statusOptions}
                 value={status}
-                onChange={setStatus}
                 placeholder="Select next status"
-                style={{ flex: 1 }}
+                style={{ width: 200 }}
                 disabled={loadingOptions || statusOptions.length <= 1}
                 rightSection={loadingOptions ? <Loader size={16} /> : null}
               />
-              <Button onClick={handleUpdateStatus} loading={loading} disabled={status === transaction.status}>
-                Update
+              <Button onClick={handleUpdateStatus} loading={loading} disabled={!isDirty}>
+                Update Status
               </Button>
             </Group>
           </Group>

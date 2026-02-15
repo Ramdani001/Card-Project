@@ -1,6 +1,6 @@
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import { authOptions } from "@/lib/auth";
-import { updateTransactionStatus } from "@/services/transaction.service";
+import { cancelTransaction, markTransactionStatus, shipTransaction } from "@/services/transaction.service";
 import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
 
@@ -16,26 +16,39 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
       return sendResponse({ success: false, message: "Unauthorized", status: 401 });
     }
 
-    if (session.user.role !== "Administrator") {
-      return sendResponse({ success: false, message: "Forbidden: Admin access required", status: 403 });
-    }
-
     const { id } = await params;
+    const userId = session.user.id;
 
     const body = await req.json();
-    const { status, note } = body;
+    const { status, resi, expedition, shippingCost, reason } = body;
 
-    const validStatuses = ["PENDING", "PAID", "PROCESSED", "SHIPPED", "COMPLETED", "CANCELLED", "FAILED"];
-    if (!status || !validStatuses.includes(status)) {
-      return sendResponse({ success: false, message: "Invalid status provided", status: 400 });
+    let result;
+
+    switch (status) {
+      case "SHIPPED":
+        if (!resi || !expedition) {
+          return sendResponse({
+            success: false,
+            message: "Resi & Ekspedisi wajib diisi!",
+            data: null,
+          });
+        }
+        result = await shipTransaction(id, { resi, expedition, shippingCost }, userId);
+        break;
+
+      case "CANCELLED":
+        result = await cancelTransaction(id, reason || "Cancelled by Admin", userId);
+        break;
+
+      default:
+        result = await markTransactionStatus(id, status, userId);
+        break;
     }
-
-    const updatedTransaction = await updateTransactionStatus(id, status, note || "Updated by Admin");
 
     return sendResponse({
       success: true,
       message: `Transaction status updated to ${status}`,
-      data: updatedTransaction,
+      data: result,
     });
   } catch (error) {
     return handleApiError(error);
