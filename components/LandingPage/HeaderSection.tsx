@@ -1,17 +1,9 @@
 "use client";
 
 import { CartItem } from "@/types/CartItem";
-import { ActionIcon, Box, Burger, Button, Container, Divider, Group, Indicator, Menu, Text, TextInput, Title, Avatar } from "@mantine/core";
+import { ActionIcon, Avatar, Box, Burger, Button, Container, Group, Indicator, Menu, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconChevronDown,
-  IconLayoutDashboard,
-  IconLogin,
-  IconLogout,
-  IconShoppingCart,
-  IconUser,
-  IconReceipt2,
-} from "@tabler/icons-react";
+import { IconChevronDown, IconLayoutDashboard, IconLogin, IconLogout, IconReceipt2, IconShoppingCart, IconUser } from "@tabler/icons-react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
@@ -25,7 +17,7 @@ interface HeaderSectionProps {
   onOpenCart?: () => void;
 }
 
-export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen, cartItemCount, onOpenCart }: HeaderSectionProps) => {
+export const HeaderSection = ({ cartItems, setIsDrawerOpen, cartItemCount, onOpenCart }: HeaderSectionProps) => {
   const [opened, { toggle }] = useDisclosure(false);
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -76,9 +68,7 @@ export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen, c
                           className="textHov"
                         >
                           <Group gap={4}>
-                            <Text size="sm" fw={700} style={{ textTransform: "uppercase" }}
-                            className="textHov2"
-                            >
+                            <Text size="sm" fw={700} style={{ textTransform: "uppercase" }} className="textHov2">
                               {item}
                             </Text>
                             <IconChevronDown size={14} style={{ opacity: 0.8 }} />
@@ -102,15 +92,21 @@ export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen, c
                 <Menu shadow="md" width={220} trigger="hover" openDelay={100} closeDelay={400} position="bottom-end">
                   <Menu.Target>
                     <Group gap={8} style={{ cursor: "pointer", lineHeight: 1 }}>
-                      <Avatar color="blue" radius="xl" size="sm">
+                      <Avatar color="blue" radius="xl" size="sm" src={session?.user.avatar}>
                         {(session?.user?.name?.[0] || "U").toUpperCase()}
                       </Avatar>
+
                       <Box visibleFrom="xs">
-                        <Text size="xs" c="dimmed">
+                        <Text size="xs" c="dimmed" lh={1.2}>
                           Hello,
                         </Text>
-                        <Text size="sm" fw={700} c="dark" lineClamp={1} w={80}>
-                          {session?.user?.name?.split(" ")[0] || "User"}
+
+                        <Text size="sm" fw={700} c="dark" lh={1.2}>
+                          {session?.user?.name || "User"}
+                        </Text>
+
+                        <Text size="xs" c="dimmed" truncate="end" maw={140} lh={1.2}>
+                          {session?.user?.email}
                         </Text>
                       </Box>
                     </Group>
@@ -118,7 +114,9 @@ export const HeaderSection = ({ search, setSearch, cartItems, setIsDrawerOpen, c
 
                   <Menu.Dropdown>
                     <Menu.Label>My Account</Menu.Label>
-                    <Menu.Item leftSection={<IconUser size={14} />}  onClick={() => router.push("/profile")}>Profile</Menu.Item>
+                    <Menu.Item leftSection={<IconUser size={14} />} onClick={() => router.push("/profile")}>
+                      Profile
+                    </Menu.Item>
                     <Menu.Item leftSection={<IconReceipt2 size={14} />} onClick={() => router.push("/transactions")}>
                       My Transactions
                     </Menu.Item>

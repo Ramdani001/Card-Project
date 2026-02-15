@@ -19,16 +19,20 @@ const Topbar = () => {
             <Menu.Target>
               <UnstyledButton style={{ padding: "5px", borderRadius: "4px" }}>
                 <Group gap={10}>
-                  <Avatar src={session?.user?.image} radius="xl" size={36} color="blue">
+                  <Avatar src={session?.user?.avatar} radius="xl" size={36} color="blue">
                     {session?.user?.email?.charAt(0).toUpperCase()}
                   </Avatar>
 
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column", lineHeight: 1 }}>
-                    <Text size="sm" fw={600}>
-                      {session?.user?.name || session?.user?.email}
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "2px" }}>
+                    <Text size="sm" fw={600} lineClamp={1}>
+                      {session?.user?.name || "User"}
                     </Text>
 
-                    <Text size="xs" c="dimmed">
+                    <Text size="xs" c="dimmed" truncate="end" w={130} lh={1}>
+                      {session?.user?.email}
+                    </Text>
+
+                    <Text size="xs" c="dimmed" style={{ fontSize: 10 }} lh={1}>
                       {session?.user?.role || "User"}
                     </Text>
                   </div>
