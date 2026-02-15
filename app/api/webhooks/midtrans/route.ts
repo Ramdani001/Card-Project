@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { mapMidtransStatus, verifyMidtransSignature } from "@/services/payment.service";
+import { mapMidtransStatus, savePaymentLog, verifyMidtransSignature } from "@/services/payment.service";
 import { updateTransactionStatus } from "@/services/transaction.service";
 
 export const POST = async (req: NextRequest) => {
   try {
     const body = await req.json();
+
+    await savePaymentLog(body);
 
     const isValidSignature = verifyMidtransSignature({
       order_id: body.order_id,

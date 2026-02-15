@@ -2,12 +2,13 @@
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
 import { PaginationMetaData } from "@/types/PaginationMetaData";
-import { ActionIcon, Button, Flex, Group, Paper, Select, Text, TextInput, Title } from "@mantine/core";
+import { ActionIcon, Button, Flex, Group, Paper, Select, Text, TextInput, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconEye, IconRefresh, IconSearch } from "@tabler/icons-react";
+import { IconEye, IconHistory, IconRefresh, IconSearch } from "@tabler/icons-react"; // Import IconHistory
 import { useEffect, useState } from "react";
 import { TransactionDetailModal } from "./TransactionDetailModal";
+import { TransactionHistoryModal } from "./TransactionHistoryModal";
 import { StatusBadge } from "../layout/StatusBadge";
 
 interface Transaction {
@@ -31,8 +32,11 @@ const ListTransaction = () => {
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [searchInvoice, setSearchInvoice] = useState("");
 
-  const [opened, { open, close }] = useDisclosure(false);
+  const [detailOpened, { open: openDetail, close: closeDetail }] = useDisclosure(false);
   const [selectedTrx, setSelectedTrx] = useState<Transaction | null>(null);
+
+  const [historyOpened, { open: openHistory, close: closeHistory }] = useDisclosure(false);
+  const [historyTrx, setHistoryTrx] = useState<{ id: string; invoice: string } | null>(null);
 
   const [queryParams, setQueryParams] = useState({
     page: 1,
@@ -43,7 +47,6 @@ const ListTransaction = () => {
 
   const fetchTransactions = async () => {
     setLoading(true);
-    const id = "80a6de75-9749-42de-96e6-88ff50e41e92";
     try {
       const params = new URLSearchParams({
         page: queryParams.page.toString(),
@@ -82,7 +85,12 @@ const ListTransaction = () => {
 
   const handleOpenDetail = (item: Transaction) => {
     setSelectedTrx(item);
-    open();
+    openDetail();
+  };
+
+  const handleOpenHistory = (item: Transaction) => {
+    setHistoryTrx({ id: item.id, invoice: item.invoice });
+    openHistory();
   };
 
   const columns: ColumnDef<Transaction>[] = [
@@ -142,12 +150,20 @@ const ListTransaction = () => {
     {
       key: "actions",
       label: "Action",
-      width: 140,
+      width: 160,
       render: (item) => (
         <Group gap={4}>
-          <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenDetail(item)}>
-            <IconEye size={18} />
-          </ActionIcon>
+          <Tooltip label="View Details">
+            <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenDetail(item)}>
+              <IconEye size={18} />
+            </ActionIcon>
+          </Tooltip>
+
+          <Tooltip label="View History Log">
+            <ActionIcon variant="subtle" color="gray" onClick={() => handleOpenHistory(item)}>
+              <IconHistory size={18} />
+            </ActionIcon>
+          </Tooltip>
 
           {item.status === "PENDING" && item.snapRedirect && (
             <Button size="xs" variant="filled" color="orange" radius="xs" onClick={() => window.open(item.snapRedirect, "_blank")}>
@@ -204,7 +220,14 @@ const ListTransaction = () => {
         onFilterChange={() => {}}
       />
 
-      <TransactionDetailModal opened={opened} onClose={close} transaction={selectedTrx} onUpdateSuccess={fetchTransactions} />
+      <TransactionDetailModal opened={detailOpened} onClose={closeDetail} transaction={selectedTrx} onUpdateSuccess={fetchTransactions} />
+
+      <TransactionHistoryModal
+        opened={historyOpened}
+        onClose={closeHistory}
+        transactionId={historyTrx?.id || null}
+        invoice={historyTrx?.invoice || ""}
+      />
     </Paper>
   );
 };

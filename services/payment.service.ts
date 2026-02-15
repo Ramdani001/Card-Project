@@ -1,5 +1,6 @@
 import midtransClient from "midtrans-client";
 import { createHash } from "crypto";
+import prisma from "@/lib/prisma";
 
 export interface MidtransItem {
   id: string;
@@ -73,6 +74,21 @@ export const verifyMidtransSignature = (notification: MidtransNotificationDto): 
   const signature = createHash("sha512").update(input).digest("hex");
 
   return signature === signature_key;
+};
+
+export const savePaymentLog = async (payload: any) => {
+  try {
+    await prisma.paymentLog.create({
+      data: {
+        orderId: payload.order_id || "UNKNOWN",
+        provider: "MIDTRANS",
+        status: payload.transaction_status || "UNKNOWN",
+        rawPayload: payload,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to save payment log:", error);
+  }
 };
 
 export const mapMidtransStatus = (transactionStatus: string, fraudStatus?: string): "PAID" | "PENDING" | "FAILED" | "CANCELLED" => {

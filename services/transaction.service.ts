@@ -300,6 +300,35 @@ export const getUserTransactions = async (userId: string, params: GetTransaction
   return { transactions, total };
 };
 
+export const getHistoryTransactions = async (
+  transactionId: string,
+  params: {
+    skip?: number;
+    take?: number;
+    orderBy?: Prisma.TransactionStatusLogOrderByWithRelationInput;
+    where?: Prisma.TransactionStatusLogWhereInput;
+  }
+) => {
+  const { skip, take, orderBy, where } = params;
+
+  const whereClause: Prisma.TransactionStatusLogWhereInput = {
+    transactionId,
+    ...where,
+  };
+
+  const [total, logs] = await prisma.$transaction([
+    prisma.transactionStatusLog.count({ where: whereClause }),
+    prisma.transactionStatusLog.findMany({
+      where: whereClause,
+      skip,
+      take,
+      orderBy: orderBy || { createdAt: "desc" },
+    }),
+  ]);
+
+  return { logs, total };
+};
+
 export const getTransactionById = async (id: string, userId: string) => {
   const transaction = await prisma.transaction.findUnique({
     where: { id },
