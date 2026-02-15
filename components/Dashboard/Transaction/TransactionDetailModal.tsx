@@ -1,9 +1,10 @@
 "use client";
 
-import { Badge, Button, Divider, Grid, Group, Modal, Paper, ScrollArea, Select, Stack, Table, Text, ThemeIcon } from "@mantine/core";
+import { formatDate, formatRupiah } from "@/utils";
+import { Badge, Button, Divider, Grid, Group, Loader, Modal, Paper, ScrollArea, Select, Stack, Table, Text, ThemeIcon } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconPrinter, IconReceipt2, IconX } from "@tabler/icons-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useReactToPrint } from "react-to-print";
 
 interface TransactionDetailProps {
@@ -16,6 +17,8 @@ interface TransactionDetailProps {
 export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateSuccess }: TransactionDetailProps) => {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(transaction?.status || null);
+  const [statusOptions, setStatusOptions] = useState<string[]>([]);
+  const [loadingOptions, setLoadingOptions] = useState(false);
 
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -25,18 +28,29 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
     onAfterPrint: () => notifications.show({ title: "Printed", message: "Invoice document prepared", color: "blue" }),
   });
 
-  const formatRupiah = (amount: number) => {
-    return new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(amount);
-  };
+  useEffect(() => {
+    if (opened && transaction) {
+      setStatus(transaction.status);
+      fetchNextStatusOptions(transaction.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opened, transaction]);
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const fetchNextStatusOptions = async (trxId: string) => {
+    setLoadingOptions(true);
+    try {
+      const res = await fetch(`/api/transactions/${trxId}/next-status`);
+      const json = await res.json();
+      if (json.success) {
+        setStatusOptions(json.data);
+      } else {
+        setStatusOptions([transaction.status]);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingOptions(false);
+    }
   };
 
   const handleUpdateStatus = async () => {
@@ -238,12 +252,13 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
 
             <Group gap="xs">
               <Select
-                data={["PENDING", "PAID", "PROCESSED", "SHIPPED", "COMPLETED", "CANCELLED", "FAILED"]}
+                data={statusOptions}
                 value={status}
                 onChange={setStatus}
-                placeholder="Status"
-                w={140}
-                allowDeselect={false}
+                placeholder="Select next status"
+                style={{ flex: 1 }}
+                disabled={loadingOptions || statusOptions.length <= 1}
+                rightSection={loadingOptions ? <Loader size={16} /> : null}
               />
               <Button onClick={handleUpdateStatus} loading={loading} disabled={status === transaction.status}>
                 Update

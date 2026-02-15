@@ -32,7 +32,7 @@ export const TransactionHistoryModal = ({ opened, onClose, transactionId, invoic
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/transactions/history/${transactionId}`);
+      const res = await fetch(`/api/transactions/${transactionId}/history`);
       const json = await res.json();
 
       if (json.success && Array.isArray(json.data)) {
@@ -65,13 +65,18 @@ export const TransactionHistoryModal = ({ opened, onClose, transactionId, invoic
     }
   };
 
-  const getActorInfo = (createdBy: string) => {
+  const getActorInfo = (createdBy: string | null | undefined) => {
+    if (!createdBy) {
+      return { icon: <IconUser size={14} />, name: "Unknown / System" };
+    }
+
     if (createdBy === "SYSTEM") {
       return { icon: <IconRobot size={14} />, name: "System" };
     }
     if (createdBy === "MIDTRANS_WEBHOOK") {
       return { icon: <IconCreditCard size={14} />, name: "Midtrans Payment" };
     }
+
     return { icon: <IconUser size={14} />, name: createdBy.length > 10 ? "User / Admin" : createdBy };
   };
 

@@ -329,7 +329,9 @@ export const getHistoryTransactions = async (
   return { logs, total };
 };
 
-export const getTransactionById = async (id: string, userId: string) => {
+export const getTransactionById = async (id: string, userId?: string) => {
+  if (!id) return null;
+
   const transaction = await prisma.transaction.findUnique({
     where: { id },
     include: {
@@ -344,8 +346,10 @@ export const getTransactionById = async (id: string, userId: string) => {
 
   if (!transaction) return null;
 
-  if (transaction.userId !== userId) {
-    throw new Error("Unauthorized Access to Transaction");
+  if (userId) {
+    if (transaction.userId !== userId) {
+      throw new Error("Unauthorized Access to Transaction");
+    }
   }
 
   return transaction;

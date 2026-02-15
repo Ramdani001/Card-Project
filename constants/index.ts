@@ -3,3 +3,14 @@ export const CONSTANT = {
     DEFAULT_ID_ROLE_CODE: "DEFAULT_ID_ROLE_REGISTER",
   },
 };
+
+export const ALLOWED_NEXT_STATUS: Record<string, string[]> = {
+  PENDING: ["PAID", "CANCELLED", "FAILED"],
+  PAID: ["PROCESSED", "REFUNDED"],
+  PROCESSED: ["SHIPPED", "REFUNDED"],
+  SHIPPED: ["COMPLETED", "REFUNDED"],
+  COMPLETED: ["REFUNDED"],
+  CANCELLED: [],
+  FAILED: [],
+  REFUNDED: [],
+};
