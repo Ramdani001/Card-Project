@@ -25,7 +25,7 @@ import ListVoucher from "@/components/Dashboard/Collection/Voucher/ListVoucher";
 import Dashboard from "@/components/Dashboard/Dashboard/Dashboard";
 import ListMember from "@/components/Dashboard/UserManagement/ListMember/ListMember";
 import ListRole from "@/components/Dashboard/UserManagement/ListRole/ListRole";
-import ListTransaction from "@/components/Transaction/ListTransaction";
+import ListTransaction from "@/components/Dashboard/Transaction/ListTransaction";
 
 export const ICON_MAP: Record<string, any> = {
   IconLayoutDashboard: IconLayoutDashboard,

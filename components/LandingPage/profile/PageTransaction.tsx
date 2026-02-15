@@ -1,4 +1,4 @@
-import ListTransaction from "@/components/Transaction/ListTransaction";
+import ListTransaction from "@/components/Dashboard/Transaction/ListTransaction";
 import { Box, Card, FileInput, Group, Image, Paper, SimpleGrid, TextInput } from "@mantine/core";
 import { useSession } from "next-auth/react";
 

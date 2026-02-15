@@ -9,7 +9,7 @@ import { IconEye, IconHistory, IconRefresh, IconSearch } from "@tabler/icons-rea
 import { useEffect, useState } from "react";
 import { TransactionDetailModal } from "./TransactionDetailModal";
 import { TransactionHistoryModal } from "./TransactionHistoryModal";
-import { StatusBadge } from "../layout/StatusBadge";
+import { StatusBadge } from "../../layout/StatusBadge";
 
 interface Transaction {
   id: string;
