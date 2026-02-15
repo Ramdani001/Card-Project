@@ -249,10 +249,36 @@ export const updateTransactionStatus = async (transactionId: string, status: Tra
   return result;
 };
 
-export const getTransactions = async (userId: string, params: GetTransactionParams) => {
+export const getTransactions = async (params: GetTransactionParams) => {
   const { skip, take, orderBy, where } = params;
 
   const whereClause: Prisma.TransactionWhereInput = {
+    ...where,
+  };
+
+  const [total, transactions] = await prisma.$transaction([
+    prisma.transaction.count({ where: whereClause }),
+    prisma.transaction.findMany({
+      where: whereClause,
+      skip,
+      take,
+      orderBy: orderBy || { createdAt: "desc" },
+      include: {
+        items: true,
+        voucher: true,
+        statusLogs: { orderBy: { createdAt: "desc" }, take: 1 },
+      },
+    }),
+  ]);
+
+  return { transactions, total };
+};
+
+export const getUserTransactions = async (userId: string, params: GetTransactionParams) => {
+  const { skip, take, orderBy, where } = params;
+
+  const whereClause: Prisma.TransactionWhereInput = {
+    userId,
     ...where,
   };
 

@@ -2,7 +2,7 @@ import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import { authOptions } from "@/lib/auth";
 import { Prisma } from "@/prisma/generated/prisma/client";
-import { getTransactions } from "@/services/transaction.service";
+import { getUserTransactions } from "@/services/transaction.service";
 import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
 
@@ -29,7 +29,7 @@ export const GET = async (req: NextRequest) => {
       additionalWhere.invoice = { contains: invoice, mode: "insensitive" };
     }
 
-    const { transactions, total } = await getTransactions({
+    const { transactions, total } = await getUserTransactions(session.user.id, {
       ...options,
       where: additionalWhere,
     });
