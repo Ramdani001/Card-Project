@@ -156,7 +156,7 @@ export default function MainCatalog() {
           icon: <IconCheck size={16} />,
         });
         fetchCart();
-        setIsDrawerOpen(true);
+        // setIsDrawerOpen(true);
       } else {
         const json = await res.json();
         throw new Error(json.message || "Gagal menambahkan ke keranjang");

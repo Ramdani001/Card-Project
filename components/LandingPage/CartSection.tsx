@@ -11,10 +11,9 @@ import {
   NumberInput,
   Paper,
   ScrollArea,
-  Select,
   Stack,
   Text,
-  TextInput,
+  TextInput
 } from "@mantine/core";
 import { IconShoppingCart, IconTrash } from "@tabler/icons-react";
 import { Dispatch, SetStateAction, memo, useState } from "react";
@@ -166,7 +165,6 @@ export const CartSection = ({
   totalAmount,
   address,
   setAddress,
-  setPaymentMethod,
   isCheckoutLoading,
 }: CartSectionProps) => {
   const [voucherCode, setVoucherCode] = useState("");
@@ -249,20 +247,6 @@ export const CartSection = ({
               onChange={(e) => setAddress(e.currentTarget.value)}
               required
               data-autofocus
-            />
-
-            <Select
-              label="Payment Method"
-              placeholder="Select payment"
-              data={[
-                { value: "TRANSFER", label: "Bank Transfer" },
-                { value: "CASH", label: "Cash on Delivery" },
-              ]}
-              value={paymentMethod}
-              onChange={setPaymentMethod}
-              radius="xs"
-              mb="lg"
-              allowDeselect={false}
             />
 
             <Button

@@ -5,7 +5,7 @@ import { PaginationMetaData } from "@/types/PaginationMetaData";
 import { ActionIcon, Button, Flex, Group, Paper, Select, Text, TextInput, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconEye, IconHistory, IconRefresh, IconSearch } from "@tabler/icons-react"; // Import IconHistory
+import { IconEye, IconHistory, IconRefresh, IconSearch } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { TransactionDetailModal } from "./TransactionDetailModal";
 import { TransactionHistoryModal } from "./TransactionHistoryModal";

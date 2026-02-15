@@ -22,7 +22,20 @@ export const POST = async (req: NextRequest) => {
 
     const newStatus = mapMidtransStatus(body.transaction_status, body.fraud_status);
 
-    await updateTransactionStatus(body.order_id, newStatus, `Midtrans Webhook: ${body.transaction_status} (${body.status_message || "No Msg"})`);
+    let paymentType = body.payment_type?.toUpperCase().replace("_", " ") || "UNKNOWN";
+    if (body.payment_type === "bank_transfer" && body.va_numbers) {
+      const bank = body.va_numbers[0]?.bank?.toUpperCase();
+      paymentType = `BANK TRANSFER - ${bank}`;
+    } else if (body.payment_type === "echannel") {
+      paymentType = "MANDIRI BILL";
+    }
+
+    await updateTransactionStatus(
+      body.order_id,
+      newStatus,
+      `Midtrans Webhook: ${body.transaction_status} (${body.status_message || "No Msg"})`,
+      paymentType
+    );
 
     return NextResponse.json({ received: true });
   } catch (error) {

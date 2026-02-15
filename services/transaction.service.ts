@@ -182,7 +182,7 @@ export const checkout = async (params: CreateTransactionParams) => {
   );
 };
 
-export const updateTransactionStatus = async (transactionId: string, status: TransactionStatus, note?: string) => {
+export const updateTransactionStatus = async (transactionId: string, status: TransactionStatus, note?: string, paymentMethod?: string) => {
   const result = await prisma.$transaction(async (tx) => {
     const oldTransaction = await tx.transaction.findUnique({
       where: { id: transactionId },
@@ -193,7 +193,7 @@ export const updateTransactionStatus = async (transactionId: string, status: Tra
 
     const updatedTransaction = await tx.transaction.update({
       where: { id: transactionId },
-      data: { status },
+      data: { status, ...(paymentMethod && { paymentMethod: paymentMethod }) },
       include: {
         items: true,
         user: true,
