@@ -33,6 +33,7 @@ export default function MainCatalog() {
   const [debouncedSearch] = useDebouncedValue(search, 500);
 
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
+  const [selectedFilterStock, setSelectedFilterStock] = useState<string>("off");
   const [sortValue, setSortValue] = useState<string | null>("createdAt|desc");
 
   const [activePage, setActivePage] = useState(1);
@@ -83,6 +84,9 @@ export default function MainCatalog() {
       if (selectedCategoryIds.length > 0) {
         params.append("categories", selectedCategoryIds.join(","));
       }
+      if (selectedFilterStock) {
+        params.append("stock", selectedFilterStock);
+      }
 
       const res = await fetch(`/api/cards?${params.toString()}`);
       const json = await res.json();
@@ -109,7 +113,7 @@ export default function MainCatalog() {
   useEffect(() => {
     fetchProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePage, debouncedSearch, selectedCategoryIds, sortValue]);
+  }, [activePage, debouncedSearch, selectedCategoryIds, sortValue, selectedFilterStock]);
 
   useEffect(() => {
     if (status === "authenticated") fetchCart();
@@ -259,7 +263,13 @@ export default function MainCatalog() {
       <Container size="xl" py="xl">
         <Grid gutter="xl">
           <Grid.Col span={{ base: 12, md: 3 }} visibleFrom="md">
-            <FilterSection categories={categoriesList} selectedCategoryIds={selectedCategoryIds} setSelectedCategoryIds={setSelectedCategoryIds} />
+            <FilterSection
+              categories={categoriesList}
+              selectedCategoryIds={selectedCategoryIds}
+              setSelectedCategoryIds={setSelectedCategoryIds}
+              setSelectedFilterStock={setSelectedFilterStock}
+              selectedFilterStock={selectedFilterStock}
+            />
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, md: 9 }}>

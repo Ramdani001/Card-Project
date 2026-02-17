@@ -9,10 +9,18 @@ export interface FilterCategory {
 interface FilterSectionProps {
   categories: FilterCategory[];
   selectedCategoryIds: string[];
+  selectedFilterStock: string;
   setSelectedCategoryIds: Dispatch<SetStateAction<string[]>>;
+  setSelectedFilterStock: Dispatch<SetStateAction<string>>;
 }
 
-export const FilterSection = ({ categories, selectedCategoryIds, setSelectedCategoryIds }: FilterSectionProps) => {
+export const FilterSection = ({
+  categories,
+  selectedCategoryIds,
+  setSelectedCategoryIds,
+  setSelectedFilterStock,
+  selectedFilterStock,
+}: FilterSectionProps) => {
   const handleToggle = (id: string) => {
     setSelectedCategoryIds((prev) => (prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id]));
   };
@@ -61,8 +69,18 @@ export const FilterSection = ({ categories, selectedCategoryIds, setSelectedCate
         <Text size="sm" fw={700} mb={4}>
           Availability
         </Text>
-        <Checkbox label="In Stock" styles={{ label: { fontSize: 14, color: "#495057" } }} />
-        <Checkbox label="Out of Stock" styles={{ label: { fontSize: 14, color: "#495057" } }} />
+        <Checkbox
+          checked={selectedFilterStock == "on"}
+          onChange={() => setSelectedFilterStock("on")}
+          label="In Stock"
+          styles={{ label: { fontSize: 14, color: "#495057" } }}
+        />
+        <Checkbox
+          checked={selectedFilterStock == "off"}
+          onChange={() => setSelectedFilterStock("off")}
+          label="Out of Stock"
+          styles={{ label: { fontSize: 14, color: "#495057" } }}
+        />
       </Stack>
     </Paper>
   );

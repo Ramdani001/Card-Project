@@ -1,6 +1,7 @@
 import { deleteFile, saveFile } from "@/helpers/file.helper";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
+import { warn } from "console";
 
 interface CreateCardParams {
   name: string;
@@ -48,24 +49,46 @@ export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string
   const baseWhere: Prisma.CardWhereInput = { ...options.where };
 
   let categorySearchFilter: Prisma.CardWhereInput = {};
+  const filterStock: Prisma.CardWhereInput = {};
+
+  const rawStock = (baseWhere as any).stock.contains;
+  delete baseWhere.stock;
+
+  if (rawStock === "on") {
+    filterStock.stock = { gt: 0 };
+  } else if (rawStock === "off") {
+    filterStock.stock = 0;
+  } else if (!isNaN(Number(rawStock)) && rawStock !== undefined) {
+    filterStock.stock = Number(rawStock);
+  }
 
   if (baseWhere.categories) {
     const categoryFilter = baseWhere.categories as any;
     const keyword = categoryFilter.contains || categoryFilter;
 
     if (typeof keyword === "string") {
-      categorySearchFilter = {
-        categories: {
-          some: {
-            category: {
-              name: {
-                contains: keyword,
-                mode: "insensitive",
+      const keywords = keyword
+        .split(",")
+        .map((k) => k.trim())
+        .filter((k) => k !== "");
+
+      if (keywords.length > 0) {
+        categorySearchFilter = {
+          categories: {
+            some: {
+              category: {
+                OR: keywords.map((k) => ({
+                  name: {
+                    contains: k,
+                    mode: "insensitive" as const,
+                  },
+                })),
               },
             },
           },
-        },
-      };
+        };
+      }
+
       delete baseWhere.categories;
     }
   }
@@ -124,7 +147,7 @@ export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string
   }
 
   const finalWhereClause: Prisma.CardWhereInput = {
-    AND: [baseWhere, categorySearchFilter, roleSecurityFilter],
+    AND: [baseWhere, categorySearchFilter, roleSecurityFilter, filterStock],
   };
 
   const finalOptions: Prisma.CardFindManyArgs = {
