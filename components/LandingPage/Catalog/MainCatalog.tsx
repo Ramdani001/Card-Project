@@ -33,7 +33,7 @@ export default function MainCatalog() {
   const [debouncedSearch] = useDebouncedValue(search, 500);
 
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
-  const [selectedFilterStock, setSelectedFilterStock] = useState<string>("off");
+  const [selectedFilterStock, setSelectedFilterStock] = useState<string>("on");
   const [sortValue, setSortValue] = useState<string | null>("createdAt|desc");
 
   const [activePage, setActivePage] = useState(1);

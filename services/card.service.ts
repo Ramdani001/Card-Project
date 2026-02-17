@@ -51,12 +51,12 @@ export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string
   let categorySearchFilter: Prisma.CardWhereInput = {};
   const filterStock: Prisma.CardWhereInput = {};
 
-  const rawStock = (baseWhere as any).stock.contains;
+  const rawStock = (baseWhere as any).stock;
   delete baseWhere.stock;
 
-  if (rawStock === "on") {
+  if (rawStock?.contains === "on") {
     filterStock.stock = { gt: 0 };
-  } else if (rawStock === "off") {
+  } else if (rawStock?.contains === "off") {
     filterStock.stock = 0;
   } else if (!isNaN(Number(rawStock)) && rawStock !== undefined) {
     filterStock.stock = Number(rawStock);
