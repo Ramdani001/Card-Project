@@ -8,6 +8,10 @@ export default withAuth(
     const { pathname } = req.nextUrl;
     const method = req.method as "GET" | "POST" | "PATCH" | "DELETE";
 
+    if (pathname === "/api/webhooks/midtrans") {
+      return NextResponse.next();
+    }
+
     let userRole: string = "Guest";
     let permissions: Record<string, any> = {};
 
