@@ -28,7 +28,7 @@ export const GET = async (req: NextRequest) => {
 export const POST = async (req: NextRequest) => {
   try {
     const body = await req.json();
-    const { name, categoryIds, menuIds } = body;
+    const { name, categoryIds, menuIds, apiAccesses } = body;
 
     if (!name || typeof name !== "string") {
       return sendResponse({
@@ -42,6 +42,7 @@ export const POST = async (req: NextRequest) => {
       name,
       categoryIds: Array.isArray(categoryIds) ? categoryIds : [],
       menuIds: Array.isArray(menuIds) ? menuIds : [],
+      apiAccesses: Array.isArray(apiAccesses) ? apiAccesses : [],
     });
 
     return sendResponse({

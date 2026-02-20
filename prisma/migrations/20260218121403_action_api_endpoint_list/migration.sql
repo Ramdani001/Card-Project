@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "RoleApiAccess" ADD COLUMN     "canCreate" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "canDelete" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "canRead" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "canUpdate" BOOLEAN NOT NULL DEFAULT false;

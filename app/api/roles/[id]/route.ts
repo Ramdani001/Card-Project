@@ -28,13 +28,14 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
     const { id } = await params;
 
     const body = await req.json();
-    const { name, categoryIds, menuIds } = body;
+    const { name, categoryIds, menuIds, apiAccesses } = body;
 
     const updatedRole = await updateRole({
       id,
       name: name || undefined,
       categoryIds: Array.isArray(categoryIds) ? categoryIds : undefined,
       menuIds: Array.isArray(menuIds) ? menuIds : undefined,
+      apiAccesses: Array.isArray(apiAccesses) ? apiAccesses : undefined,
     });
 
     return sendResponse({

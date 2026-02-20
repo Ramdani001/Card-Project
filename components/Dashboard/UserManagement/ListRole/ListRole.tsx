@@ -2,26 +2,14 @@
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
 import { PaginationMetaData } from "@/types/PaginationMetaData";
-import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title } from "@mantine/core";
+import { Role } from "@/types/Role";
+import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import { IconEdit, IconPlus, IconRefresh, IconTrash } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { RoleFormModal } from "./RoleFormModal";
-import { CategoryCard } from "@/types/CategoryCard";
-import { Menu } from "@/types/Menu";
-
-export interface Role {
-  id: string;
-  name: string;
-  createdAt: string;
-  cardCategoryRoleAccesses: { category: CategoryCard }[];
-  roleMenuAccesses: { menu: Menu }[];
-  _count?: {
-    users: number;
-  };
-}
 
 const ListRole = () => {
   const [roles, setRoles] = useState<Role[]>([]);
@@ -63,22 +51,10 @@ const ListRole = () => {
         throw new Error(json.message);
       }
     } catch (error: any) {
-      console.error("Error fetching roles:", error);
       notifications.show({ title: "Error", message: error.message || "Failed to fetch data", color: "red" });
     } finally {
       setLoading(false);
     }
-  };
-
-  const handlePageChange = (page: number) => setQueryParams((p) => ({ ...p, page }));
-  const handleLimitChange = (limit: number) => setQueryParams((p) => ({ ...p, limit, page: 1 }));
-  const handleSortChange = (key: string, order: "asc" | "desc") => setQueryParams((p) => ({ ...p, sortBy: key, sortOrder: order }));
-  const handleFilterChange = (key: string, value: string) => {
-    setQueryParams((p) => ({
-      ...p,
-      page: 1,
-      filters: { ...p.filters, [key]: value },
-    }));
   };
 
   useEffect(() => {
@@ -86,11 +62,17 @@ const ListRole = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryParams]);
 
+  const handlePageChange = (page: number) => setQueryParams((p) => ({ ...p, page }));
+  const handleLimitChange = (limit: number) => setQueryParams((p) => ({ ...p, limit, page: 1 }));
+  const handleSortChange = (key: string, order: "asc" | "desc") => setQueryParams((p) => ({ ...p, sortBy: key, sortOrder: order }));
+  const handleFilterChange = (key: string, value: string) => {
+    setQueryParams((p) => ({ ...p, page: 1, filters: { ...p.filters, [key]: value } }));
+  };
+
   const handleOpenCreate = () => {
     setSelectedRole(null);
     open();
   };
-
   const handleOpenEdit = (role: Role) => {
     setSelectedRole(role);
     open();
@@ -98,11 +80,7 @@ const ListRole = () => {
 
   const handleDelete = (role: Role) => {
     if (role._count && role._count.users > 0) {
-      notifications.show({
-        title: "Cannot Delete",
-        message: "This role is assigned to one or more users.",
-        color: "orange",
-      });
+      notifications.show({ title: "Cannot Delete", message: "This role is assigned to users.", color: "orange" });
       return;
     }
 
@@ -111,7 +89,7 @@ const ListRole = () => {
       centered: true,
       children: (
         <Text size="sm">
-          Are you sure you want to delete the role <strong>{role.name}</strong>? This action cannot be undone.
+          Are you sure you want to delete <strong>{role.name}</strong>?
         </Text>
       ),
       labels: { confirm: "Delete", cancel: "Cancel" },
@@ -119,12 +97,9 @@ const ListRole = () => {
       onConfirm: async () => {
         try {
           const res = await fetch(`/api/roles/${role.id}`, { method: "DELETE" });
-          const json = await res.json();
           if (res.ok) {
-            notifications.show({ title: "Success", message: "Role deleted successfully", color: "green" });
+            notifications.show({ title: "Success", message: "Role deleted", color: "green" });
             fetchRoles();
-          } else {
-            throw new Error(json.message);
           }
         } catch (error: any) {
           notifications.show({ title: "Error", message: error.message, color: "red" });
@@ -137,8 +112,7 @@ const ListRole = () => {
     {
       key: "no",
       label: "No",
-      sortable: false,
-      width: 60,
+      width: 50,
       render: (_, index) => (metadata.page - 1) * metadata.limit + index + 1,
     },
     {
@@ -147,27 +121,26 @@ const ListRole = () => {
       sortable: true,
       filterable: true,
       render: (item) => (
-        <Text fw={600} size="sm">
+        <Text fw={700} size="sm">
           {item.name}
         </Text>
       ),
     },
     {
       key: "usersCount",
-      label: "Users Assigned",
-      sortable: true,
+      label: "Users",
+      width: 100,
       render: (item) => (
         <Badge color={item._count?.users ? "blue" : "gray"} variant="light">
-          {item._count?.users || 0} Users
+          {item._count?.users || 0}
         </Badge>
       ),
     },
     {
-      key: "categoryAccess",
-      label: "Category Access",
-      sortable: false,
+      key: "apiAccess",
+      label: "API Access",
       render: (item) => {
-        const accesses = item.cardCategoryRoleAccesses || [];
+        const accesses = item.roleApiAccesses || [];
         const limit = 2;
         const hasMore = accesses.length > limit;
 
@@ -175,79 +148,83 @@ const ListRole = () => {
           <Group gap={4}>
             {accesses.length > 0 ? (
               <>
-                {accesses.slice(0, limit).map((access: any) => (
-                  <Badge key={access.category.id} variant="light" color="cyan" size="sm">
-                    {access.category.name}
-                  </Badge>
-                ))}
+                {accesses.slice(0, limit).map((access, idx) => {
+                  const crud = [
+                    access.canRead ? "R" : "-",
+                    access.canCreate ? "C" : "-",
+                    access.canUpdate ? "U" : "-",
+                    access.canDelete ? "D" : "-",
+                  ].join(" ");
 
+                  return (
+                    <Tooltip key={idx} label={`Permissions: ${crud}`} withArrow>
+                      <Badge variant="dot" color="indigo" size="sm" tt="none">
+                        {access.apiEndpoints.url}
+                      </Badge>
+                    </Tooltip>
+                  );
+                })}
                 {hasMore && (
-                  <Badge variant="outline" color="gray" size="sm" style={{ cursor: "help" }}>
+                  <Badge variant="outline" color="gray" size="sm">
                     +{accesses.length - limit} more
                   </Badge>
                 )}
               </>
             ) : (
               <Text size="xs" c="dimmed" fs="italic">
-                No access defined
+                No API Access
               </Text>
             )}
           </Group>
         );
       },
+    },
+    {
+      key: "categoryAccess",
+      label: "Category",
+      render: (item) => (
+        <Group gap={4}>
+          {(item.cardCategoryRoleAccesses || []).slice(0, 2).map((a: any) => (
+            <Badge key={a.category.id} variant="light" color="cyan" size="sm">
+              {a.category.name}
+            </Badge>
+          ))}
+          {(item.cardCategoryRoleAccesses?.length || 0) > 2 && (
+            <Text size="xs" c="dimmed">
+              ...
+            </Text>
+          )}
+        </Group>
+      ),
     },
     {
       key: "menuAccess",
-      label: "Menu Access",
-      sortable: false,
-      render: (item) => {
-        const accesses = item.roleMenuAccesses || [];
-        const limit = 2;
-        const hasMore = accesses.length > limit;
-
-        return (
-          <Group gap={4}>
-            {accesses.length > 0 ? (
-              <>
-                {accesses.slice(0, limit).map((access: any) => (
-                  <Badge key={access.menu.id} variant="light" color="cyan" size="sm">
-                    {access.menu.label}
-                  </Badge>
-                ))}
-
-                {hasMore && (
-                  <Badge variant="outline" color="gray" size="sm" style={{ cursor: "help" }}>
-                    +{accesses.length - limit} more
-                  </Badge>
-                )}
-              </>
-            ) : (
-              <Text size="xs" c="dimmed" fs="italic">
-                No access defined
-              </Text>
-            )}
-          </Group>
-        );
-      },
-    },
-    {
-      key: "createdAt",
-      label: "Created At",
-      sortable: true,
+      label: "Menu",
       render: (item) => (
-        <Text size="xs">{new Date(item.createdAt).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric" })}</Text>
+        <Group gap={4}>
+          {(item.roleMenuAccesses || []).slice(0, 2).map((a: any) => (
+            <Badge key={a.menu.id} variant="light" color="teal" size="sm">
+              {a.menu.label}
+            </Badge>
+          ))}
+          {(item.roleMenuAccesses?.length || 0) > 2 && (
+            <Text size="xs" c="dimmed">
+              ...
+            </Text>
+          )}
+        </Group>
       ),
     },
     {
       key: "actions",
       label: "Action",
-      width: 120,
+      width: 100,
       render: (item) => (
         <Group gap={4}>
           <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenEdit(item)}>
             <IconEdit size={18} />
           </ActionIcon>
-          <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(item)} disabled={item._count?.users ? item._count.users > 0 : false}>
+          <ActionIcon variant="subtle" color="red" onClick={() => handleDelete(item)} disabled={!!item._count?.users}>
             <IconTrash size={18} />
           </ActionIcon>
         </Group>

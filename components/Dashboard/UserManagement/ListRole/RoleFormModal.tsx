@@ -1,9 +1,11 @@
 "use client";
 
-import { Button, Group, Modal, MultiSelect, Stack, TextInput } from "@mantine/core";
+import { Role } from "@/types/Role";
+import { Button, Divider, Group, Modal, MultiSelect, ScrollArea, Select, Stack, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { useEffect, useState } from "react";
-import { Role } from "./ListRole";
+import { IconLockAccess, IconPlus } from "@tabler/icons-react";
+import { useEffect, useMemo, useState } from "react";
+import { ApiPermissionState, RoleApiAccessTable } from "./RoleApiAccessTable";
 
 interface RoleFormModalProps {
   opened: boolean;
@@ -13,149 +15,162 @@ interface RoleFormModalProps {
 }
 
 export const RoleFormModal = ({ opened, onClose, role, onSuccess }: RoleFormModalProps) => {
-  const [name, setName] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [categoriesList, setCategoriesList] = useState<{ value: string; label: string }[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [fetchingCategories, setFetchingCategories] = useState(false);
-  const [fetchingMenus, setFetchingMenus] = useState(false);
-  const [selectedMenus, setSelectedMenus] = useState<string[]>([]);
-  const [menusList, setMenusList] = useState<{ value: string; label: string }[]>([]);
-
   const isEditing = !!role;
 
-  const fetchMenus = async () => {
-    setFetchingMenus(true);
+  const [name, setName] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedMenus, setSelectedMenus] = useState<string[]>([]);
+  const [apiPermissions, setApiPermissions] = useState<ApiPermissionState[]>([]);
+
+  const [categoriesList, setCategoriesList] = useState<{ value: string; label: string }[]>([]);
+  const [menusList, setMenusList] = useState<{ value: string; label: string }[]>([]);
+  const [apiEndpoints, setApiEndpoints] = useState<{ value: string; label: string }[]>([]);
+  const [searchValue, setSearchValue] = useState(""); // Buat logic creatable v7
+  const [loading, setLoading] = useState(false);
+
+  const selectData = useMemo(() => {
+    const data = [...apiEndpoints];
+    const query = searchValue.trim();
+    if (query.length > 0 && !data.some((item) => item.value === query)) {
+      data.unshift({ value: query, label: `+ Gunakan API Baru: ${query}` });
+    }
+    return data;
+  }, [apiEndpoints, searchValue]);
+
+  const fetchAll = async () => {
     try {
-      const res = await fetch("/api/menus");
-      const json = await res.json();
-      if (json.success) {
-        setMenusList(json.data.map((m: any) => ({ value: m.id, label: m.label })));
-      }
-    } catch (error) {
-      console.error("Gagal mengambil menu:", error);
-    } finally {
-      setFetchingMenus(false);
+      const [cat, menu, api] = await Promise.all([
+        fetch("/api/categories").then((r) => r.json()),
+        fetch("/api/menus").then((r) => r.json()),
+        fetch("/api/api-endpoints").then((r) => r.json()),
+      ]);
+
+      if (cat.success) setCategoriesList(cat.data.map((c: any) => ({ value: c.id, label: c.name })));
+      if (menu.success) setMenusList(menu.data.map((m: any) => ({ value: m.id, label: m.label })));
+      if (api.success) setApiEndpoints(api.data.map((e: any) => ({ value: e.url, label: e.url })));
+    } catch (e) {
+      console.error(e);
     }
   };
 
-  const fetchCategories = async () => {
-    setFetchingCategories(true);
-    try {
-      const res = await fetch("/api/categories");
-      const json = await res.json();
-      if (json.success) {
-        setCategoriesList(json.data.map((c: any) => ({ value: c.id, label: c.name })));
-      }
-    } catch (error) {
-      console.error("Gagal mengambil kategori:", error);
-    } finally {
-      setFetchingCategories(false);
-    }
-  };
-
-  // Panggil fetch saat modal pertama kali dibuka
   useEffect(() => {
     if (opened) {
-      fetchCategories();
-      fetchMenus();
+      fetchAll();
+      if (role) {
+        setName(role.name);
+
+        const categoryIds = (role.cardCategoryRoleAccesses || []).map((a: any) => a.category.id).filter(Boolean);
+        const menuIds = (role.roleMenuAccesses || []).map((a: any) => a.menuId).filter(Boolean);
+        setSelectedCategories(categoryIds);
+        setSelectedMenus(menuIds);
+        setApiPermissions(
+          role.roleApiAccesses?.map((a) => ({
+            url: a.apiEndpoints.url,
+            canRead: a.canRead,
+            canCreate: a.canCreate,
+            canUpdate: a.canUpdate,
+            canDelete: a.canDelete,
+          })) || []
+        );
+      } else {
+        setName("");
+        setSelectedCategories([]);
+        setSelectedMenus([]);
+        setApiPermissions([]);
+      }
     }
-  }, [opened]);
+  }, [opened, role]);
 
-  useEffect(() => {
-    if (role && opened) {
-      setName(role.name);
-
-      // Ambil ID Category dari relasi cardCategoryRoleAccesses
-      const categoryIds = role.cardCategoryRoleAccesses?.map((a: any) => a.categoryId || a.category?.id) || [];
-      // Ambil ID Menu dari relasi roleMenuAccesses
-      const menuIds = role.roleMenuAccesses?.map((a: any) => a.menuId || a.menu?.id) || [];
-
-      setSelectedCategories(categoryIds);
-      setSelectedMenus(menuIds);
-    } else if (!isEditing) {
-      setName("");
-      setSelectedCategories([]);
-      setSelectedMenus([]);
+  const handleAddApi = (url: string) => {
+    if (!apiPermissions.find((p) => p.url === url)) {
+      setApiPermissions([{ url, canRead: true, canCreate: false, canUpdate: false, canDelete: false }, ...apiPermissions]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [role, opened]);
+    setSearchValue("");
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return notifications.show({ message: "Role name is required", color: "red" });
-
     setLoading(true);
     try {
       const url = isEditing ? `/api/roles/${role.id}` : "/api/roles";
-      const method = isEditing ? "PATCH" : "POST";
-
       const res = await fetch(url, {
-        method,
+        method: isEditing ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
           categoryIds: selectedCategories,
           menuIds: selectedMenus,
+          apiAccesses: apiPermissions,
         }),
       });
 
       const json = await res.json();
-
-      if (res.ok) {
-        notifications.show({
-          title: "Success",
-          message: isEditing ? "Role updated successfully" : "Role created successfully",
-          color: "green",
-        });
+      if (json.success) {
+        notifications.show({ title: "Sukses", message: "Role berhasil disimpan", color: "green" });
         onSuccess();
         onClose();
       } else {
-        throw new Error(json.message || "Something went wrong");
+        notifications.show({ title: "Gagal", message: json.message, color: "red" });
       }
-    } catch (error: any) {
-      notifications.show({ title: "Error", message: error.message, color: "red" });
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Modal opened={opened} onClose={onClose} title={isEditing ? "Edit Role" : "Create New Role"} centered size="md">
-      <form onSubmit={handleSubmit}>
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={isEditing ? "Edit Role" : "Tambah Role"}
+      size="xl"
+      centered
+      scrollAreaComponent={ScrollArea.Autosize}
+    >
+      <form onSubmit={handleSave}>
         <Stack gap="md">
-          <TextInput label="Role Name" placeholder="e.g. SUPER_ADMIN, STAFF" value={name} onChange={(e) => setName(e.target.value)} required />
+          <TextInput label="Nama Role" value={name} onChange={(e) => setName(e.target.value)} required />
 
-          <MultiSelect
-            label="Category Access"
-            placeholder={fetchingCategories ? "Loading categories..." : "Select categories"}
-            data={categoriesList}
-            value={selectedCategories}
-            onChange={setSelectedCategories}
-            searchable
-            clearable
-            nothingFoundMessage="No categories found"
-            disabled={fetchingCategories}
+          <Group grow>
+            <MultiSelect label="Akses Kategori" data={categoriesList} value={selectedCategories} onChange={setSelectedCategories} searchable />
+            <MultiSelect label="Akses Menu" data={menusList} value={selectedMenus} onChange={setSelectedMenus} searchable />
+          </Group>
+
+          <Divider
+            label={
+              <Group gap={4}>
+                <IconLockAccess size={14} /> API ACCESS MATRIX
+              </Group>
+            }
+            labelPosition="center"
           />
 
-          <MultiSelect
-            label="Menu Access"
-            placeholder={fetchingMenus ? "Loading menus..." : "Select menus"} // Typo fixed
-            data={menusList}
-            value={selectedMenus}
-            onChange={setSelectedMenus}
+          <Select
+            label="Cari atau Ketik Endpoint API Baru"
+            placeholder="/api/products"
+            data={selectData}
             searchable
-            clearable
-            nothingFoundMessage="No menus found"
-            disabled={fetchingMenus}
+            searchValue={searchValue}
+            onSearchChange={setSearchValue}
+            onChange={(val) => val && handleAddApi(val)}
+            value={null}
+            nothingFoundMessage="Ketik URL baru untuk menambah..."
+            leftSection={<IconPlus size={16} />}
           />
 
-          <Group justify="flex-end" mt="md">
-            <Button variant="default" onClick={onClose} disabled={loading}>
+          <RoleApiAccessTable
+            value={apiPermissions}
+            onChange={setApiPermissions}
+            onRemove={(url) => setApiPermissions((prev) => prev.filter((p) => p.url !== url))}
+          />
+
+          <Group justify="flex-end" mt="xl">
+            <Button variant="default" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" loading={loading} color="blue">
-              {isEditing ? "Save Changes" : "Create Role"}
+            <Button type="submit" loading={loading}>
+              Save Role
             </Button>
           </Group>
         </Stack>

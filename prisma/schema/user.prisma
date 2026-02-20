@@ -7,6 +7,7 @@ model Role {
     users                    User[]
     cardCategoryRoleAccesses CardCategoryRoleAccess[]
     roleMenuAccesses         RoleMenuAccess[]
+    roleApiAccesses          RoleApiAccess[]
 }
 
 model CardCategoryRoleAccess {
@@ -37,6 +38,36 @@ model RoleMenuAccess {
     updatedAt DateTime @updatedAt
 
     @@unique([roleId, menuId])
+}
+
+model RoleApiAccess {
+    id String @id @default(uuid())
+
+    roleId String
+    role   Role   @relation(fields: [roleId], references: [id])
+
+    canRead Boolean @default(false)
+    canUpdate Boolean @default(false)
+    canDelete Boolean @default(false)
+    canCreate Boolean @default(false)
+
+    apiEndpointId String
+    apiEndpoints  ApiEndpoint @relation(fields: [apiEndpointId], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([roleId, apiEndpointId])
+}
+
+model ApiEndpoint {
+    id          String  @id @default(uuid())
+    url         String  @unique
+    description String?
+
+    createdAt       DateTime        @default(now())
+    updatedAt       DateTime        @updatedAt
+    roleApiAccesses RoleApiAccess[]
 }
 
 model User {
