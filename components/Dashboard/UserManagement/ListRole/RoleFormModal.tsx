@@ -3,7 +3,7 @@
 import { Role } from "@/types/Role";
 import { Button, Divider, Group, Modal, MultiSelect, ScrollArea, Select, Stack, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconLockAccess, IconPlus } from "@tabler/icons-react";
+import { IconCheck, IconLockAccess, IconPlus, IconX } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 import { ApiPermissionState, RoleApiAccessTable } from "./RoleApiAccessTable";
 
@@ -32,7 +32,7 @@ export const RoleFormModal = ({ opened, onClose, role, onSuccess }: RoleFormModa
     const data = [...apiEndpoints];
     const query = searchValue.trim();
     if (query.length > 0 && !data.some((item) => item.value === query)) {
-      data.unshift({ value: query, label: `+ Gunakan API Baru: ${query}` });
+      data.unshift({ value: query, label: `+ Add: ${query}` });
     }
     return data;
   }, [apiEndpoints, searchValue]);
@@ -106,14 +106,15 @@ export const RoleFormModal = ({ opened, onClose, role, onSuccess }: RoleFormModa
 
       const json = await res.json();
       if (json.success) {
-        notifications.show({ title: "Sukses", message: "Role berhasil disimpan", color: "green" });
+        notifications.show({ title: "Success", message: json.message, color: "teal", icon: <IconCheck size={16} /> });
         onSuccess();
         onClose();
       } else {
-        notifications.show({ title: "Gagal", message: json.message, color: "red" });
+        notifications.show({ title: "Error", message: json.message, color: "red", icon: <IconX size={16} /> });
       }
     } catch (e) {
       console.error(e);
+      notifications.show({ title: "Error", message: "Network error", color: "red" });
     } finally {
       setLoading(false);
     }
@@ -130,16 +131,16 @@ export const RoleFormModal = ({ opened, onClose, role, onSuccess }: RoleFormModa
     >
       <form onSubmit={handleSave}>
         <Stack gap="md">
-          <TextInput label="Nama Role" value={name} onChange={(e) => setName(e.target.value)} required />
+          <TextInput label="Role Name" value={name} onChange={(e) => setName(e.target.value)} required />
 
           <Group grow>
-            <MultiSelect label="Akses Kategori" data={categoriesList} value={selectedCategories} onChange={setSelectedCategories} searchable />
-            <MultiSelect label="Akses Menu" data={menusList} value={selectedMenus} onChange={setSelectedMenus} searchable />
+            <MultiSelect label="Category Access" data={categoriesList} value={selectedCategories} onChange={setSelectedCategories} searchable />
+            <MultiSelect label="Menu Access" data={menusList} value={selectedMenus} onChange={setSelectedMenus} searchable />
           </Group>
 
           <Divider
             label={
-              <Group gap={4}>
+              <Group gap={4} mt={40}>
                 <IconLockAccess size={14} /> API ACCESS MATRIX
               </Group>
             }
@@ -147,7 +148,7 @@ export const RoleFormModal = ({ opened, onClose, role, onSuccess }: RoleFormModa
           />
 
           <Select
-            label="Cari atau Ketik Endpoint API Baru"
+            label="Search or insert API"
             placeholder="/api/products"
             data={selectData}
             searchable
@@ -155,7 +156,7 @@ export const RoleFormModal = ({ opened, onClose, role, onSuccess }: RoleFormModa
             onSearchChange={setSearchValue}
             onChange={(val) => val && handleAddApi(val)}
             value={null}
-            nothingFoundMessage="Ketik URL baru untuk menambah..."
+            nothingFoundMessage="Add"
             leftSection={<IconPlus size={16} />}
           />
 

@@ -1,6 +1,4 @@
-"use client";
-
-import { ActionIcon, Checkbox, Table, Text } from "@mantine/core";
+import { ActionIcon, Checkbox, Table, Text, ScrollArea, Box } from "@mantine/core";
 import { IconTrash } from "@tabler/icons-react";
 
 export interface ApiPermissionState {
@@ -34,60 +32,70 @@ export const RoleApiAccessTable = ({ value, onChange, onRemove }: Props) => {
   };
 
   return (
-    <Table striped highlightOnHover withTableBorder mt="md">
-      <Table.Thead>
-        <Table.Tr>
-          <Table.Th>API Endpoint</Table.Th>
-          <Table.Th>Read</Table.Th>
-          <Table.Th>Create</Table.Th>
-          <Table.Th>Update</Table.Th>
-          <Table.Th>Delete</Table.Th>
-          <Table.Th>Action</Table.Th>
-        </Table.Tr>
-      </Table.Thead>
-      <Table.Tbody>
-        {value.length === 0 ? (
-          <Table.Tr>
-            <Table.Td colSpan={6} align="center">
-              <Text c="dimmed" py="sm" size="sm">
-                Belum ada akses API yang ditambahkan.
-              </Text>
-            </Table.Td>
-          </Table.Tr>
-        ) : (
-          value.map((item) => (
-            <Table.Tr key={item.url}>
-              <Table.Td>
-                <Text fw={500} size="sm">
-                  {item.url}
-                </Text>
-                {item.description && (
-                  <Text size="xs" c="dimmed">
-                    {item.description}
-                  </Text>
-                )}
-              </Table.Td>
-              <Table.Td>
-                <Checkbox checked={item.canRead} onChange={() => handleToggle(item.url, "canRead")} />
-              </Table.Td>
-              <Table.Td>
-                <Checkbox color="green" checked={item.canCreate} onChange={() => handleToggle(item.url, "canCreate")} />
-              </Table.Td>
-              <Table.Td>
-                <Checkbox color="orange" checked={item.canUpdate} onChange={() => handleToggle(item.url, "canUpdate")} />
-              </Table.Td>
-              <Table.Td>
-                <Checkbox color="red" checked={item.canDelete} onChange={() => handleToggle(item.url, "canDelete")} />
-              </Table.Td>
-              <Table.Td>
-                <ActionIcon variant="subtle" color="red" onClick={() => onRemove(item.url)}>
-                  <IconTrash size={16} />
-                </ActionIcon>
-              </Table.Td>
+    <Box mt="md">
+      <ScrollArea h={300} scrollbarSize={10}>
+        <Table striped highlightOnHover withTableBorder withColumnBorders stickyHeader stickyHeaderOffset={0}>
+          <Table.Thead bg="var(--mantine-color-body)">
+            <Table.Tr>
+              <Table.Th>API Endpoint</Table.Th>
+              <Table.Th style={{ width: 100, textAlign: "center" }}>Read</Table.Th>
+              <Table.Th style={{ width: 100, textAlign: "center" }}>Create</Table.Th>
+              <Table.Th style={{ width: 100, textAlign: "center" }}>Update</Table.Th>
+              <Table.Th style={{ width: 100, textAlign: "center" }}>Delete</Table.Th>
+              <Table.Th style={{ width: 80, textAlign: "center" }}>Action</Table.Th>
             </Table.Tr>
-          ))
-        )}
-      </Table.Tbody>
-    </Table>
+          </Table.Thead>
+
+          <Table.Tbody>
+            {value.length === 0 ? (
+              <Table.Tr>
+                <Table.Td colSpan={6} align="center">
+                  <Text c="dimmed" py="xl" size="sm">
+                    Belum ada akses API yang ditambahkan.
+                  </Text>
+                </Table.Td>
+              </Table.Tr>
+            ) : (
+              value.map((item) => (
+                <Table.Tr key={item.url}>
+                  <Table.Td>
+                    <Text fw={600} size="sm" style={{ whiteSpace: "nowrap" }}>
+                      {item.url}
+                    </Text>
+                    {item.description && (
+                      <Text size="xs" c="dimmed">
+                        {item.description}
+                      </Text>
+                    )}
+                  </Table.Td>
+
+                  <Table.Td align="center">
+                    <Checkbox checked={item.canRead} onChange={() => handleToggle(item.url, "canRead")} />
+                  </Table.Td>
+
+                  <Table.Td align="center">
+                    <Checkbox color="green" checked={item.canCreate} onChange={() => handleToggle(item.url, "canCreate")} />
+                  </Table.Td>
+
+                  <Table.Td align="center">
+                    <Checkbox color="orange" checked={item.canUpdate} onChange={() => handleToggle(item.url, "canUpdate")} />
+                  </Table.Td>
+
+                  <Table.Td align="center">
+                    <Checkbox color="red" checked={item.canDelete} onChange={() => handleToggle(item.url, "canDelete")} />
+                  </Table.Td>
+
+                  <Table.Td align="center">
+                    <ActionIcon variant="subtle" color="red" onClick={() => onRemove(item.url)}>
+                      <IconTrash size={18} />
+                    </ActionIcon>
+                  </Table.Td>
+                </Table.Tr>
+              ))
+            )}
+          </Table.Tbody>
+        </Table>
+      </ScrollArea>
+    </Box>
   );
 };

@@ -14,6 +14,7 @@ const roleData: Prisma.RoleCreateInput[] = [
   { name: "B2C" },
   { name: "Admin Toko" },
   { name: "Staff Toko" },
+  { name: "Guest" },
 ];
 
 const userData = [
