@@ -1,8 +1,8 @@
 "use client";
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
-import { Discount } from "@/types/Discount";
-import { PaginationMetaData } from "@/types/PaginationMetaData";
+import { DiscountDto } from "@/types/DiscountDto";
+import { PaginationMetaDataDto } from "@/types/PaginationMetaDataDto";
 import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
@@ -12,8 +12,8 @@ import { useEffect, useState } from "react";
 import { DiscountForm } from "./DiscountForm";
 
 const ListDiscount = () => {
-  const [discounts, setDiscounts] = useState<Discount[]>([]);
-  const [metadata, setMetadata] = useState<PaginationMetaData>({
+  const [discounts, setDiscounts] = useState<DiscountDto[]>([]);
+  const [metadata, setMetadata] = useState<PaginationMetaDataDto>({
     total: 0,
     page: 1,
     limit: 10,
@@ -22,7 +22,7 @@ const ListDiscount = () => {
   const [loading, setLoading] = useState(false);
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedDiscount, setSelectedDiscount] = useState<Discount | null>(null);
+  const [selectedDiscount, setSelectedDiscount] = useState<DiscountDto | null>(null);
 
   const [queryParams, setQueryParams] = useState({
     page: 1,
@@ -113,12 +113,12 @@ const ListDiscount = () => {
     open();
   };
 
-  const handleOpenEdit = (discount: Discount) => {
+  const handleOpenEdit = (discount: DiscountDto) => {
     setSelectedDiscount(discount);
     open();
   };
 
-  const columns: ColumnDef<Discount>[] = [
+  const columns: ColumnDef<DiscountDto>[] = [
     {
       key: "no",
       label: "No",

@@ -1,8 +1,8 @@
 "use client";
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
-import { PaginationMetaData } from "@/types/PaginationMetaData";
-import { Role } from "@/types/Role";
+import { PaginationMetaDataDto } from "@/types/PaginationMetaDataDto";
+import { RoleDto } from "@/types/RoleDto";
 import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
@@ -12,12 +12,12 @@ import { useEffect, useState } from "react";
 import { RoleFormModal } from "./RoleFormModal";
 
 const ListRole = () => {
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [metadata, setMetadata] = useState<PaginationMetaData>({ total: 0, page: 1, limit: 10, totalPages: 0 });
+  const [roles, setRoles] = useState<RoleDto[]>([]);
+  const [metadata, setMetadata] = useState<PaginationMetaDataDto>({ total: 0, page: 1, limit: 10, totalPages: 0 });
   const [loading, setLoading] = useState(false);
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [selectedRole, setSelectedRole] = useState<RoleDto | null>(null);
 
   const [queryParams, setQueryParams] = useState({
     page: 1,
@@ -73,12 +73,12 @@ const ListRole = () => {
     setSelectedRole(null);
     open();
   };
-  const handleOpenEdit = (role: Role) => {
+  const handleOpenEdit = (role: RoleDto) => {
     setSelectedRole(role);
     open();
   };
 
-  const handleDelete = (role: Role) => {
+  const handleDelete = (role: RoleDto) => {
     if (role._count && role._count.users > 0) {
       notifications.show({ title: "Cannot Delete", message: "This role is assigned to users.", color: "orange" });
       return;
@@ -108,7 +108,7 @@ const ListRole = () => {
     });
   };
 
-  const columns: ColumnDef<Role>[] = [
+  const columns: ColumnDef<RoleDto>[] = [
     {
       key: "no",
       label: "No",

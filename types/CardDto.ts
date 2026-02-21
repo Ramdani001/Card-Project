@@ -1,6 +1,6 @@
-import { Discount } from "./Discount";
+import { DiscountDto } from "./DiscountDto";
 
-export interface CardData {
+export interface CardDto {
   id: string;
   name: string;
   slug?: string;
@@ -8,7 +8,7 @@ export interface CardData {
   stock: number;
   sku?: string;
   discountId?: string;
-  discount?: Discount;
+  discount?: DiscountDto;
   description?: string;
   images: { id: string; url: string; isPrimary: boolean }[];
   categories: {

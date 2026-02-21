@@ -1,4 +1,4 @@
-export interface Menu {
+export interface MenuDto {
   id: string;
   label: string;
   url: string | null;
@@ -9,5 +9,5 @@ export interface Menu {
     id: string;
     label: string;
   } | null;
-  subMenus?: Menu[];
+  subMenus?: MenuDto[];
 }

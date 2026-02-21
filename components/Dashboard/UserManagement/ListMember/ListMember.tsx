@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
-import { PaginationMetaData } from "@/types/PaginationMetaData";
+import { PaginationMetaDataDto } from "@/types/PaginationMetaDataDto";
 import { ActionIcon, Avatar, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
@@ -9,39 +9,22 @@ import { notifications } from "@mantine/notifications";
 import { IconCheck, IconPencil, IconPhone, IconRefresh, IconTrash, IconUserPlus, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { ListMemberForm } from "./ListMemberForm";
-
-export interface User {
-  id: string;
-  name: string | null;
-  email: string;
-  phone: string | null;
-  avatar: string | null;
-  roleId: string | null;
-  role: {
-    id: string;
-    name: string;
-  } | null;
-  createdAt: string;
-}
-
-export interface Role {
-  id: string;
-  name: string;
-}
+import { UserDto } from "@/types/UserDto";
+import { RoleDto } from "@/types/RoleDto";
 
 const ListMember = () => {
-  const [users, setUsers] = useState<User[]>([]);
-  const [metadata, setMetadata] = useState<PaginationMetaData>({
+  const [users, setUsers] = useState<UserDto[]>([]);
+  const [metadata, setMetadata] = useState<PaginationMetaDataDto>({
     total: 0,
     page: 1,
     limit: 10,
     totalPages: 0,
   });
   const [loading, setLoading] = useState(false);
-  const [rolesList, setRolesList] = useState<Role[]>([]);
+  const [rolesList, setRolesList] = useState<RoleDto[]>([]);
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserDto | null>(null);
 
   const [queryParams, setQueryParams] = useState({
     page: 1,
@@ -146,12 +129,12 @@ const ListMember = () => {
     open();
   };
 
-  const handleOpenEdit = (user: User) => {
+  const handleOpenEdit = (user: UserDto) => {
     setSelectedUser(user);
     open();
   };
 
-  const columns: ColumnDef<User>[] = [
+  const columns: ColumnDef<UserDto>[] = [
     {
       key: "no",
       label: "No",

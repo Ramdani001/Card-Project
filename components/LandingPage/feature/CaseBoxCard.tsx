@@ -1,11 +1,11 @@
-import { CardData } from "@/types/CardData";
+import { CardDto } from "@/types/CardDto";
 import { Box, Center, Group, ScrollArea, Skeleton } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useEffect, useState } from "react";
 import { BoxCard } from "../Card/BoxCard";
 
 export const CaseBoxCard = () => {
-  const [products, setProducts] = useState<CardData[]>([]);
+  const [products, setProducts] = useState<CardDto[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
   useEffect(() => {

@@ -1,16 +1,17 @@
 "use client";
 
+import { RoleDto } from "@/types/RoleDto";
+import { UserDto } from "@/types/UserDto";
 import { Avatar, Button, FileInput, Flex, Group, Modal, PasswordInput, Select, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconPhoto, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { Role, User } from "./ListMember";
 
 interface ListMemberFormProps {
   opened: boolean;
   onClose: () => void;
-  rolesList: Role[];
-  userToEdit: User | null;
+  rolesList: RoleDto[];
+  userToEdit: UserDto | null;
   onSuccess: () => void;
 }
 

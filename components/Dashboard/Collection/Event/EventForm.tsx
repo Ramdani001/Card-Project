@@ -1,6 +1,6 @@
 "use client";
 
-import { Event } from "@/types/Event";
+import { EventDto } from "@/types/EventDto";
 import { AspectRatio, Button, FileInput, Flex, Image, Modal, Paper, SimpleGrid, Text, Textarea, TextInput } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 interface EventFormProps {
   opened: boolean;
   onClose: () => void;
-  eventToEdit: Event | null;
+  eventToEdit: EventDto | null;
   onSuccess: () => void;
 }
 

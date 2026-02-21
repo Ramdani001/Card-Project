@@ -1,4 +1,4 @@
-import { CartItem } from "@/types/CartItem";
+import { CartItemDto } from "@/types/CartItemDto";
 import {
   ActionIcon,
   Box,
@@ -13,16 +13,16 @@ import {
   ScrollArea,
   Stack,
   Text,
-  TextInput
+  TextInput,
 } from "@mantine/core";
 import { IconShoppingCart, IconTrash } from "@tabler/icons-react";
 import { Dispatch, SetStateAction, memo, useState } from "react";
 
-const getCardName = (item: CartItem) => item.card?.name || "Unknown Item";
-const getCardStock = (item: CartItem) => Number(item.card?.stock || 0);
-const getCardType = (item: CartItem) => item.card?.categories?.[0]?.category?.name || "General";
-const getCardImage = (item: CartItem) => item.card?.images?.[0]?.url || "https://placehold.co/60?text=No+Img";
-const getCardPrice = (item: CartItem) => Number(item.card?.price || 0);
+const getCardName = (item: CartItemDto) => item.card?.name || "Unknown Item";
+const getCardStock = (item: CartItemDto) => Number(item.card?.stock || 0);
+const getCardType = (item: CartItemDto) => item.card?.categories?.[0]?.category?.name || "General";
+const getCardImage = (item: CartItemDto) => item.card?.images?.[0]?.url || "https://placehold.co/60?text=No+Img";
+const getCardPrice = (item: CartItemDto) => Number(item.card?.price || 0);
 
 const CartItemRow = memo(
   ({
@@ -31,7 +31,7 @@ const CartItemRow = memo(
     onRemove,
     onUpdate,
   }: {
-    item: CartItem;
+    item: CartItemDto;
     processingId: string | null;
     onRemove: (id: string) => void;
     onUpdate: (id: string, qty: number) => void;
@@ -136,7 +136,7 @@ CartItemRow.displayName = "CartItemRow";
 interface CartSectionProps {
   isDrawerOpen: boolean;
   loadingCart: boolean;
-  cartItems: CartItem[];
+  cartItems: CartItemDto[];
   setIsDrawerOpen: Dispatch<SetStateAction<boolean>>;
 
   handleRemoveItem: (id: string) => Promise<void>;

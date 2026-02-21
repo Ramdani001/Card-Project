@@ -5,15 +5,15 @@ import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } f
 import { useDisclosure } from "@mantine/hooks";
 import { IconPencil, IconPlus, IconTrash, IconCheck, IconX, IconTag, IconRefresh } from "@tabler/icons-react";
 import { TableComponent, ColumnDef } from "@/components/layout/TableComponent";
-import { PaginationMetaData } from "@/types/PaginationMetaData";
+import { PaginationMetaDataDto } from "@/types/PaginationMetaDataDto";
 import { notifications } from "@mantine/notifications";
 import { openConfirmModal } from "@mantine/modals";
 import { CategoryForm } from "./CategoryForm";
-import { CategoryCard } from "@/types/CategoryCard";
+import { CategoryCardDto } from "@/types/CategoryCardDto";
 
 const ListCategory = () => {
-  const [categories, setCategories] = useState<CategoryCard[]>([]);
-  const [metadata, setMetadata] = useState<PaginationMetaData>({
+  const [categories, setCategories] = useState<CategoryCardDto[]>([]);
+  const [metadata, setMetadata] = useState<PaginationMetaDataDto>({
     total: 0,
     page: 1,
     limit: 10,
@@ -22,7 +22,7 @@ const ListCategory = () => {
   const [loading, setLoading] = useState(false);
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedCategory, setSelectedCategory] = useState<CategoryCard | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryCardDto | null>(null);
 
   const [queryParams, setQueryParams] = useState({
     page: 1,
@@ -118,12 +118,12 @@ const ListCategory = () => {
     open();
   };
 
-  const handleOpenEdit = (item: CategoryCard) => {
+  const handleOpenEdit = (item: CategoryCardDto) => {
     setSelectedCategory(item);
     open();
   };
 
-  const columns: ColumnDef<CategoryCard>[] = [
+  const columns: ColumnDef<CategoryCardDto>[] = [
     {
       key: "no",
       label: "No",

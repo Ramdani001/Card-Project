@@ -3,7 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { PermissionValue } from "@/types/PermissionValue";
+import { PermissionValueDto } from "@/types/PermissionValueDto";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -38,7 +38,7 @@ export const authOptions: NextAuthOptions = {
         const isValid = await bcrypt.compare(credentials.password, user.password);
         if (!isValid) return null;
 
-        const permissions: Record<string, PermissionValue> = {};
+        const permissions: Record<string, PermissionValueDto> = {};
         user.role?.roleApiAccesses.forEach((access) => {
           permissions[access.apiEndpoints.url] = {
             GET: access.canRead,

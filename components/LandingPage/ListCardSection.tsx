@@ -1,4 +1,4 @@
-import { CardData } from "@/types/CardData";
+import { CardDto } from "@/types/CardDto";
 import { Badge, Box, Button, Card, Group, LoadingOverlay, Paper, SimpleGrid, Stack, Text, Image } from "@mantine/core";
 import { IconSearch, IconShoppingCart } from "@tabler/icons-react";
 import { Dispatch, SetStateAction } from "react";
@@ -7,13 +7,13 @@ interface ListCardSectionProps {
   loadingProducts: boolean;
   setSearch: Dispatch<SetStateAction<string>>;
   setSelectedCategoryIds?: Dispatch<SetStateAction<string[]>>;
-  products: CardData[];
-  handleAddToCart: (product: CardData) => Promise<void>;
+  products: CardDto[];
+  handleAddToCart: (product: CardDto) => Promise<void>;
   loadingAction: string | null;
 }
 
 export const ListCardSection = ({ loadingProducts, products, setSearch, handleAddToCart, loadingAction }: ListCardSectionProps) => {
-  const getCardImage = (item: CardData) => item.images?.[0]?.url || "https://placehold.co/400x560?text=No+Image";
+  const getCardImage = (item: CardDto) => item.images?.[0]?.url || "https://placehold.co/400x560?text=No+Image";
 
   return (
     <Box style={{ minHeight: 400, position: "relative" }}>

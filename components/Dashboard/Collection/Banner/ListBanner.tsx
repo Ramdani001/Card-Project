@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
-import { PaginationMetaData } from "@/types/PaginationMetaData";
+import { PaginationMetaDataDto } from "@/types/PaginationMetaDataDto";
 import { ActionIcon, Box, Button, Flex, Group, Image, Paper, Text, Title, Tooltip, Anchor, Badge } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
@@ -21,7 +21,7 @@ const formatSize = (bytes: number) => {
 
 const ListBanner = () => {
   const [banners, setBanners] = useState<BannerDto[]>([]);
-  const [metadata, setMetadata] = useState<PaginationMetaData>({
+  const [metadata, setMetadata] = useState<PaginationMetaDataDto>({
     total: 0,
     page: 1,
     limit: 10,

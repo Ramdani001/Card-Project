@@ -1,7 +1,6 @@
 import { deleteFile, saveFile } from "@/helpers/file.helper";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
-import { warn } from "console";
 
 interface CreateCardParams {
   name: string;

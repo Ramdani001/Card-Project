@@ -1,7 +1,7 @@
-import { CardData } from "@/types/CardData";
-import { Badge, Button, Card, Group, Image, Text, Box } from "@mantine/core";
+import { CardDto } from "@/types/CardDto";
+import { Badge, Box, Card, Group, Image, Text } from "@mantine/core";
 interface CardSingleProps {
-  data: CardData;
+  data: CardDto;
 }
 
 export const CardSingle: React.FC<CardSingleProps> = ({ data }) => {

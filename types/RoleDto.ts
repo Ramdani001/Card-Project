@@ -1,7 +1,7 @@
-import { CategoryCard } from "./CategoryCard";
-import { Menu } from "./Menu";
+import { CategoryCardDto } from "./CategoryCardDto";
+import { MenuDto } from "./MenuDto";
 
-export interface ApiPermissionState {
+export interface ApiPermissionStateDto {
   url: string;
   description?: string;
   canRead: boolean;
@@ -10,17 +10,17 @@ export interface ApiPermissionState {
   canDelete: boolean;
 }
 
-export interface Role {
+export interface RoleDto {
   id: string;
   name: string;
   createdAt: string;
   cardCategoryRoleAccesses?: {
     categoryId: string;
-    category?: CategoryCard;
+    category?: CategoryCardDto;
   }[];
   roleMenuAccesses?: {
     menuId: string;
-    menu?: Menu;
+    menu?: MenuDto;
   }[];
   roleApiAccesses?: {
     canRead: boolean;

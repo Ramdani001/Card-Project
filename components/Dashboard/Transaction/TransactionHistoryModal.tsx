@@ -2,19 +2,7 @@ import { Modal, Timeline, Text, Group, ThemeIcon, Loader, Center } from "@mantin
 import { IconGitCommit, IconUser, IconRobot, IconCreditCard } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { notifications } from "@mantine/notifications";
-
-interface LogItem {
-  id: string;
-  status: string;
-  note: string;
-  createdBy: string;
-  createdAt: string;
-  user?: {
-    name: string;
-    email: string;
-    role: string;
-  } | null;
-}
+import { LogItemDto } from "@/types/LogItemDto";
 
 interface HistoryModalProps {
   opened: boolean;
@@ -24,7 +12,7 @@ interface HistoryModalProps {
 }
 
 export const TransactionHistoryModal = ({ opened, onClose, transactionId, invoice }: HistoryModalProps) => {
-  const [logs, setLogs] = useState<LogItem[]>([]);
+  const [logs, setLogs] = useState<LogItemDto[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -70,7 +58,7 @@ export const TransactionHistoryModal = ({ opened, onClose, transactionId, invoic
     }
   };
 
-  const getActorInfo = (log: LogItem) => {
+  const getActorInfo = (log: LogItemDto) => {
     if (log.user && log.user.name) {
       return {
         icon: <IconUser size={14} />,

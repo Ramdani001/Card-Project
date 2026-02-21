@@ -1,4 +1,4 @@
-export type PermissionValue = {
+export type PermissionValueDto = {
   GET: boolean;
   POST: boolean;
   PATCH: boolean;

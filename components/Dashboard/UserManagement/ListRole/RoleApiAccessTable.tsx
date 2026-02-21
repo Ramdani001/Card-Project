@@ -1,23 +1,15 @@
+import { ApiPermissionStateDto } from "@/types/RoleDto";
 import { ActionIcon, Checkbox, Table, Text, ScrollArea, Box } from "@mantine/core";
 import { IconTrash } from "@tabler/icons-react";
 
-export interface ApiPermissionState {
-  url: string;
-  description?: string;
-  canRead: boolean;
-  canCreate: boolean;
-  canUpdate: boolean;
-  canDelete: boolean;
-}
-
 interface Props {
-  value: ApiPermissionState[];
-  onChange: (val: ApiPermissionState[]) => void;
+  value: ApiPermissionStateDto[];
+  onChange: (val: ApiPermissionStateDto[]) => void;
   onRemove: (url: string) => void;
 }
 
 export const RoleApiAccessTable = ({ value, onChange, onRemove }: Props) => {
-  const handleToggle = (url: string, field: keyof Omit<ApiPermissionState, "url" | "description">) => {
+  const handleToggle = (url: string, field: keyof Omit<ApiPermissionStateDto, "url" | "description">) => {
     const newData = value.map((item) => {
       if (item.url === url) {
         const newVal = !item[field];

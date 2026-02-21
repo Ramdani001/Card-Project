@@ -1,6 +1,6 @@
 "use client";
 
-import { CardData } from "@/types/CardData";
+import { CardDto } from "@/types/CardDto";
 import { Box, Button, Center, Group, ScrollArea, Text, Skeleton } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
@@ -9,7 +9,7 @@ import { CardSingle } from "../Card/CardSingle";
 
 export const SingleCard = () => {
   const router = useRouter();
-  const [products, setProducts] = useState<CardData[]>([]);
+  const [products, setProducts] = useState<CardDto[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
   useEffect(() => {

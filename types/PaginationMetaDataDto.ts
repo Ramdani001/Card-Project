@@ -1,4 +1,4 @@
-export interface PaginationMetaData {
+export interface PaginationMetaDataDto {
   total: number;
   page: number;
   limit: number;

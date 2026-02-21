@@ -5,8 +5,8 @@ import { FilterSection } from "@/components/LandingPage/FilterSection";
 import { FooterSection } from "@/components/LandingPage/FooterSection";
 import { HeaderSection } from "@/components/LandingPage/HeaderSection";
 import { ListCardSection } from "@/components/LandingPage/ListCardSection";
-import { CardData } from "@/types/CardData";
-import { CartItem } from "@/types/CartItem";
+import { CardDto } from "@/types/CardDto";
+import { CartItemDto } from "@/types/CartItemDto";
 import { Box, Center, Container, Grid, Group, Loader, Pagination, Select, Text } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
@@ -26,7 +26,7 @@ export default function MainCatalog() {
   const router = useRouter();
   const { status } = useSession();
 
-  const [products, setProducts] = useState<CardData[]>([]);
+  const [products, setProducts] = useState<CardDto[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
   const [search, setSearch] = useState("");
@@ -39,7 +39,7 @@ export default function MainCatalog() {
   const [activePage, setActivePage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItemsDto] = useState<CartItemDto[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [loadingCart, setLoadingCart] = useState(false);
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
@@ -50,7 +50,7 @@ export default function MainCatalog() {
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [categoriesList, setCategoriesList] = useState<{ id: string; name: string }[]>([]);
 
-  const getCardPrice = (item: CardData) => Number(item?.price || 0);
+  const getCardPrice = (item: CardDto) => Number(item?.price || 0);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -127,9 +127,9 @@ export default function MainCatalog() {
       const res = await fetch("/api/cart");
       const json = await res.json();
       if (res.ok) {
-        if (Array.isArray(json.data)) setCartItems(json.data);
-        else if (json.data?.items) setCartItems(json.data.items);
-        else setCartItems([]);
+        if (Array.isArray(json.data)) setCartItemsDto(json.data);
+        else if (json.data?.items) setCartItemsDto(json.data.items);
+        else setCartItemsDto([]);
       }
     } catch (error) {
       console.error("Cart error", error);
@@ -138,7 +138,7 @@ export default function MainCatalog() {
     }
   };
 
-  const handleAddToCart = async (product: CardData) => {
+  const handleAddToCart = async (product: CardDto) => {
     if (status !== "authenticated") {
       notifications.show({ title: "Login Required", message: "Silakan login untuk berbelanja.", color: "red" });
       return router.push("/login");
@@ -177,7 +177,7 @@ export default function MainCatalog() {
     try {
       const res = await fetch(`/api/cart/${id}`, { method: "DELETE" });
       if (res.ok) {
-        setCartItems((prev) => prev.filter((item) => item.id !== id));
+        setCartItemsDto((prev) => prev.filter((item) => item.id !== id));
         notifications.show({ message: "Item dihapus", color: "gray" });
       }
     } catch (error) {
@@ -198,7 +198,7 @@ export default function MainCatalog() {
       });
 
       if (res.ok) {
-        setCartItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: newQty } : item)));
+        setCartItemsDto((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: newQty } : item)));
       }
     } catch (error) {
       console.error(error);
@@ -229,7 +229,7 @@ export default function MainCatalog() {
 
       if (res.ok) {
         notifications.show({ title: "Order Berhasil!", message: "Silakan selesaikan pembayaran.", color: "blue" });
-        setCartItems([]);
+        setCartItemsDto([]);
         setIsDrawerOpen(false);
 
         if (json.data?.snapRedirect) {

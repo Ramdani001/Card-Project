@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
-import { PaginationMetaData } from "@/types/PaginationMetaData";
+import { PaginationMetaDataDto } from "@/types/PaginationMetaDataDto";
 import { ActionIcon, Avatar, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconCheck, IconCreditCard, IconPencil, IconPlus, IconRefresh, IconTrash, IconX } from "@tabler/icons-react";
@@ -9,11 +9,11 @@ import { useEffect, useState } from "react";
 import { CardForm } from "./CardForm";
 import { notifications } from "@mantine/notifications";
 import { openConfirmModal } from "@mantine/modals";
-import { CardData } from "@/types/CardData";
+import { CardDto } from "@/types/CardDto";
 
 const ListCard = () => {
-  const [cards, setCards] = useState<CardData[]>([]);
-  const [metadata, setMetadata] = useState<PaginationMetaData>({
+  const [cards, setCards] = useState<CardDto[]>([]);
+  const [metadata, setMetadata] = useState<PaginationMetaDataDto>({
     total: 0,
     page: 1,
     limit: 10,
@@ -22,7 +22,7 @@ const ListCard = () => {
   const [loading, setLoading] = useState(false);
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedCard, setSelectedCard] = useState<CardData | null>(null);
+  const [selectedCard, setSelectedCard] = useState<CardDto | null>(null);
 
   const [queryParams, setQueryParams] = useState({
     page: 1,
@@ -122,12 +122,12 @@ const ListCard = () => {
     open();
   };
 
-  const handleOpenEdit = (card: CardData) => {
+  const handleOpenEdit = (card: CardDto) => {
     setSelectedCard(card);
     open();
   };
 
-  const columns: ColumnDef<CardData>[] = [
+  const columns: ColumnDef<CardDto>[] = [
     {
       key: "no",
       label: "No",

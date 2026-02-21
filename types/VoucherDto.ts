@@ -1,11 +1,11 @@
-import { DiscountType } from "./DiscountType";
+import { DiscountTypeDto } from "./DiscountDto";
 
-export interface Voucher {
+export interface VoucherDto {
   id: string;
   code: string;
   name: string;
   description?: string;
-  type: DiscountType;
+  type: DiscountTypeDto;
   value: number;
   minPurchase?: number;
   maxDiscount?: number;

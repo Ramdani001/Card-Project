@@ -1,6 +1,6 @@
 "use client";
 
-import { Menu } from "@/types/Menu";
+import { MenuDto } from "@/types/MenuDto";
 import { Button, Group, Modal, NumberInput, Select, SimpleGrid, Stack, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -9,8 +9,8 @@ import { useEffect, useState } from "react";
 interface MenuFormProps {
   opened: boolean;
   onClose: () => void;
-  menuToEdit: Menu | null;
-  allMenus: Menu[];
+  menuToEdit: MenuDto | null;
+  allMenus: MenuDto[];
   onSuccess: () => void;
 }
 

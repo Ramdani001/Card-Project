@@ -1,4 +1,4 @@
-export interface Event {
+export interface EventDto {
   id: string;
   title: string;
   slug: string;

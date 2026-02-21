@@ -8,12 +8,12 @@ import { HeaderSection } from "@/components/LandingPage/HeaderSection";
 import { HeroSection } from "@/components/LandingPage/HeroSection";
 import { PreOrder } from "@/components/LandingPage/PreOrder/PreOrder";
 import { SwiperCard } from "@/components/LandingPage/swiper/SwiperCard";
-import { CartItem } from "@/types/CartItem";
+import { CartItemDto } from "@/types/CartItemDto";
 import { Box } from "@mantine/core";
 import { useState } from "react";
 
 export default function TcgCornerClone() {
-  const [cartItems, _setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, _setCartItems] = useState<CartItemDto[]>([]);
   const [_isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [search, setSearch] = useState("");
 

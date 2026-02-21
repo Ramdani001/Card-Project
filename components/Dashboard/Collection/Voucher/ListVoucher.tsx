@@ -1,8 +1,8 @@
 "use client";
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
-import { Voucher } from "@/types/Voucher"; // Pastikan path sesuai
-import { PaginationMetaData } from "@/types/PaginationMetaData";
+import { VoucherDto } from "@/types/VoucherDto";
+import { PaginationMetaDataDto } from "@/types/PaginationMetaDataDto";
 import { ActionIcon, Badge, Button, Code, CopyButton, Flex, Group, Paper, Progress, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
@@ -12,8 +12,8 @@ import { useEffect, useState } from "react";
 import { VoucherForm } from "./VoucherForm";
 
 const ListVoucher = () => {
-  const [vouchers, setVouchers] = useState<Voucher[]>([]);
-  const [metadata, setMetadata] = useState<PaginationMetaData>({
+  const [vouchers, setVouchers] = useState<VoucherDto[]>([]);
+  const [metadata, setMetadata] = useState<PaginationMetaDataDto>({
     total: 0,
     page: 1,
     limit: 10,
@@ -22,7 +22,7 @@ const ListVoucher = () => {
   const [loading, setLoading] = useState(false);
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedVoucher, setSelectedVoucher] = useState<Voucher | null>(null);
+  const [selectedVoucher, setSelectedVoucher] = useState<VoucherDto | null>(null);
 
   const [queryParams, setQueryParams] = useState({
     page: 1,
@@ -99,7 +99,7 @@ const ListVoucher = () => {
     return { label: "Active", color: "green" };
   };
 
-  const columns: ColumnDef<Voucher>[] = [
+  const columns: ColumnDef<VoucherDto>[] = [
     {
       key: "no",
       label: "No",

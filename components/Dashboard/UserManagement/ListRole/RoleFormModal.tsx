@@ -1,16 +1,16 @@
 "use client";
 
-import { Role } from "@/types/Role";
+import { ApiPermissionStateDto, RoleDto } from "@/types/RoleDto";
 import { Button, Divider, Group, Modal, MultiSelect, ScrollArea, Select, Stack, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconLockAccess, IconPlus, IconX } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
-import { ApiPermissionState, RoleApiAccessTable } from "./RoleApiAccessTable";
+import { RoleApiAccessTable } from "./RoleApiAccessTable";
 
 interface RoleFormModalProps {
   opened: boolean;
   onClose: () => void;
-  role: Role | null;
+  role: RoleDto | null;
   onSuccess: () => void;
 }
 
@@ -20,12 +20,12 @@ export const RoleFormModal = ({ opened, onClose, role, onSuccess }: RoleFormModa
   const [name, setName] = useState("");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedMenus, setSelectedMenus] = useState<string[]>([]);
-  const [apiPermissions, setApiPermissions] = useState<ApiPermissionState[]>([]);
+  const [apiPermissions, setApiPermissions] = useState<ApiPermissionStateDto[]>([]);
 
   const [categoriesList, setCategoriesList] = useState<{ value: string; label: string }[]>([]);
   const [menusList, setMenusList] = useState<{ value: string; label: string }[]>([]);
   const [apiEndpoints, setApiEndpoints] = useState<{ value: string; label: string }[]>([]);
-  const [searchValue, setSearchValue] = useState(""); // Buat logic creatable v7
+  const [searchValue, setSearchValue] = useState("");
   const [loading, setLoading] = useState(false);
 
   const selectData = useMemo(() => {

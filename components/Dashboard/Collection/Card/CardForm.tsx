@@ -1,6 +1,6 @@
 "use client";
 
-import { CardData } from "@/types/CardData";
+import { CardDto } from "@/types/CardDto";
 import { Button, FileInput, Flex, Image, Modal, MultiSelect, NumberInput, Paper, Select, Text, Textarea, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconUpload, IconX } from "@tabler/icons-react";
@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 interface CardFormProps {
   opened: boolean;
   onClose: () => void;
-  cardToEdit: CardData | null;
+  cardToEdit: CardDto | null;
   onSuccess: () => void;
 }
 

@@ -1,8 +1,8 @@
 "use client";
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
-import { Event } from "@/types/Event";
-import { PaginationMetaData } from "@/types/PaginationMetaData";
+import { EventDto } from "@/types/EventDto";
+import { PaginationMetaDataDto } from "@/types/PaginationMetaDataDto";
 import { ActionIcon, Avatar, Badge, Box, Button, Flex, Group, Paper, Text, ThemeIcon, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
@@ -12,8 +12,8 @@ import { useEffect, useState } from "react";
 import { EventForm } from "./EventForm";
 
 const ListEvent = () => {
-  const [events, setEvents] = useState<Event[]>([]);
-  const [metadata, setMetadata] = useState<PaginationMetaData>({
+  const [events, setEvents] = useState<EventDto[]>([]);
+  const [metadata, setMetadata] = useState<PaginationMetaDataDto>({
     total: 0,
     page: 1,
     limit: 10,
@@ -22,7 +22,7 @@ const ListEvent = () => {
   const [loading, setLoading] = useState(false);
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<EventDto | null>(null);
 
   const [queryParams, setQueryParams] = useState({
     page: 1,
@@ -113,7 +113,7 @@ const ListEvent = () => {
     open();
   };
 
-  const handleOpenEdit = (event: Event) => {
+  const handleOpenEdit = (event: EventDto) => {
     setSelectedEvent(event);
     open();
   };
@@ -128,7 +128,7 @@ const ListEvent = () => {
     });
   };
 
-  const columns: ColumnDef<Event>[] = [
+  const columns: ColumnDef<EventDto>[] = [
     {
       key: "no",
       label: "No",

@@ -1,6 +1,6 @@
 "use client";
 
-import { CategoryCard } from "@/types/CategoryCard";
+import { CategoryCardDto } from "@/types/CategoryCardDto";
 import { Button, Modal, Textarea, TextInput, Flex } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 interface CategoryFormProps {
   opened: boolean;
   onClose: () => void;
-  categoryToEdit: CategoryCard | null;
+  categoryToEdit: CategoryCardDto | null;
   onSuccess: () => void;
 }
 

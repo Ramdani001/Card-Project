@@ -1,10 +1,10 @@
-import { CardData } from "./CardData";
+import { CardDto } from "./CardDto";
 
-export interface CartItem {
+export interface CartItemDto {
   id: string;
   cartId: string;
   cardId: string;
   quantity: number;
   createdAt: string;
-  card: CardData;
+  card: CardDto;
 }

@@ -1,4 +1,4 @@
-import { Event } from "@/types/Event";
+import { EventDto } from "@/types/EventDto";
 import { Box, Button, Card, Center, Container, Grid, Image, Text, Loader, Indicator } from "@mantine/core";
 import { DatePicker } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
@@ -6,7 +6,7 @@ import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 
 export const PreOrder = () => {
-  const [preOrder, setPreOrder] = useState<Event[]>([]);
+  const [preOrder, setPreOrder] = useState<EventDto[]>([]);
   const [loadingPreOrder, setLoadingPreOrder] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 

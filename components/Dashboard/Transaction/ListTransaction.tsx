@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
-import { PaginationMetaData } from "@/types/PaginationMetaData";
+import { PaginationMetaDataDto } from "@/types/PaginationMetaDataDto";
 import { ActionIcon, Button, Flex, Group, Paper, Select, Text, TextInput, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
@@ -26,7 +26,7 @@ interface Transaction {
 
 const ListTransaction = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [metadata, setMetadata] = useState<PaginationMetaData>({ total: 0, page: 1, limit: 10, totalPages: 0 });
+  const [metadata, setMetadata] = useState<PaginationMetaDataDto>({ total: 0, page: 1, limit: 10, totalPages: 0 });
   const [loading, setLoading] = useState(false);
 
   const [filterStatus, setFilterStatus] = useState<string | null>(null);

@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
-import { PaginationMetaData } from "@/types/PaginationMetaData";
+import { PaginationMetaDataDto } from "@/types/PaginationMetaDataDto";
 import { ActionIcon, Badge, Button, Code, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconCheck, IconPencil, IconPlus, IconRefresh, IconTrash, IconX } from "@tabler/icons-react";
@@ -9,11 +9,11 @@ import { useEffect, useState } from "react";
 import { MenuForm } from "./MenuForm";
 import { notifications } from "@mantine/notifications";
 import { openConfirmModal } from "@mantine/modals";
-import { Menu } from "@/types/Menu";
+import { MenuDto } from "@/types/MenuDto";
 
 const ListMenu = () => {
-  const [menus, setMenus] = useState<Menu[]>([]);
-  const [metadata, setMetadata] = useState<PaginationMetaData>({
+  const [menus, setMenus] = useState<MenuDto[]>([]);
+  const [metadata, setMetadata] = useState<PaginationMetaDataDto>({
     total: 0,
     page: 1,
     limit: 10,
@@ -22,7 +22,7 @@ const ListMenu = () => {
   const [loading, setLoading] = useState(false);
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedMenu, setSelectedMenu] = useState<Menu | null>(null);
+  const [selectedMenu, setSelectedMenu] = useState<MenuDto | null>(null);
 
   const [queryParams, setQueryParams] = useState({
     page: 1,
@@ -120,12 +120,12 @@ const ListMenu = () => {
     open();
   };
 
-  const handleOpenEdit = (menu: Menu) => {
+  const handleOpenEdit = (menu: MenuDto) => {
     setSelectedMenu(menu);
     open();
   };
 
-  const columns: ColumnDef<Menu>[] = [
+  const columns: ColumnDef<MenuDto>[] = [
     {
       key: "no",
       label: "No",

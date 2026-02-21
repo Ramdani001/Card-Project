@@ -1,6 +1,7 @@
 "use client";
 
-import { Voucher } from "@/types/Voucher";
+import { DiscountTypeDto } from "@/types/DiscountDto";
+import { VoucherDto } from "@/types/VoucherDto";
 import { Button, Flex, Modal, NumberInput, SegmentedControl, Text, Textarea, TextInput } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
@@ -10,7 +11,7 @@ import { useEffect, useState } from "react";
 interface VoucherFormProps {
   opened: boolean;
   onClose: () => void;
-  voucherToEdit: Voucher | null;
+  voucherToEdit: VoucherDto | null;
   onSuccess: () => void;
 }
 
@@ -21,7 +22,7 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [type, setType] = useState<"NOMINAL" | "PERCENTAGE">("NOMINAL");
+  const [type, setType] = useState<DiscountTypeDto>("NOMINAL");
   const [value, setValue] = useState<number | string>(0);
 
   const [minPurchase, setMinPurchase] = useState<number | string>("");

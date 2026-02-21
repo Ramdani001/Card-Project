@@ -1,6 +1,6 @@
 "use client";
 
-import { Discount } from "@/types/Discount";
+import { DiscountDto } from "@/types/DiscountDto";
 import { Button, Flex, Modal, NumberInput, SegmentedControl, Text, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 interface DiscountFormProps {
   opened: boolean;
   onClose: () => void;
-  discountToEdit: Discount | null;
+  discountToEdit: DiscountDto | null;
   onSuccess: () => void;
 }
 

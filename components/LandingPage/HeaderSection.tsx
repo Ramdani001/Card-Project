@@ -1,6 +1,6 @@
 "use client";
 
-import { CartItem } from "@/types/CartItem";
+import { CartItemDto } from "@/types/CartItemDto";
 import { ActionIcon, Avatar, Box, Burger, Button, Container, Group, Indicator, Menu, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconChevronDown, IconLayoutDashboard, IconLogin, IconLogout, IconReceipt2, IconShoppingCart, IconUser } from "@tabler/icons-react";
@@ -11,7 +11,7 @@ import { Dispatch, SetStateAction } from "react";
 interface HeaderSectionProps {
   search: string;
   setSearch: Dispatch<SetStateAction<string>>;
-  cartItems: CartItem[];
+  cartItems: CartItemDto[];
   setIsDrawerOpen: Dispatch<SetStateAction<boolean>>;
   cartItemCount?: number;
   onOpenCart?: () => void;
