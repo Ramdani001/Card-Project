@@ -13,10 +13,8 @@ import { Box } from "@mantine/core";
 import { useState } from "react";
 
 export default function TcgCornerClone() {
-  const [loadingProducts, setLoadingProducts] = useState(true);
-
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [cartItems, _setCartItems] = useState<CartItem[]>([]);
+  const [_isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [search, setSearch] = useState("");
 
   return (
