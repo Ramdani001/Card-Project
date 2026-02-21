@@ -1,4 +1,4 @@
-import { CardDto } from "@/types/CardDto";
+import { CardDto } from "@/types/dtos/CardDto";
 import { Box, Center, Group, ScrollArea, Skeleton } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useEffect, useState } from "react";

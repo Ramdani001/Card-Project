@@ -1,6 +1,6 @@
 "use client";
 
-import { EventDto } from "@/types/EventDto";
+import { EventDto } from "@/types/dtos/EventDto";
 import { AspectRatio, Button, FileInput, Flex, Image, Modal, Paper, SimpleGrid, Text, Textarea, TextInput } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";

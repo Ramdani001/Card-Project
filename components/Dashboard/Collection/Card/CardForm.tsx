@@ -1,6 +1,6 @@
 "use client";
 
-import { CardDto } from "@/types/CardDto";
+import { CardDto } from "@/types/dtos/CardDto";
 import { Button, FileInput, Flex, Image, Modal, MultiSelect, NumberInput, Paper, Select, Text, Textarea, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconUpload, IconX } from "@tabler/icons-react";

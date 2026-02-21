@@ -1,6 +1,6 @@
 "use client";
 
-import { MenuDto } from "@/types/MenuDto";
+import { MenuDto } from "@/types/dtos/MenuDto";
 import { Button, Group, Modal, NumberInput, Select, SimpleGrid, Stack, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";

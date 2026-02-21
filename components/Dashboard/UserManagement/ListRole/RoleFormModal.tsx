@@ -1,6 +1,6 @@
 "use client";
 
-import { ApiPermissionStateDto, RoleDto } from "@/types/RoleDto";
+import { ApiPermissionStateDto, RoleDto } from "@/types/dtos/RoleDto";
 import { Button, Divider, Group, Modal, MultiSelect, ScrollArea, Select, Stack, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconLockAccess, IconPlus, IconX } from "@tabler/icons-react";

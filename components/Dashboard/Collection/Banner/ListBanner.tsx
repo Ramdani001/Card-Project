@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
-import { PaginationMetaDataDto } from "@/types/PaginationMetaDataDto";
+import { PaginationMetaDataDto } from "@/types/dtos/PaginationMetaDataDto";
 import { ActionIcon, Box, Button, Flex, Group, Image, Paper, Text, Title, Tooltip, Anchor, Badge } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
@@ -9,7 +9,7 @@ import { notifications } from "@mantine/notifications";
 import { IconCheck, IconPencil, IconPlus, IconRefresh, IconTrash, IconX, IconExternalLink } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { BannerForm } from "./BannerForm";
-import { BannerDto } from "@/types/BannerDto";
+import { BannerDto } from "@/types/dtos/BannerDto";
 
 const formatSize = (bytes: number) => {
   if (bytes === 0) return "0 B";

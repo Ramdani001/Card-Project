@@ -1,8 +1,8 @@
 "use client";
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
-import { VoucherDto } from "@/types/VoucherDto";
-import { PaginationMetaDataDto } from "@/types/PaginationMetaDataDto";
+import { VoucherDto } from "@/types/dtos/VoucherDto";
+import { PaginationMetaDataDto } from "@/types/dtos/PaginationMetaDataDto";
 import { ActionIcon, Badge, Button, Code, CopyButton, Flex, Group, Paper, Progress, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";

@@ -2,7 +2,7 @@ import { Modal, Timeline, Text, Group, ThemeIcon, Loader, Center } from "@mantin
 import { IconGitCommit, IconUser, IconRobot, IconCreditCard } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { notifications } from "@mantine/notifications";
-import { LogItemDto } from "@/types/LogItemDto";
+import { LogItemDto } from "@/types/dtos/LogItemDto";
 
 interface HistoryModalProps {
   opened: boolean;

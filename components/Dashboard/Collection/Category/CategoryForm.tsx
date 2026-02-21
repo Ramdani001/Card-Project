@@ -1,6 +1,6 @@
 "use client";
 
-import { CategoryCardDto } from "@/types/CategoryCardDto";
+import { CategoryCardDto } from "@/types/dtos/CategoryCardDto";
 import { Button, Modal, Textarea, TextInput, Flex } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";

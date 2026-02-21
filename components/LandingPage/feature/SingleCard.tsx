@@ -1,6 +1,6 @@
 "use client";
 
-import { CardDto } from "@/types/CardDto";
+import { CardDto } from "@/types/dtos/CardDto";
 import { Box, Button, Center, Group, ScrollArea, Text, Skeleton } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";

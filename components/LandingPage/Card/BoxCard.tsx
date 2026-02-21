@@ -1,4 +1,4 @@
-import { CardDto } from "@/types/CardDto";
+import { CardDto } from "@/types/dtos/CardDto";
 import { Box, Card, Image, Text } from "@mantine/core";
 interface BoxCardProps {
   data: CardDto;

@@ -1,7 +1,7 @@
 "use client";
 
-import { DiscountTypeDto } from "@/types/DiscountDto";
-import { VoucherDto } from "@/types/VoucherDto";
+import { DiscountTypeDto } from "@/types/dtos/DiscountDto";
+import { VoucherDto } from "@/types/dtos/VoucherDto";
 import { Button, Flex, Modal, NumberInput, SegmentedControl, Text, Textarea, TextInput } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";

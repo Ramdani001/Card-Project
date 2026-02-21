@@ -8,7 +8,7 @@ import { HeaderSection } from "@/components/LandingPage/HeaderSection";
 import { HeroSection } from "@/components/LandingPage/HeroSection";
 import { PreOrder } from "@/components/LandingPage/PreOrder/PreOrder";
 import { SwiperCard } from "@/components/LandingPage/swiper/SwiperCard";
-import { CartItemDto } from "@/types/CartItemDto";
+import { CartItemDto } from "@/types/dtos/CartItemDto";
 import { Box } from "@mantine/core";
 import { useState } from "react";
 

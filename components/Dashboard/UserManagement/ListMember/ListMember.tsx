@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
-import { PaginationMetaDataDto } from "@/types/PaginationMetaDataDto";
+import { PaginationMetaDataDto } from "@/types/dtos/PaginationMetaDataDto";
 import { ActionIcon, Avatar, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
@@ -9,8 +9,8 @@ import { notifications } from "@mantine/notifications";
 import { IconCheck, IconPencil, IconPhone, IconRefresh, IconTrash, IconUserPlus, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { ListMemberForm } from "./ListMemberForm";
-import { UserDto } from "@/types/UserDto";
-import { RoleDto } from "@/types/RoleDto";
+import { UserDto } from "@/types/dtos/UserDto";
+import { RoleDto } from "@/types/dtos/RoleDto";
 
 const ListMember = () => {
   const [users, setUsers] = useState<UserDto[]>([]);

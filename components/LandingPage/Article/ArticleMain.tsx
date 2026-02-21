@@ -1,4 +1,4 @@
-import { EventDto } from "@/types/EventDto";
+import { EventDto } from "@/types/dtos/EventDto";
 import { Box, Card, Center, Container, Group, Image, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useEffect, useState } from "react";

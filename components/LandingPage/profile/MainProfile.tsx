@@ -1,5 +1,5 @@
-import { CardDto } from "@/types/CardDto";
-import { CartItemDto } from "@/types/CartItemDto";
+import { CardDto } from "@/types/dtos/CardDto";
+import { CartItemDto } from "@/types/dtos/CartItemDto";
 import { Box, Divider, Grid, Group, Paper, Stack, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";

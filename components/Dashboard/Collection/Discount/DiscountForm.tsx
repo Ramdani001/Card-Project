@@ -1,6 +1,6 @@
 "use client";
 
-import { DiscountDto } from "@/types/DiscountDto";
+import { DiscountDto } from "@/types/dtos/DiscountDto";
 import { Button, Flex, Modal, NumberInput, SegmentedControl, Text, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";

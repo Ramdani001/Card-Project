@@ -1,4 +1,4 @@
-import { EventDto } from "@/types/EventDto";
+import { EventDto } from "@/types/dtos/EventDto";
 import { Box, Button, Card, Center, Container, Grid, Image, Text, Loader, Indicator } from "@mantine/core";
 import { DatePicker } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";

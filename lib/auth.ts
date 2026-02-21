@@ -3,7 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import { PermissionValueDto } from "@/types/PermissionValueDto";
+import { PermissionValueDto } from "@/types/dtos/PermissionValueDto";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),

@@ -5,11 +5,11 @@ import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } f
 import { useDisclosure } from "@mantine/hooks";
 import { IconPencil, IconPlus, IconTrash, IconCheck, IconX, IconTag, IconRefresh } from "@tabler/icons-react";
 import { TableComponent, ColumnDef } from "@/components/layout/TableComponent";
-import { PaginationMetaDataDto } from "@/types/PaginationMetaDataDto";
+import { PaginationMetaDataDto } from "@/types/dtos/PaginationMetaDataDto";
 import { notifications } from "@mantine/notifications";
 import { openConfirmModal } from "@mantine/modals";
 import { CategoryForm } from "./CategoryForm";
-import { CategoryCardDto } from "@/types/CategoryCardDto";
+import { CategoryCardDto } from "@/types/dtos/CategoryCardDto";
 
 const ListCategory = () => {
   const [categories, setCategories] = useState<CategoryCardDto[]>([]);

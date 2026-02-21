@@ -1,4 +1,4 @@
-import { CartItemDto } from "@/types/CartItemDto";
+import { CartItemDto } from "@/types/dtos/CartItemDto";
 import {
   ActionIcon,
   Box,

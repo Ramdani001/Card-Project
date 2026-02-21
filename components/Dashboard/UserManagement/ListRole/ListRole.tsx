@@ -1,8 +1,8 @@
 "use client";
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
-import { PaginationMetaDataDto } from "@/types/PaginationMetaDataDto";
-import { RoleDto } from "@/types/RoleDto";
+import { PaginationMetaDataDto } from "@/types/dtos/PaginationMetaDataDto";
+import { RoleDto } from "@/types/dtos/RoleDto";
 import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";

@@ -1,6 +1,6 @@
 "use client";
 
-import { BannerDto } from "@/types/BannerDto";
+import { BannerDto } from "@/types/dtos/BannerDto";
 import { AspectRatio, Button, FileInput, Flex, Group, Image, Modal, Paper, Text, TextInput } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";

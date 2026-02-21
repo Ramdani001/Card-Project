@@ -1,4 +1,4 @@
-import { CardDto } from "@/types/CardDto";
+import { CardDto } from "@/types/dtos/CardDto";
 import { Badge, Box, Button, Card, Group, LoadingOverlay, Paper, SimpleGrid, Stack, Text, Image } from "@mantine/core";
 import { IconSearch, IconShoppingCart } from "@tabler/icons-react";
 import { Dispatch, SetStateAction } from "react";

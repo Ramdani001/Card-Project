@@ -1,7 +1,7 @@
 "use client";
 
-import { RoleDto } from "@/types/RoleDto";
-import { UserDto } from "@/types/UserDto";
+import { RoleDto } from "@/types/dtos/RoleDto";
+import { UserDto } from "@/types/dtos/UserDto";
 import { Avatar, Button, FileInput, Flex, Group, Modal, PasswordInput, Select, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconPhoto, IconX } from "@tabler/icons-react";

@@ -1,4 +1,4 @@
-import { ApiPermissionStateDto } from "@/types/RoleDto";
+import { ApiPermissionStateDto } from "@/types/dtos/RoleDto";
 import { ActionIcon, Checkbox, Table, Text, ScrollArea, Box } from "@mantine/core";
 import { IconTrash } from "@tabler/icons-react";
 
