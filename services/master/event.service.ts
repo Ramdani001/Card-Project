@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
 import { saveFile, deleteFile } from "@/helpers/file.helper";
+import { generateSlug } from "@/utils";
 
 interface CreateEventParams {
   title: string;
@@ -18,15 +19,6 @@ interface UpdateEventParams {
   endDate?: Date;
   files?: File[];
 }
-
-const generateSlug = (title: string) => {
-  return title
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-};
 
 export const getEvents = async (options: Prisma.EventFindManyArgs) => {
   const finalOptions: Prisma.EventFindManyArgs = {

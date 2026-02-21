@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { createRole, getRoles } from "@/services/role.service";
+import { createRole, getRoles } from "@/services/auth/role.service";
 
 export const GET = async (req: NextRequest) => {
   try {

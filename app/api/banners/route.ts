@@ -1,6 +1,6 @@
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { createBanner, getBanners } from "@/services/banner.service";
+import { createBanner, getBanners } from "@/services/master/banner.service";
 import { NextRequest } from "next/server";
 
 export const GET = async (req: NextRequest) => {

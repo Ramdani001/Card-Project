@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { deleteCategory, getCategoryById, updateCategory } from "@/services/category.service";
+import { deleteCategory, getCategoryById, updateCategory } from "@/services/master/category.service";
 
 type RouteParams = {
   params: Promise<{ id: string }>;

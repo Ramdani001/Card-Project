@@ -1,5 +1,5 @@
 import { ALLOWED_NEXT_STATUS } from "@/constants";
-import { getTransactionById } from "@/services/transaction.service";
+import { getTransactionById } from "@/services/transaction/transaction.service";
 import { NextRequest, NextResponse } from "next/server";
 
 type RouteParams = {

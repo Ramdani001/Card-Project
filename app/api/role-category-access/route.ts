@@ -1,7 +1,7 @@
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import { Prisma } from "@/prisma/generated/prisma/client";
-import { createRoleCategoryAccess, getRoleCategoryAccesses } from "@/services/cardCategoryRoleAccess.service";
+import { createRoleCategoryAccess, getRoleCategoryAccesses } from "@/services/master/cardCategoryRoleAccess.service";
 import { NextRequest } from "next/server";
 
 export const GET = async (req: NextRequest) => {

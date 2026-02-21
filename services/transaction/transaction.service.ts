@@ -1,7 +1,7 @@
 import prisma from "@/lib/prisma";
 import { createPaymentToken } from "./payment.service";
 import { Prisma, TransactionStatus } from "@/prisma/generated/prisma/client";
-import { sendTransactionReceipt } from "./email.service";
+import { sendTransactionReceipt } from "../system/email.service";
 
 interface CreateTransactionParams {
   userId: string;

@@ -1,6 +1,6 @@
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import { authOptions } from "@/lib/auth";
-import { getUserMenus } from "@/services/menu.service";
+import { getUserMenus } from "@/services/master/menu.service";
 import { getServerSession } from "next-auth";
 
 export const GET = async () => {

@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { deleteDiscount, getDiscountById, updateDiscount } from "@/services/discount.service";
+import { deleteDiscount, getDiscountById, updateDiscount } from "@/services/master/discount.service";
 import { DiscountType } from "@/prisma/generated/prisma/client";
 
 type RouteParams = {

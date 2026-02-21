@@ -1,5 +1,5 @@
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { register } from "@/services/auth.service";
+import { register } from "@/services/auth/auth.service";
 import { NextRequest } from "next/server";
 
 export const POST = async (req: NextRequest) => {

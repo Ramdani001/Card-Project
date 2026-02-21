@@ -1,5 +1,5 @@
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { deleteBanner, updateBanner } from "@/services/banner.service";
+import { deleteBanner, updateBanner } from "@/services/master/banner.service";
 import { NextRequest } from "next/server";
 
 type Params = {

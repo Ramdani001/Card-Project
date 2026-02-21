@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { createMenu, getMenus } from "@/services/menu.service";
+import { createMenu, getMenus } from "@/services/master/menu.service";
 
 export const GET = async (req: NextRequest) => {
   try {

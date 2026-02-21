@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { removeCartItem, updateCartItem } from "@/services/cart.service";
+import { removeCartItem, updateCartItem } from "@/services/transaction/cart.service";
 
 type RouteParams = {
   params: Promise<{ id: string }>;

@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import { DiscountType } from "@/prisma/generated/prisma/client";
-import { createVoucher, getVouchers } from "@/services/voucher.service";
+import { createVoucher, getVouchers } from "@/services/master/voucher.service";
 
 export const GET = async (req: NextRequest) => {
   try {

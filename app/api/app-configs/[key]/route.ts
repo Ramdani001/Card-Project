@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { getConfigByKey, setConfig, deleteConfig } from "@/services/config.service";
+import { getConfigByKey, setConfig, deleteConfig } from "@/services/system/config.service";
 
 type RouteParams = {
   params: Promise<{ key: string }>;

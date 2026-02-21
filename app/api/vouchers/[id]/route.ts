@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { deleteVoucher, getVoucherById, updateVoucher } from "@/services/voucher.service";
+import { deleteVoucher, getVoucherById, updateVoucher } from "@/services/master/voucher.service";
 import { DiscountType } from "@/prisma/generated/prisma/enums";
 
 type RouteParams = {

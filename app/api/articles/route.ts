@@ -1,18 +1,18 @@
-import { NextRequest } from "next/server";
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { createEvent, getEvents } from "@/services/master/event.service";
+import { createArticle, getArticles } from "@/services/master/article.service";
+import { NextRequest } from "next/server";
 
 export const GET = async (req: NextRequest) => {
   try {
     const { options, page, limit } = getQueryPaginationOptions(req);
 
-    const { events, total } = await getEvents(options);
+    const { articles, total } = await getArticles(options);
 
     return sendResponse({
       success: true,
-      message: "Events fetched successfully",
-      data: events,
+      message: "Articles fetched successfully",
+      data: articles,
       metadata: {
         total,
         page,
@@ -31,20 +31,11 @@ export const POST = async (req: NextRequest) => {
 
     const title = formData.get("title") as string;
     const content = formData.get("content") as string;
-    const startDateStr = formData.get("startDate") as string;
-    const endDateStr = formData.get("endDate") as string;
 
     const files = formData.getAll("images") as File[];
 
-    if (!title || !content || !startDateStr || !endDateStr) {
-      return sendResponse({ success: false, message: "Title, Content, Start Date, and End Date are required", status: 400 });
-    }
-
-    const startDate = new Date(startDateStr);
-    const endDate = new Date(endDateStr);
-
-    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-      return sendResponse({ success: false, message: "Invalid date format", status: 400 });
+    if (!title || !content) {
+      return sendResponse({ success: false, message: "Title and Content are required", status: 400 });
     }
 
     if (files.length > 0) {
@@ -59,18 +50,16 @@ export const POST = async (req: NextRequest) => {
       }
     }
 
-    const newEvent = await createEvent({
+    const newArticle = await createArticle({
       title,
       content,
-      startDate,
-      endDate,
       files,
     });
 
     return sendResponse({
       success: true,
-      message: "Event created successfully",
-      data: newEvent,
+      message: "Article created successfully",
+      data: newArticle,
       status: 201,
     });
   } catch (err: any) {

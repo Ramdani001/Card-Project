@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { createDiscount, getDiscounts } from "@/services/discount.service";
+import { createDiscount, getDiscounts } from "@/services/master/discount.service";
 import { DiscountType } from "@/prisma/generated/prisma/client";
 
 export const GET = async (req: NextRequest) => {

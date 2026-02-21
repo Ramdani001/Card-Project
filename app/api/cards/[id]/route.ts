@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { getCardById, updateCard, deleteCard } from "@/services/card.service";
+import { getCardById, updateCard, deleteCard } from "@/services/master/card.service";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 

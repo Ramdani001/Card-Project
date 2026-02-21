@@ -1,7 +1,7 @@
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import { authOptions } from "@/lib/auth";
-import { getHistoryTransactions } from "@/services/transaction.service";
+import { getHistoryTransactions } from "@/services/transaction/transaction.service";
 import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
 

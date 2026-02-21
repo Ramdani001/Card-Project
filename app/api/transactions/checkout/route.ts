@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { checkout } from "@/services/transaction.service";
+import { checkout } from "@/services/transaction/transaction.service";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 

@@ -1,5 +1,5 @@
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { deleteRoleCategoryAccess, getRoleCategoryAccessById, updateRoleCategoryAccess } from "@/services/cardCategoryRoleAccess.service";
+import { deleteRoleCategoryAccess, getRoleCategoryAccessById, updateRoleCategoryAccess } from "@/services/master/cardCategoryRoleAccess.service";
 import { NextRequest } from "next/server";
 
 type RouteParams = {

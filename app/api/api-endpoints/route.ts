@@ -1,6 +1,6 @@
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { createApiEndpoint, getApiEndpoints } from "@/services/apiEndpoint.service";
+import { createApiEndpoint, getApiEndpoints } from "@/services/master/apiEndpoint.service";
 import { NextRequest } from "next/server";
 
 export const GET = async (req: NextRequest) => {

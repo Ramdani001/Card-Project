@@ -1,6 +1,7 @@
 import { deleteFile, saveFile } from "@/helpers/file.helper";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
+import { generateSlug } from "@/utils";
 
 interface CreateCardParams {
   name: string;
@@ -26,15 +27,6 @@ interface UpdateCardParams {
   file?: File | null;
   userId: string;
 }
-
-const generateSlug = (name: string) => {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-};
 
 export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string) => {
   const defaultInclude: Prisma.CardInclude = {

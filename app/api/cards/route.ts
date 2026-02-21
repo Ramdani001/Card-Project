@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { createCard, getCards } from "@/services/card.service";
+import { createCard, getCards } from "@/services/master/card.service";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 

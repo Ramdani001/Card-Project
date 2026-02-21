@@ -2,7 +2,7 @@ import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import { authOptions } from "@/lib/auth";
 import { Prisma } from "@/prisma/generated/prisma/client";
-import { getTransactions } from "@/services/transaction.service";
+import { getTransactions } from "@/services/transaction/transaction.service";
 import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
 

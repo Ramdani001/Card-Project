@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { getTransactionById } from "@/services/transaction.service";
+import { getTransactionById } from "@/services/transaction/transaction.service";
 
 type RouteParams = {
   params: Promise<{ id: string }>;

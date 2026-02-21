@@ -15,3 +15,12 @@ export const formatDate = (dateString: string) => {
     minute: "2-digit",
   });
 };
+
+export const generateSlug = (title: string) => {
+  return title
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+};

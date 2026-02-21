@@ -1,5 +1,5 @@
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { getActiveBanners } from "@/services/banner.service";
+import { getActiveBanners } from "@/services/master/banner.service";
 
 export const GET = async () => {
   try {

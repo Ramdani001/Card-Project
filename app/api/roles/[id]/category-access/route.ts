@@ -1,5 +1,5 @@
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { syncRoleCategoryAccess } from "@/services/cardCategoryRoleAccess.service";
+import { syncRoleCategoryAccess } from "@/services/master/cardCategoryRoleAccess.service";
 import { NextRequest } from "next/server";
 
 export const PATCH = async (req: NextRequest) => {

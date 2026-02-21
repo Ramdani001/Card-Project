@@ -1,5 +1,5 @@
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { deleteApiEndpoint, getApiEndpointById, updateApiEndpoint } from "@/services/apiEndpoint.service";
+import { deleteApiEndpoint, getApiEndpointById, updateApiEndpoint } from "@/services/master/apiEndpoint.service";
 import { NextRequest } from "next/server";
 
 type RouteParams = {

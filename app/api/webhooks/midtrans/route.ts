@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { mapMidtransStatus, savePaymentLog, verifyMidtransSignature } from "@/services/payment.service";
-import { updateTransactionStatus } from "@/services/transaction.service";
+import { mapMidtransStatus, savePaymentLog, verifyMidtransSignature } from "@/services/transaction/payment.service";
+import { updateTransactionStatus } from "@/services/transaction/transaction.service";
 
 export const POST = async (req: NextRequest) => {
   try {

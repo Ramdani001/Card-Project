@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
+import { generateSlug } from "@/utils";
 
 interface CreateCategoryParams {
   name: string;
@@ -11,15 +12,6 @@ interface UpdateCategoryParams {
   name?: string;
   note?: string;
 }
-
-const generateSlug = (name: string) => {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, "")
-    .replace(/[\s_-]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-};
 
 export const getCategories = async (options: Prisma.CategoryFindManyArgs) => {
   const finalOptions: Prisma.CategoryFindManyArgs = {

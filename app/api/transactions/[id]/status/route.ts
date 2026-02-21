@@ -1,6 +1,6 @@
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import { authOptions } from "@/lib/auth";
-import { cancelTransaction, markTransactionStatus, shipTransaction } from "@/services/transaction.service";
+import { cancelTransaction, markTransactionStatus, shipTransaction } from "@/services/transaction/transaction.service";
 import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
 

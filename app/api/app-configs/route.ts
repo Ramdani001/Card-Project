@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { getAllConfigs, setConfig } from "@/services/config.service";
+import { getAllConfigs, setConfig } from "@/services/system/config.service";
 
 export const GET = async (_req: NextRequest) => {
   try {
