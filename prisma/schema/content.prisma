@@ -58,6 +58,7 @@ model BannerImage {
     startDate DateTime
     endDate   DateTime
 
+    link         String?
     url          String
     path         String
     originalName String

@@ -2,13 +2,14 @@
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
 import { PaginationMetaData } from "@/types/PaginationMetaData";
-import { ActionIcon, Box, Button, Flex, Group, Image, Paper, Text, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Box, Button, Flex, Group, Image, Paper, Text, Title, Tooltip, Anchor, Badge } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconPencil, IconPlus, IconRefresh, IconTrash, IconX } from "@tabler/icons-react";
+import { IconCheck, IconPencil, IconPlus, IconRefresh, IconTrash, IconX, IconExternalLink } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { Banner, BannerForm } from "./BannerForm";
+import { BannerForm } from "./BannerForm";
+import { BannerDto } from "@/types/BannerDto";
 
 const formatSize = (bytes: number) => {
   if (bytes === 0) return "0 B";
@@ -19,7 +20,7 @@ const formatSize = (bytes: number) => {
 };
 
 const ListBanner = () => {
-  const [banners, setBanners] = useState<Banner[]>([]);
+  const [banners, setBanners] = useState<BannerDto[]>([]);
   const [metadata, setMetadata] = useState<PaginationMetaData>({
     total: 0,
     page: 1,
@@ -29,7 +30,7 @@ const ListBanner = () => {
   const [loading, setLoading] = useState(false);
 
   const [opened, { open, close }] = useDisclosure(false);
-  const [selectedBanner, setSelectedBanner] = useState<Banner | null>(null);
+  const [selectedBanner, setSelectedBanner] = useState<BannerDto | null>(null);
 
   const [queryParams, setQueryParams] = useState({
     page: 1,
@@ -54,7 +55,6 @@ const ListBanner = () => {
 
       if (json.success) {
         setBanners(json.data);
-
         setMetadata(json.metadata || { total: json.data.length, page: 1, limit: 10, totalPages: 1 });
       }
     } catch (error) {
@@ -110,12 +110,12 @@ const ListBanner = () => {
     open();
   };
 
-  const handleOpenEdit = (banner: Banner) => {
+  const handleOpenEdit = (banner: BannerDto) => {
     setSelectedBanner(banner);
     open();
   };
 
-  const columns: ColumnDef<Banner>[] = [
+  const columns: ColumnDef<BannerDto>[] = [
     {
       key: "no",
       label: "No",
@@ -140,6 +140,27 @@ const ListBanner = () => {
             </Text>
           </Box>
         </Group>
+      ),
+    },
+    {
+      key: "link",
+      label: "Redirect Link",
+      sortable: true,
+      render: (item) => (
+        <Box style={{ maxWidth: 200 }}>
+          {item.link ? (
+            <Anchor href={item.link} target="_blank" size="xs" c="blue" style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <Text size="xs" truncate style={{ maxWidth: 150 }}>
+                {item.link}
+              </Text>
+              <IconExternalLink size={12} />
+            </Anchor>
+          ) : (
+            <Badge variant="dot" color="gray" size="sm">
+              No Link
+            </Badge>
+          )}
+        </Box>
       ),
     },
     {
@@ -169,7 +190,7 @@ const ListBanner = () => {
       width: 100,
       render: (item) => (
         <Group gap={4} justify="center">
-          <Tooltip label="Edit Dates/Image">
+          <Tooltip label="Edit Dates/Image/Link">
             <ActionIcon variant="subtle" color="blue" onClick={() => handleOpenEdit(item)}>
               <IconPencil size={16} />
             </ActionIcon>

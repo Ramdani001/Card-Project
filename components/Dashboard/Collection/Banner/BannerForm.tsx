@@ -1,28 +1,23 @@
 "use client";
 
-import { AspectRatio, Button, FileInput, Flex, Image, Modal, Paper, Text, Group } from "@mantine/core";
+import { BannerDto } from "@/types/BannerDto";
+import { AspectRatio, Button, FileInput, Flex, Group, Image, Modal, Paper, Text, TextInput } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconUpload, IconX } from "@tabler/icons-react";
+import { IconCheck, IconLink, IconUpload, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-
-export interface Banner {
-  id: string;
-  startDate: string | Date;
-  endDate: string | Date;
-  url: string;
-}
 
 interface BannerFormProps {
   opened: boolean;
   onClose: () => void;
-  bannerToEdit: Banner | null;
+  bannerToEdit: BannerDto | null;
   onSuccess: () => void;
 }
 
 export const BannerForm = ({ opened, onClose, bannerToEdit, onSuccess }: BannerFormProps) => {
   const [loading, setLoading] = useState(false);
 
+  const [link, setLink] = useState<string>("");
   const [startDate, setStartDate] = useState<Date | string | null>(null);
   const [endDate, setEndDate] = useState<Date | string | null>(null);
 
@@ -33,11 +28,13 @@ export const BannerForm = ({ opened, onClose, bannerToEdit, onSuccess }: BannerF
     if (bannerToEdit) {
       setStartDate(new Date(bannerToEdit.startDate));
       setEndDate(new Date(bannerToEdit.endDate));
+      setLink(bannerToEdit.link || "");
       setPreview(bannerToEdit.url);
       setFile(null);
     } else {
       setStartDate(new Date());
       setEndDate(new Date(Date.now() + 7 * 24 * 3600 * 1000));
+      setLink("");
       setFile(null);
       setPreview(null);
     }
@@ -61,7 +58,7 @@ export const BannerForm = ({ opened, onClose, bannerToEdit, onSuccess }: BannerF
       return notifications.show({ message: "Start and End date required", color: "red" });
     }
 
-    if (endDate < startDate) {
+    if (new Date(endDate) < new Date(startDate)) {
       return notifications.show({ message: "End date must be after Start date", color: "red" });
     }
 
@@ -74,6 +71,7 @@ export const BannerForm = ({ opened, onClose, bannerToEdit, onSuccess }: BannerF
       const formData = new FormData();
       formData.append("startDate", new Date(startDate).toISOString());
       formData.append("endDate", new Date(endDate).toISOString());
+      formData.append("link", link);
 
       if (file) {
         formData.append("file", file);
@@ -118,12 +116,11 @@ export const BannerForm = ({ opened, onClose, bannerToEdit, onSuccess }: BannerF
   return (
     <Modal opened={opened} onClose={onClose} title={bannerToEdit ? "Edit Banner" : "Upload New Banner"} centered size="md">
       <Flex direction="column" gap="md">
-        {/* Input Tanggal */}
         <Flex gap="md" direction={{ base: "column", sm: "row" }}>
           <DateTimePicker
             label="Start Date"
             placeholder="Pick date & time"
-            value={startDate}
+            value={startDate instanceof Date ? startDate : null}
             onChange={setStartDate}
             style={{ flex: 1 }}
             withAsterisk
@@ -132,14 +129,23 @@ export const BannerForm = ({ opened, onClose, bannerToEdit, onSuccess }: BannerF
           <DateTimePicker
             label="End Date"
             placeholder="Pick date & time"
-            value={endDate}
+            value={endDate instanceof Date ? endDate : null}
             onChange={setEndDate}
-            minDate={startDate || undefined}
+            minDate={startDate instanceof Date ? startDate : undefined}
             style={{ flex: 1 }}
             withAsterisk
             clearable
           />
         </Flex>
+
+        <TextInput
+          label="Redirect Link (Optional)"
+          placeholder="https://example.com/promo"
+          leftSection={<IconLink size={16} />}
+          value={link}
+          onChange={(event) => setLink(event.currentTarget.value)}
+          description="Arahkan user ke halaman tertentu saat banner diklik."
+        />
 
         <FileInput
           label="Banner Image"
@@ -154,7 +160,7 @@ export const BannerForm = ({ opened, onClose, bannerToEdit, onSuccess }: BannerF
         />
 
         {preview && (
-          <Paper withBorder p="sm" bg="gray.0" radius="md">
+          <Paper withBorder p="sm" radius="md">
             <Text size="xs" c="dimmed" mb="xs">
               {bannerToEdit && file ? "New Image Preview (Will replace old one)" : "Preview"}
             </Text>

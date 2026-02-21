@@ -29,6 +29,7 @@ export const POST = async (req: NextRequest) => {
   try {
     const formData = await req.formData();
 
+    const linkStr = formData.get("link") as string;
     const startDateStr = formData.get("startDate") as string;
     const endDateStr = formData.get("endDate") as string;
     const file = formData.get("file") as File | null;
@@ -42,6 +43,7 @@ export const POST = async (req: NextRequest) => {
     }
 
     const newBanner = await createBanner({
+      link: linkStr,
       startDate: new Date(startDateStr),
       endDate: new Date(endDateStr),
       file: file,

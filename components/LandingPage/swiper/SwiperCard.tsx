@@ -8,11 +8,10 @@ import "swiper/css";
 import "swiper/css/effect-creative";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-
-import { Banner } from "@/components/Dashboard/Collection/Banner/BannerForm";
+import { BannerDto } from "@/types/BannerDto";
 
 export const SwiperCard = () => {
-  const [Banners, setBanners] = useState<Banner[]>([]);
+  const [Banners, setBanners] = useState<BannerDto[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
 
   useEffect(() => {

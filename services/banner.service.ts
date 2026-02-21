@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
 
 interface CreateBannerParams {
+  link?: string | null;
   startDate: Date;
   endDate: Date;
   file: File;
@@ -10,6 +11,7 @@ interface CreateBannerParams {
 
 interface UpdateBannerParams {
   id: string;
+  link?: string | null;
   startDate?: Date;
   endDate?: Date;
   file?: File | null;
@@ -37,7 +39,7 @@ export const getActiveBanners = async () => {
 };
 
 export const createBanner = async (params: CreateBannerParams) => {
-  const { startDate, endDate, file } = params;
+  const { startDate, endDate, file, link } = params;
 
   if (endDate < startDate) {
     throw new Error("End date must be after start date");
@@ -51,6 +53,7 @@ export const createBanner = async (params: CreateBannerParams) => {
 
     const banner = await prisma.bannerImage.create({
       data: {
+        link,
         startDate,
         endDate,
         ...fileData,
@@ -67,7 +70,7 @@ export const createBanner = async (params: CreateBannerParams) => {
 };
 
 export const updateBanner = async (params: UpdateBannerParams) => {
-  const { id, startDate, endDate, file } = params;
+  const { id, startDate, endDate, file, link } = params;
 
   const existingBanner = await prisma.bannerImage.findUnique({ where: { id } });
   if (!existingBanner) throw new Error("Banner not found");
@@ -88,6 +91,7 @@ export const updateBanner = async (params: UpdateBannerParams) => {
     const updatedBanner = await prisma.bannerImage.update({
       where: { id },
       data: {
+        ...(link && { link }),
         ...(startDate && { startDate }),
         ...(endDate && { endDate }),
         ...(newFileData ? newFileData : {}),
