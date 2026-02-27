@@ -82,7 +82,7 @@ export const createUser = async (data: CreateUserParams) => {
     });
   } catch (error) {
     if (avatarUrl) {
-      await deleteFile(avatarUrl).catch(console.error);
+      await deleteFile(avatarUrl.replace("/uploads/", "")).catch(console.error);
     }
     throw error;
   }
@@ -109,7 +109,7 @@ export const updateUser = async ({ id, name, email, phone, password, roleId, fil
     if (file && file.size > 0) {
       const uploadResult = await saveFile(file);
       newAvatarUrl = uploadResult.url;
-      
+
       updateData.avatar = newAvatarUrl;
     }
 
@@ -126,7 +126,7 @@ export const updateUser = async ({ id, name, email, phone, password, roleId, fil
     return updatedUser;
   } catch (error) {
     if (newAvatarUrl) {
-      await deleteFile(newAvatarUrl).catch(console.error);
+      await deleteFile(newAvatarUrl.replace("/uploads/", "")).catch(console.error);
     }
     throw error;
   }
@@ -141,7 +141,7 @@ export const deleteUser = async (id: string) => {
   });
 
   if (existingUser.avatar) {
-    await deleteFile(existingUser.avatar).catch(console.error);
+    await deleteFile(existingUser.avatar.replace("/uploads/", "")).catch(console.error);
   }
 
   return deletedUser;
