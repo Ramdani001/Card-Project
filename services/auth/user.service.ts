@@ -82,7 +82,7 @@ export const createUser = async (data: CreateUserParams) => {
     });
   } catch (error) {
     if (avatarUrl) {
-      await deleteFile(avatarUrl.replace("/uploads/", "")).catch(console.error);
+      await deleteFile(avatarUrl.replace(/[\\/]uploads[\\/]/g, "")).catch(console.error);
     }
     throw error;
   }
@@ -120,13 +120,13 @@ export const updateUser = async ({ id, name, email, phone, password, roleId, fil
     });
 
     if (newAvatarUrl && existingUser.avatar) {
-      await deleteFile(existingUser.avatar).catch(console.error);
+      await deleteFile(existingUser.avatar.replace(/[\\/]uploads[\\/]/g, "")).catch(console.error);
     }
 
     return updatedUser;
   } catch (error) {
     if (newAvatarUrl) {
-      await deleteFile(newAvatarUrl.replace("/uploads/", "")).catch(console.error);
+      await deleteFile(newAvatarUrl.replace(/[\\/]uploads[\\/]/g, "")).catch(console.error);
     }
     throw error;
   }
@@ -141,7 +141,7 @@ export const deleteUser = async (id: string) => {
   });
 
   if (existingUser.avatar) {
-    await deleteFile(existingUser.avatar.replace("/uploads/", "")).catch(console.error);
+    await deleteFile(existingUser.avatar.replace(/[\\/]uploads[\\/]/g, "")).catch(console.error);
   }
 
   return deletedUser;
