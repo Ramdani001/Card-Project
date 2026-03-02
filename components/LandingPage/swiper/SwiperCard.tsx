@@ -1,3 +1,4 @@
+"use client";
 import { Box, Image, Skeleton } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useEffect, useState } from "react";
@@ -9,10 +10,12 @@ import "swiper/css/effect-creative";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { BannerDto } from "@/types/dtos/BannerDto";
+import { useRouter } from "next/navigation";
 
 export const SwiperCard = () => {
   const [Banners, setBanners] = useState<BannerDto[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -79,8 +82,13 @@ export const SwiperCard = () => {
                 borderRadius: 8,
               }}
               bg={"#ffff"}
+              onClick={() => {
+                if (item.link) {
+                  window.open(item.link, "_blank", "noopener,noreferrer");
+                }
+              }}
             >
-              <Image src={item.url} fit="contain" w="100%" h="100%" style={{ position: "absolute", top: 0, left: 0 }} alt={`Banner ${index + 1}`} />
+              <Image src={item.url} fit="contain" w="100%" h="100%" style={{ position: "absolute", top: 0, left: 0 }} alt={`Banner ${index + 1}`}/>
             </Box>
           </SwiperSlide>
         ))}

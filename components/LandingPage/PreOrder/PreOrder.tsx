@@ -1,6 +1,7 @@
 import { EventDto } from "@/types/dtos/EventDto";
-import { Box, Button, Card, Center, Container, Grid, Image, Text, Loader, Indicator } from "@mantine/core";
+import { Box, Button, Card, Center, Container, Grid, Image, Text, Loader, Indicator, Modal } from "@mantine/core";
 import { DatePicker } from "@mantine/dates";
+import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
@@ -9,6 +10,9 @@ export const PreOrder = () => {
   const [preOrder, setPreOrder] = useState<EventDto[]>([]);
   const [loadingPreOrder, setLoadingPreOrder] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  const [opened, { open, close }] = useDisclosure(false);
+
 
   useEffect(() => {
     const fetchPreOrder = async () => {
@@ -34,6 +38,11 @@ export const PreOrder = () => {
 
   return (
     <Container mb={30} size="xl">
+
+      <Modal opened={opened} onClose={close} withCloseButton={false}>
+        Modal without header, press escape or click on overlay to close
+      </Modal>
+
       <Box style={{ minHeight: 800 }} bg={"#f5f6fa"} p="md" mt="xl">
         <Center mb="xl">
           <h1 style={{ color: "#05004f", margin: 0 }}>Pre Order Event</h1>
@@ -98,7 +107,7 @@ export const PreOrder = () => {
                 const minutes = startDate.getMinutes().toString().padStart(2, "0");
 
                 return (
-                  <Card key={item.id} shadow="sm" p="lg" radius="md" withBorder mb="md">
+                  <Card key={item.id} shadow="sm" p="lg" radius="md" withBorder mb="md" onClick={open}>
                     <Box style={{ display: "flex", alignItems: "center", gap: 20 }}>
                       <Box style={{ textAlign: "center", minWidth: 60 }}>
                         <Text size="xl" fw={800} style={{ lineHeight: 1, fontSize: "2rem" }} c="blue">

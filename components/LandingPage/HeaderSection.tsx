@@ -117,9 +117,6 @@ export const HeaderSection = ({ cartItems, setIsDrawerOpen, cartItemCount, onOpe
                     <Menu.Item leftSection={<IconUser size={14} />} onClick={() => router.push("/profile")}>
                       Profile
                     </Menu.Item>
-                    <Menu.Item leftSection={<IconReceipt2 size={14} />} onClick={() => router.push("/transactions")}>
-                      My Transactions
-                    </Menu.Item>
 
                     {(session?.user as any)?.role === "Administrator" && (
                       <>
