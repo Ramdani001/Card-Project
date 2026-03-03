@@ -1,124 +1,107 @@
 model Category {
-    id        String   @id @default(uuid())
-    name      String
-    slug      String   @unique
-    note      String?
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    cards                    CategoriesOnCards[]
-    cardCategoryRoleAccesses CardCategoryRoleAccess[]
+  id                       String                   @id @default(uuid())
+  name                     String
+  slug                     String                   @unique
+  note                     String?
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+  cardCategoryRoleAccesses CardCategoryRoleAccess[]
+  cards                    CategoriesOnCards[]
 }
 
 model Card {
-    id   String  @id @default(uuid())
-    name String
-    slug String  @unique
-    sku  String? @unique
-
-    price       Decimal @db.Decimal(15, 2)
-    stock       Int
-    description String? @db.Text
-
-    discountId String?
-    createdAt  DateTime @default(now())
-    updatedAt  DateTime @updatedAt
-
-    discount         Discount?           @relation(fields: [discountId], references: [id])
-    categories       CategoriesOnCards[]
-    images           ImageCard[]
-    cartItems        CartItem[]
-    transactionItems TransactionItem[]
-    histories        CardHistory[]
+  id               String              @id @default(uuid())
+  name             String
+  slug             String              @unique
+  price            Decimal             @db.Decimal(15, 2)
+  stock            Int
+  description      String?
+  sku              String?             @unique
+  discountId       String?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  maxQtyPurchase   Int?
+  minQtyPurchase   Int?
+  discount         Discount?           @relation(fields: [discountId], references: [id])
+  histories        CardHistory[]
+  cartItems        CartItem[]
+  categories       CategoriesOnCards[]
+  images           ImageCard[]
+  transactionItems TransactionItem[]
 }
 
 model CardHistory {
-    id     String @id @default(uuid())
-    cardId String
-
-    name        String
-    price       Decimal @db.Decimal(15, 2)
-    stock       Int
-    sku         String?
-    description String? @db.Text
-
-    discountId String?
-    changedBy  String?
-    changeType String?
-    createdAt  DateTime @default(now())
-
-    card Card  @relation(fields: [cardId], references: [id], onDelete: Cascade)
-    user User? @relation(fields: [changedBy], references: [id])
-
-    discount Discount? @relation(fields: [discountId], references: [id], onDelete: SetNull)
+  id          String    @id @default(uuid())
+  cardId      String
+  name        String
+  price       Decimal   @db.Decimal(15, 2)
+  stock       Int
+  sku         String?
+  description String?
+  discountId  String?
+  changedBy   String?
+  changeType  String?
+  createdAt   DateTime  @default(now())
+  card        Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user        User?     @relation(fields: [changedBy], references: [id])
+  discount    Discount? @relation(fields: [discountId], references: [id])
 }
 
 model CategoriesOnCards {
-    cardId     String
-    categoryId String
-    assignedAt DateTime @default(now())
+  cardId     String
+  categoryId String
+  assignedAt DateTime @default(now())
+  card       Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
-    card     Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
-    category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-
-    @@id([cardId, categoryId])
+  @@id([cardId, categoryId])
 }
 
 model ImageCard {
-    id     String @id @default(uuid())
-    cardId String
-
-    url          String
-    path         String
-    originalName String
-    fileName     String
-    mimeType     String
-    size         Int
-
-    isPrimary Boolean  @default(false)
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  id           String   @id @default(uuid())
+  cardId       String
+  url          String
+  isPrimary    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  fileName     String
+  mimeType     String
+  originalName String
+  path         String
+  size         Int
+  card         Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
 }
 
 model Discount {
-    id        String       @id @default(uuid())
-    name      String
-    value     Decimal      @db.Decimal(10, 2)
-    type      DiscountType
-    createdAt DateTime     @default(now())
-    updatedAt DateTime     @updatedAt
-
-    cards         Card[]
-    cardHistories CardHistory[]
+  id            String        @id @default(uuid())
+  name          String
+  value         Decimal       @db.Decimal(10, 2)
+  type          DiscountType
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  cards         Card[]
+  cardHistories CardHistory[]
 }
 
 model Voucher {
-    id          String  @id @default(uuid())
-    code        String  @unique
-    name        String
-    description String? @db.Text
-
-    type  DiscountType
-    value Decimal      @db.Decimal(10, 2)
-
-    minPurchase Decimal? @db.Decimal(15, 2)
-    maxDiscount Decimal? @db.Decimal(15, 2)
-
-    stock     Int?
-    usedCount Int  @default(0)
-
-    startDate DateTime
-    endDate   DateTime
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    transactions Transaction[]
+  id           String        @id @default(uuid())
+  code         String        @unique
+  name         String
+  description  String?
+  type         DiscountType
+  value        Decimal       @db.Decimal(10, 2)
+  minPurchase  Decimal?      @db.Decimal(15, 2)
+  maxDiscount  Decimal?      @db.Decimal(15, 2)
+  stock        Int?
+  usedCount    Int           @default(0)
+  startDate    DateTime
+  endDate      DateTime
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
 }
 
 enum DiscountType {
-    NOMINAL
-    PERCENTAGE
+  NOMINAL
+  PERCENTAGE
 }

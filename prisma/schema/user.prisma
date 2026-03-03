@@ -1,89 +1,75 @@
 model Role {
-    id        String   @id @default(uuid())
-    name      String   @unique
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    users                    User[]
-    cardCategoryRoleAccesses CardCategoryRoleAccess[]
-    roleMenuAccesses         RoleMenuAccess[]
-    roleApiAccesses          RoleApiAccess[]
+  id                       String                   @id @default(uuid())
+  name                     String                   @unique
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+  cardCategoryRoleAccesses CardCategoryRoleAccess[]
+  roleApiAccesses          RoleApiAccess[]
+  roleMenuAccesses         RoleMenuAccess[]
+  users                    User[]
 }
 
 model CardCategoryRoleAccess {
-    id String @id @default(uuid())
+  id         String   @id @default(uuid())
+  roleId     String
+  categoryId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  category   Category @relation(fields: [categoryId], references: [id])
+  role       Role     @relation(fields: [roleId], references: [id])
 
-    roleId String
-    role   Role   @relation(fields: [roleId], references: [id])
-
-    categoryId String
-    category   Category @relation(fields: [categoryId], references: [id])
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    @@unique([roleId, categoryId])
+  @@unique([roleId, categoryId])
 }
 
 model RoleMenuAccess {
-    id String @id @default(uuid())
+  id        String   @id @default(uuid())
+  roleId    String
+  menuId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  menu      Menu     @relation(fields: [menuId], references: [id])
+  role      Role     @relation(fields: [roleId], references: [id])
 
-    roleId String
-    role   Role   @relation(fields: [roleId], references: [id])
-
-    menuId String
-    menu   Menu   @relation(fields: [menuId], references: [id])
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    @@unique([roleId, menuId])
+  @@unique([roleId, menuId])
 }
 
 model RoleApiAccess {
-    id String @id @default(uuid())
+  id            String      @id @default(uuid())
+  roleId        String
+  apiEndpointId String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  canCreate     Boolean     @default(false)
+  canDelete     Boolean     @default(false)
+  canRead       Boolean     @default(false)
+  canUpdate     Boolean     @default(false)
+  apiEndpoints  ApiEndpoint @relation(fields: [apiEndpointId], references: [id])
+  role          Role        @relation(fields: [roleId], references: [id])
 
-    roleId String
-    role   Role   @relation(fields: [roleId], references: [id])
-
-    canRead Boolean @default(false)
-    canUpdate Boolean @default(false)
-    canDelete Boolean @default(false)
-    canCreate Boolean @default(false)
-
-    apiEndpointId String
-    apiEndpoints  ApiEndpoint @relation(fields: [apiEndpointId], references: [id])
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    @@unique([roleId, apiEndpointId])
+  @@unique([roleId, apiEndpointId])
 }
 
 model ApiEndpoint {
-    id          String  @id @default(uuid())
-    url         String  @unique
-    description String?
-
-    createdAt       DateTime        @default(now())
-    updatedAt       DateTime        @updatedAt
-    roleApiAccesses RoleApiAccess[]
+  id              String          @id @default(uuid())
+  url             String          @unique
+  description     String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  roleApiAccesses RoleApiAccess[]
 }
 
 model User {
-    id        String   @id @default(uuid())
-    email     String   @unique
-    password  String
-    name      String?
-    phone     String?
-    avatar    String?
-    roleId    String?
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    role Role? @relation(fields: [roleId], references: [id], onDelete: SetNull)
-
-    carts         Cart[]
-    transactions  Transaction[]
-    cardHistories CardHistory[]
+  id            String        @id @default(uuid())
+  email         String        @unique
+  password      String
+  name          String?
+  phone         String?
+  avatar        String?
+  roleId        String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  cardHistories CardHistory[]
+  carts         Cart[]
+  transactions  Transaction[]
+  role          Role?         @relation(fields: [roleId], references: [id])
 }

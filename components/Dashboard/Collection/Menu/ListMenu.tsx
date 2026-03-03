@@ -1,15 +1,15 @@
 "use client";
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
+import { MenuDto } from "@/types/dtos/MenuDto";
 import { PaginationMetaDataDto } from "@/types/dtos/PaginationMetaDataDto";
 import { ActionIcon, Badge, Button, Code, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { openConfirmModal } from "@mantine/modals";
+import { notifications } from "@mantine/notifications";
 import { IconCheck, IconPencil, IconPlus, IconRefresh, IconTrash, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { MenuForm } from "./MenuForm";
-import { notifications } from "@mantine/notifications";
-import { openConfirmModal } from "@mantine/modals";
-import { MenuDto } from "@/types/dtos/MenuDto";
 
 const ListMenu = () => {
   const [menus, setMenus] = useState<MenuDto[]>([]);
@@ -175,6 +175,22 @@ const ListMenu = () => {
             No Link
           </Text>
         ),
+    },
+    {
+      key: "isDashboardMenu",
+      label: "Dashboard Menu",
+      sortable: true,
+      filterable: true,
+      width: 150,
+      render: (item) => (
+        <Badge
+          variant="light"
+          color={item.isDashboardMenu ? "green" : "gray"}
+          leftSection={item.isDashboardMenu ? <IconCheck size={12} /> : <IconX size={12} />}
+        >
+          {item.isDashboardMenu ? "Yes" : "No"}
+        </Badge>
+      ),
     },
     {
       key: "parent",

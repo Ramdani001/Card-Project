@@ -14,7 +14,7 @@ export const GET = async (req: NextRequest, { params }: RouteParams) => {
     }
 
     const { id } = await params;
-    const transaction = await getTransactionById(id, userId);
+    const transaction = await getTransactionById(id);
 
     if (!transaction) {
       return sendResponse({ success: false, message: "Transaction not found", status: 404 });

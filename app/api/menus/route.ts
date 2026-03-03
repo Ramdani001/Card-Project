@@ -27,7 +27,7 @@ export const GET = async (req: NextRequest) => {
 export const POST = async (req: NextRequest) => {
   try {
     const body = await req.json();
-    const { label, url, icon, order, parentId } = body;
+    const { label, url, icon, order, parentId, isDashboardMenu } = body;
 
     if (!label) {
       return sendResponse({ success: false, message: "Label is required", status: 400 });
@@ -39,6 +39,7 @@ export const POST = async (req: NextRequest) => {
       icon,
       order: order ? Number(order) : 0,
       parentId,
+      isDashboardMenu,
     });
 
     return sendResponse({

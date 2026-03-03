@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import { createPaymentToken } from "./payment.service";
-import { Prisma, TransactionStatus } from "@/prisma/generated/prisma/client";
+import { DiscountType, Prisma, TransactionStatus } from "@/prisma/generated/prisma/client";
 import { sendTransactionReceipt } from "../system/email.service";
 
 interface CreateTransactionParams {
@@ -25,19 +25,17 @@ interface ShipTransactionParams {
   shippingCost?: number;
 }
 
+const FAILED_STATUSES: TransactionStatus[] = [TransactionStatus.CANCELLED, TransactionStatus.FAILED, TransactionStatus.EXPIRED];
+
 export const checkout = async (params: CreateTransactionParams) => {
   const { userId, customerName, customerEmail, voucherCode, address, paymentMethod } = params;
 
   const cart = await prisma.cart.findFirst({
     where: { userId },
-    include: {
-      items: { include: { card: true } },
-    },
+    include: { items: { include: { card: true } } },
   });
 
-  if (!cart || cart.items.length === 0) {
-    throw new Error("Cart is empty");
-  }
+  if (!cart || cart.items.length === 0) throw new Error("Your cart is empty.");
 
   let subTotal = 0;
   const prismaItemsPayload: Prisma.TransactionItemCreateWithoutTransactionInput[] = [];
@@ -46,11 +44,8 @@ export const checkout = async (params: CreateTransactionParams) => {
   for (const item of cart.items) {
     if (!item.card) throw new Error(`Product data missing for item ID: ${item.id}`);
 
-    if (item.card.stock < item.quantity) {
-      throw new Error(`Insufficient stock for: ${item.card.name}. Available: ${item.card.stock}`);
-    }
-
-    const itemTotal = Number(item.card.price) * item.quantity;
+    const price = Number(item.card.price);
+    const itemTotal = price * item.quantity;
     subTotal += itemTotal;
 
     prismaItemsPayload.push({
@@ -64,82 +59,76 @@ export const checkout = async (params: CreateTransactionParams) => {
 
     midtransItemsPayload.push({
       id: item.card.id.substring(0, 20),
-      price: Number(item.card.price),
+      price: price,
       quantity: item.quantity,
       name: item.card.name.substring(0, 50),
     });
   }
 
-  let voucherAmount = 0;
-  let voucherId: string | null = null;
-  let finalTotal = subTotal;
-
-  if (voucherCode) {
-    const voucher = await prisma.voucher.findUnique({ where: { code: voucherCode } });
-    if (!voucher) throw new Error("Invalid voucher code");
-
-    const now = new Date();
-    if (now < voucher.startDate || now > voucher.endDate) throw new Error("Voucher is expired or not started yet");
-
-    if (voucher.stock !== null && voucher.usedCount >= voucher.stock) throw new Error("Voucher usage limit reached");
-
-    if (voucher.minPurchase && subTotal < Number(voucher.minPurchase)) {
-      throw new Error(`Minimum purchase for this voucher is Rp ${Number(voucher.minPurchase).toLocaleString()}`);
-    }
-
-    if (voucher.type === "NOMINAL") {
-      voucherAmount = Number(voucher.value);
-    } else if (voucher.type === "PERCENTAGE") {
-      voucherAmount = subTotal * (Number(voucher.value) / 100);
-      if (voucher.maxDiscount && voucherAmount > Number(voucher.maxDiscount)) {
-        voucherAmount = Number(voucher.maxDiscount);
-      }
-    }
-
-    if (voucherAmount > subTotal) voucherAmount = subTotal;
-
-    finalTotal = subTotal - voucherAmount;
-    voucherId = voucher.id;
-
-    if (voucherAmount > 0) {
-      midtransItemsPayload.push({
-        id: "VOUCHER-DISC",
-        price: -Math.floor(voucherAmount),
-        quantity: 1,
-        name: `Voucher: ${voucherCode}`,
-      });
-    }
-  }
-
-  const randomStr = Math.floor(1000 + Math.random() * 9000);
-  const invoiceNumber = `INV/${new Date().getFullYear()}/${Date.now()}-${randomStr}`;
-
-  return await prisma.$transaction(
+  const transactionData = await prisma.$transaction(
     async (tx) => {
+      let voucherAmount = 0;
+      let voucherId: string | null = null;
+      let finalTotal = subTotal;
+
+      if (voucherCode) {
+        const voucher = await tx.voucher.findUnique({ where: { code: voucherCode } });
+        if (!voucher) throw new Error("Invalid voucher code.");
+
+        const now = new Date();
+        if (now < voucher.startDate || now > voucher.endDate) throw new Error("Voucher has expired or is not yet active.");
+        if (voucher.stock !== null && voucher.usedCount >= voucher.stock) throw new Error("Voucher usage limit has been reached.");
+        if (voucher.minPurchase && subTotal < Number(voucher.minPurchase)) {
+          throw new Error(`Minimum purchase of Rp ${Number(voucher.minPurchase).toLocaleString()} required for this voucher.`);
+        }
+
+        voucherAmount = voucher.type === DiscountType.NOMINAL ? Number(voucher.value) : subTotal * (Number(voucher.value) / 100);
+
+        if (voucher.maxDiscount && voucherAmount > Number(voucher.maxDiscount)) voucherAmount = Number(voucher.maxDiscount);
+        if (voucherAmount > subTotal) voucherAmount = subTotal;
+
+        finalTotal = subTotal - voucherAmount;
+        voucherId = voucher.id;
+
+        await tx.voucher.update({
+          where: { id: voucherId },
+          data: { usedCount: { increment: 1 } },
+        });
+      }
+
+      const randomStr = Math.floor(1000 + Math.random() * 9000);
+      const invoiceNumber = `INV/${new Date().getFullYear()}/${Date.now()}-${randomStr}`;
+
       const newTransaction = await tx.transaction.create({
         data: {
           userId,
           invoice: invoiceNumber,
           subTotal: new Prisma.Decimal(subTotal),
           voucherAmount: new Prisma.Decimal(voucherAmount),
-          totalPrice: new Prisma.Decimal(finalTotal < 0 ? 0 : finalTotal),
-          status: "PENDING",
+          totalPrice: new Prisma.Decimal(Math.max(0, finalTotal)),
+          status: TransactionStatus.PENDING,
           customerName,
           customerEmail,
           address,
           voucherId,
-          paymentMethod: paymentMethod || "MIDTRANS",
-          statusLogs: {
-            create: { status: "PENDING", note: "Checkout initiated", createdBy: "SYSTEM" },
-          },
-          items: {
-            create: prismaItemsPayload,
-          },
+          paymentMethod: paymentMethod,
+          statusLogs: { create: { status: TransactionStatus.PENDING, note: "Checkout initiated", createdBy: userId } },
+          items: { create: prismaItemsPayload },
         },
       });
 
       for (const item of cart.items) {
-        const updatedBatch = await tx.card.updateMany({
+        const card = item.card!;
+
+        if (card.maxQtyPurchase && item.quantity > card.maxQtyPurchase) {
+          throw new Error(`Maximum purchase for '${card.name}' is ${card.maxQtyPurchase} pcs.`);
+        }
+
+        if (card.minQtyPurchase && item.quantity < card.minQtyPurchase) {
+          throw new Error(`Minimum purchase for '${card.name}' is ${card.minQtyPurchase} pcs.`);
+        }
+
+        const updated = await tx.card.updateMany({
           where: {
             id: item.cardId,
             stock: { gte: item.quantity },
@@ -149,62 +138,104 @@ export const checkout = async (params: CreateTransactionParams) => {
           },
         });
 
-        if (updatedBatch.count === 0) {
-          throw new Error(`Checkout Failed: Stock for product '${item.card?.name}' is no longer available.`);
+        if (updated.count === 0) {
+          throw new Error(`Insufficient stock for '${card.name}' (Only ${card.stock} pcs available).`);
         }
       }
 
-      if (voucherId) {
-        await tx.voucher.update({
-          where: { id: voucherId },
-          data: { usedCount: { increment: 1 } },
-        });
-      }
+      await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
 
-      await tx.cartItem.deleteMany({
-        where: { cartId: cart.id },
-      });
-
-      const payment = await createPaymentToken({
-        id: newTransaction.id,
-        totalPrice: Math.max(1, Math.floor(finalTotal)),
-        customerName,
-        customerEmail,
-        items: midtransItemsPayload,
-      });
-
-      return await tx.transaction.update({
-        where: { id: newTransaction.id },
-        data: {
-          snapToken: payment.token,
-          snapRedirect: payment.redirect_url,
-        },
-        include: { items: true },
-      });
+      return {
+        transaction: newTransaction,
+        finalTotal: Math.max(1, Math.floor(finalTotal)),
+        voucherCode,
+      };
     },
-    {
-      timeout: 10000,
-    }
+    { timeout: 10000 }
   );
+
+  try {
+    if (voucherCode && transactionData.transaction.voucherAmount.toNumber() > 0) {
+      midtransItemsPayload.push({
+        id: "VOUCHER-DISC",
+        price: -Math.floor(transactionData.transaction.voucherAmount.toNumber()),
+        quantity: 1,
+        name: `Discount: ${voucherCode}`,
+      });
+    }
+
+    const payment = await createPaymentToken({
+      id: transactionData.transaction.id,
+      totalPrice: transactionData.finalTotal,
+      customerName,
+      customerEmail,
+      items: midtransItemsPayload,
+    });
+
+    return await prisma.transaction.update({
+      where: { id: transactionData.transaction.id },
+      data: {
+        snapToken: payment.token,
+        snapRedirect: payment.redirect_url,
+        statusLogs: {
+          create: {
+            status: TransactionStatus.PENDING,
+            note: "Payment link successfully generated",
+            createdBy: "SYSTEM",
+          },
+        },
+      },
+      include: { items: true },
+    });
+  } catch (error) {
+    console.error("Payment Gateway Error:", error);
+    return transactionData.transaction;
+  }
 };
 
-export const updateTransactionStatus = async (transactionId: string, status: TransactionStatus, note?: string, paymentMethod?: string) => {
+export const updateTransactionStatus = async (
+  transactionId: string,
+  status: TransactionStatus,
+  options?: {
+    note?: string;
+    paymentMethod?: string;
+    shippingData?: ShipTransactionParams;
+    userId?: string;
+  }
+) => {
+  const { note, paymentMethod, shippingData, userId = "SYSTEM" } = options || {};
+
   const result = await prisma.$transaction(async (tx) => {
     const oldTransaction = await tx.transaction.findUnique({
       where: { id: transactionId },
-      select: { status: true, voucherId: true },
+      select: { status: true, voucherId: true, subTotal: true, voucherAmount: true },
     });
 
     if (!oldTransaction) throw new Error("Transaction not found");
 
+    if (status === TransactionStatus.SHIPPED && oldTransaction.status !== TransactionStatus.PAID) {
+      throw new Error("Cannot ship an unpaid or cancelled transaction");
+    }
+
+    const updateData: Prisma.TransactionUpdateInput = {
+      status,
+      ...(paymentMethod && { paymentMethod }),
+    };
+
+    if (status === TransactionStatus.SHIPPED && shippingData) {
+      const newShippingCost = shippingData.shippingCost || 0;
+      const newTotalPrice = Number(oldTransaction.subTotal) - Number(oldTransaction.voucherAmount) + newShippingCost;
+
+      updateData.resi = shippingData.resi;
+      updateData.expedition = shippingData.expedition;
+      updateData.shippingCost = new Prisma.Decimal(newShippingCost);
+      updateData.totalPrice = new Prisma.Decimal(newTotalPrice);
+    }
+
     const updatedTransaction = await tx.transaction.update({
       where: { id: transactionId },
-      data: { status, ...(paymentMethod && { paymentMethod: paymentMethod }) },
-      include: {
-        items: true,
-        user: true,
-        voucher: true,
-      },
+      data: updateData,
+      include: { items: true, user: true, voucher: true },
     });
 
     await tx.transactionStatusLog.create({
@@ -212,13 +243,13 @@ export const updateTransactionStatus = async (transactionId: string, status: Tra
         transactionId,
         status,
         previousStatus: oldTransaction.status,
-        note,
-        createdBy: "SYSTEM_WEBHOOK",
+        note: note || (status === TransactionStatus.SHIPPED ? `Sent via ${shippingData?.expedition}` : undefined),
+        createdBy: userId,
       },
     });
 
-    const isCancelled = ["CANCELLED", "FAILED", "EXPIRED"].includes(status);
-    const wasAlreadyCancelled = ["CANCELLED", "FAILED", "EXPIRED"].includes(oldTransaction.status);
+    const isCancelled = FAILED_STATUSES.includes(status);
+    const wasAlreadyCancelled = FAILED_STATUSES.includes(oldTransaction.status);
 
     if (isCancelled && !wasAlreadyCancelled) {
       const items = await tx.transactionItem.findMany({
@@ -246,11 +277,11 @@ export const updateTransactionStatus = async (transactionId: string, status: Tra
     return updatedTransaction;
   });
 
-  if (status === "PAID" && result) {
-    sendTransactionReceipt(result).catch((err) => {
-      console.error("Background task error: Failed to send email receipt.", err);
-    });
-  }
+  // if (status === TransactionStatus.PAID && result) {
+  sendTransactionReceipt(result).catch((err) => {
+    console.error("Failed to send email receipt.", err);
+  });
+  // }
 
   return result;
 };
@@ -356,9 +387,7 @@ export const getHistoryTransactions = async (
     },
   });
 
-  // 4. Gabungkan (Enrich)
   const enrichedLogs = logs.map((log) => {
-    // Safety check saat find user
     const userDetail = log.createdBy ? users.find((u) => u.id === log.createdBy) : null;
 
     return {
@@ -370,7 +399,7 @@ export const getHistoryTransactions = async (
   return { logs: enrichedLogs, total };
 };
 
-export const getTransactionById = async (id: string, userId?: string) => {
+export const getTransactionById = async (id: string) => {
   if (!id) return null;
 
   const transaction = await prisma.transaction.findUnique({
@@ -387,82 +416,5 @@ export const getTransactionById = async (id: string, userId?: string) => {
 
   if (!transaction) return null;
 
-  if (userId) {
-    if (transaction.userId !== userId) {
-      throw new Error("Unauthorized Access to Transaction");
-    }
-  }
-
   return transaction;
-};
-
-export const markTransactionStatus = async (id: string, status: TransactionStatus, userId: string = "ADMIN") => {
-  return await prisma.$transaction(async (tx) => {
-    const updated = await tx.transaction.update({
-      where: { id },
-      data: { status },
-    });
-
-    await tx.transactionStatusLog.create({
-      data: {
-        transactionId: id,
-        status,
-        note: `Status updated to ${status}`,
-        createdBy: userId,
-      },
-    });
-
-    return updated;
-  });
-};
-
-export const shipTransaction = async (id: string, data: ShipTransactionParams, userId: string = "ADMIN") => {
-  return await prisma.$transaction(async (tx) => {
-    const oldData = await tx.transaction.findUniqueOrThrow({ where: { id } });
-
-    const newShippingCost = data.shippingCost || 0;
-    const newTotalPrice = Number(oldData.subTotal) - Number(oldData.voucherAmount) + newShippingCost;
-
-    const updated = await tx.transaction.update({
-      where: { id },
-      data: {
-        status: "SHIPPED",
-        resi: data.resi,
-        expedition: data.expedition,
-        shippingCost: newShippingCost,
-        totalPrice: newTotalPrice,
-      },
-    });
-
-    await tx.transactionStatusLog.create({
-      data: {
-        transactionId: id,
-        status: "SHIPPED",
-        note: `Barang dikirim via ${data.expedition}. Resi: ${data.resi}`,
-        createdBy: userId,
-      },
-    });
-
-    return updated;
-  });
-};
-
-export const cancelTransaction = async (id: string, reason: string, userId: string = "ADMIN") => {
-  return await prisma.$transaction(async (tx) => {
-    const updated = await tx.transaction.update({
-      where: { id },
-      data: { status: "CANCELLED" },
-    });
-
-    await tx.transactionStatusLog.create({
-      data: {
-        transactionId: id,
-        status: "CANCELLED",
-        note: `Transaction cancelled. Reason: ${reason}`,
-        createdBy: userId,
-      },
-    });
-
-    return updated;
-  });
 };

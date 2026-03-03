@@ -1,99 +1,89 @@
 model AppConfig {
-    id        String   @id @default(uuid())
-    key       String   @unique
-    value     String   @db.Text
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Menu {
-    id    String  @id @default(uuid())
-    label String
-    url   String?
-    icon  String?
-    order Int     @default(0)
-
-    parentId String?
-    parent   Menu?   @relation("MenuToSubMenu", fields: [parentId], references: [id], onDelete: Cascade)
-    subMenus Menu[]  @relation("MenuToSubMenu")
-
-    createdAt        DateTime         @default(now())
-    updatedAt        DateTime         @updatedAt
-    roleMenuAccesses RoleMenuAccess[]
+  id               String           @id @default(uuid())
+  label            String
+  url              String?
+  icon             String?
+  order            Int              @default(0)
+  parentId         String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  isDashboardMenu  Boolean          @default(true)
+  parent           Menu?            @relation("MenuToSubMenu", fields: [parentId], references: [id], onDelete: Cascade)
+  subMenus         Menu[]           @relation("MenuToSubMenu")
+  roleMenuAccesses RoleMenuAccess[]
 }
 
 model Event {
-    id        String   @id @default(uuid())
-    title     String
-    slug      String   @unique
-    content   String   @db.Text
-    startDate DateTime
-    endDate   DateTime
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    images EventImage[]
+  id        String       @id @default(uuid())
+  title     String
+  slug      String       @unique
+  content   String
+  startDate DateTime
+  endDate   DateTime
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  images    EventImage[]
 }
 
 model EventImage {
-    id        String  @id @default(uuid())
-    eventId   String
-    isPrimary Boolean @default(false)
-
-    url          String
-    path         String
-    originalName String
-    fileName     String
-    mimeType     String
-    size         Int
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  id           String   @id @default(uuid())
+  url          String
+  eventId      String
+  createdAt    DateTime @default(now())
+  isPrimary    Boolean  @default(false)
+  fileName     String
+  mimeType     String
+  originalName String
+  path         String
+  size         Int
+  updatedAt    DateTime @updatedAt
+  event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 }
 
 model BannerImage {
-    id        String   @id @default(uuid())
-    startDate DateTime
-    endDate   DateTime
-
-    link         String?
-    url          String
-    path         String
-    originalName String
-    fileName     String
-    mimeType     String
-    size         Int
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  id           String   @id @default(uuid())
+  startDate    DateTime
+  endDate      DateTime
+  url          String
+  path         String
+  originalName String
+  fileName     String
+  mimeType     String
+  size         Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  link         String?
 }
 
 model Article {
-    id            String         @id @default(uuid())
-    title         String
-    slug      String   @unique
-    content       String         @db.Text
-    createdAt     DateTime       @default(now())
-    updatedAt     DateTime       @updatedAt
-    images ArticleImage[]
+  id        String         @id @default(uuid())
+  title     String
+  content   String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  slug      String         @unique
+  images    ArticleImage[]
 }
 
 model ArticleImage {
-    id        String  @id @default(uuid())
-    articleId String
-    isPrimary Boolean @default(false)
-
-    url          String
-    path         String
-    originalName String
-    fileName     String
-    mimeType     String
-    size         Int
-
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    article Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  id           String   @id @default(uuid())
+  articleId    String
+  isPrimary    Boolean  @default(false)
+  url          String
+  path         String
+  originalName String
+  fileName     String
+  mimeType     String
+  size         Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  article      Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
 }

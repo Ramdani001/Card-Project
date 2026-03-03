@@ -7,6 +7,7 @@ interface CreateMenuParams {
   icon?: string;
   order?: number;
   parentId?: string | null;
+  isDashboardMenu: boolean;
 }
 
 interface UpdateMenuParams {
@@ -16,6 +17,7 @@ interface UpdateMenuParams {
   icon?: string;
   order?: number;
   parentId?: string | null;
+  isDashboardMenu: boolean;
 }
 
 export const getMenus = async (options: Prisma.MenuFindManyArgs) => {
@@ -83,11 +85,13 @@ export const getUserMenus = async (userId: string) => {
     return await prisma.menu.findMany({
       where: {
         parentId: null,
+        isDashboardMenu: true,
       },
       orderBy: { order: "asc" },
       include: {
         subMenus: {
           orderBy: { order: "asc" },
+          where: { isDashboardMenu: true },
         },
       },
     });
@@ -127,7 +131,7 @@ export const getMenuById = async (id: string) => {
 };
 
 export const createMenu = async (params: CreateMenuParams) => {
-  const { label, url, icon, order, parentId } = params;
+  const { label, url, icon, order, parentId, isDashboardMenu } = params;
 
   if (parentId) {
     const parentExists = await prisma.menu.findUnique({ where: { id: parentId } });
@@ -141,12 +145,13 @@ export const createMenu = async (params: CreateMenuParams) => {
       icon: icon || null,
       order: order || 0,
       parentId: parentId || null,
+      isDashboardMenu: isDashboardMenu,
     },
   });
 };
 
 export const updateMenu = async (params: UpdateMenuParams) => {
-  const { id, label, url, icon, order, parentId } = params;
+  const { id, label, url, icon, order, parentId, isDashboardMenu } = params;
 
   const existingMenu = await prisma.menu.findUnique({ where: { id } });
   if (!existingMenu) throw new Error("Menu not found");
@@ -165,6 +170,7 @@ export const updateMenu = async (params: UpdateMenuParams) => {
       ...(icon !== undefined && { icon }),
       ...(order !== undefined && { order }),
       ...(parentId !== undefined && { parentId }),
+      ...(isDashboardMenu !== undefined && { isDashboardMenu }),
     },
   });
 };

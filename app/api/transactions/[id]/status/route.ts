@@ -1,6 +1,6 @@
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import { authOptions } from "@/lib/auth";
-import { cancelTransaction, markTransactionStatus, shipTransaction } from "@/services/transaction/transaction.service";
+import { updateTransactionStatus } from "@/services/transaction/transaction.service";
 import { getServerSession } from "next-auth";
 import { NextRequest } from "next/server";
 
@@ -22,35 +22,35 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
     const body = await req.json();
     const { status, resi, expedition, shippingCost, reason } = body;
 
-    let result;
-
-    switch (status) {
-      case "SHIPPED":
-        if (!resi || !expedition) {
-          return sendResponse({
-            success: false,
-            message: "Resi & Ekspedisi wajib diisi!",
-            data: null,
-          });
-        }
-        result = await shipTransaction(id, { resi, expedition, shippingCost }, userId);
-        break;
-
-      case "CANCELLED":
-        result = await cancelTransaction(id, reason || "Cancelled by Admin", userId);
-        break;
-
-      default:
-        result = await markTransactionStatus(id, status, userId);
-        break;
+    if (status === "SHIPPED") {
+      if (!resi || !expedition) {
+        return sendResponse({
+          success: false,
+          message: "Resi & Ekspedisi wajib diisi untuk pengiriman!",
+          status: 400,
+        });
+      }
     }
+
+    const result = await updateTransactionStatus(id, status, {
+      userId,
+      note: reason,
+      shippingData:
+        status === "SHIPPED"
+          ? {
+              resi,
+              expedition,
+              shippingCost,
+            }
+          : undefined,
+    });
 
     return sendResponse({
       success: true,
       message: `Transaction status updated to ${status}`,
       data: result,
     });
-  } catch (error) {
-    return handleApiError(error);
+  } catch (error: any) {
+    handleApiError(error);
   }
 };

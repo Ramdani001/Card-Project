@@ -17,6 +17,7 @@ export const POST = async (req: NextRequest) => {
     });
 
     if (!isValidSignature) {
+      console.error(`Invalid Signature for Order: ${body.order_id}`);
       return NextResponse.json({ message: "Invalid Signature" }, { status: 403 });
     }
 
@@ -30,12 +31,11 @@ export const POST = async (req: NextRequest) => {
       paymentType = "MANDIRI BILL";
     }
 
-    await updateTransactionStatus(
-      body.order_id,
-      newStatus,
-      `Midtrans Webhook: ${body.transaction_status} (${body.status_message || "No Msg"})`,
-      paymentType
-    );
+    await updateTransactionStatus(body.order_id, newStatus, {
+      note: `Midtrans Webhook: ${body.transaction_status} (${body.status_message || "No Msg"})`,
+      paymentMethod: paymentType,
+      userId: "MIDTRANS_WEBHOOK",
+    });
 
     return NextResponse.json({ received: true });
   } catch (error) {

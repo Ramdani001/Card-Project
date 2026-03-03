@@ -1,7 +1,7 @@
 "use client";
 
 import { MenuDto } from "@/types/dtos/MenuDto";
-import { Button, Group, Modal, NumberInput, Select, SimpleGrid, Stack, TextInput } from "@mantine/core";
+import { Button, Group, Modal, NumberInput, Select, SimpleGrid, Stack, Switch, TextInput, } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
@@ -20,8 +20,9 @@ export const MenuForm = ({ opened, onClose, menuToEdit, allMenus, onSuccess }: M
   const [label, setLabel] = useState("");
   const [url, setUrl] = useState("");
   const [icon, setIcon] = useState("");
-  const [order, setOrder] = useState<number | "">("");
+  const [order, setOrder] = useState<number | "">(0);
   const [parentId, setParentId] = useState<string | null>(null);
+  const [isDashboardMenu, setIsDashboardMenu] = useState<boolean>(false);
 
   useEffect(() => {
     if (opened) {
@@ -31,12 +32,14 @@ export const MenuForm = ({ opened, onClose, menuToEdit, allMenus, onSuccess }: M
         setIcon(menuToEdit.icon || "");
         setOrder(menuToEdit.order);
         setParentId(menuToEdit.parentId || null);
+        setIsDashboardMenu(menuToEdit.isDashboardMenu || false);
       } else {
         setLabel("");
         setUrl("");
         setIcon("");
         setOrder(0);
         setParentId(null);
+        setIsDashboardMenu(false);
       }
     }
   }, [menuToEdit, opened]);
@@ -60,6 +63,7 @@ export const MenuForm = ({ opened, onClose, menuToEdit, allMenus, onSuccess }: M
         icon: icon || null,
         order: Number(order),
         parentId: parentId || null,
+        isDashboardMenu: isDashboardMenu,
       };
 
       const isEditMode = !!menuToEdit;
@@ -138,6 +142,23 @@ export const MenuForm = ({ opened, onClose, menuToEdit, allMenus, onSuccess }: M
           searchable
           checkIconPosition="right"
         />
+
+        <Group mt="xs">
+          <Switch
+            label="Dashboard Menu"
+            description="This menu will appear in the internal admin sidebar."
+            checked={isDashboardMenu}
+            onChange={(event) => setIsDashboardMenu(event.currentTarget.checked)}
+            color="blue"
+            thumbIcon={
+              isDashboardMenu ? (
+                <IconCheck size="0.8rem" color="var(--mantine-color-blue-6)" stroke={3} />
+              ) : (
+                <IconX size="0.8rem" color="var(--mantine-color-red-6)" stroke={3} />
+              )
+            }
+          />
+        </Group>
 
         <Group justify="flex-end" mt="md">
           <Button variant="default" onClick={onClose} disabled={loading}>
