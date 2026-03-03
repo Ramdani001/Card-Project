@@ -4,7 +4,7 @@ import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export const ArticleMain = (id : id) => {
+export const ArticleMain = () => {
   const [article, setEvents] = useState<ArticleDto[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
   const route = useRouter();
