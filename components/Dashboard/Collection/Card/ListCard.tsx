@@ -1,17 +1,32 @@
 "use client";
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
+import { CardDto } from "@/types/dtos/CardDto";
 import { PaginationMetaDataDto } from "@/types/dtos/PaginationMetaDataDto";
-import { ActionIcon, Avatar, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Avatar, Badge, Button, FileButton, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconCheck, IconCreditCard, IconPencil, IconPlus, IconRefresh, IconTrash, IconX } from "@tabler/icons-react";
+import { openConfirmModal } from "@mantine/modals";
+import { notifications } from "@mantine/notifications";
+import {
+  IconCheck,
+  IconCreditCard,
+  IconDownload,
+  IconFileSpreadsheet,
+  IconPencil,
+  IconPlus,
+  IconRefresh,
+  IconTrash,
+  IconUpload,
+  IconX,
+} from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { CardForm } from "./CardForm";
-import { notifications } from "@mantine/notifications";
-import { openConfirmModal } from "@mantine/modals";
-import { CardDto } from "@/types/dtos/CardDto";
 
 const ListCard = () => {
+  const [importing, setImporting] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+
   const [cards, setCards] = useState<CardDto[]>([]);
   const [metadata, setMetadata] = useState<PaginationMetaDataDto>({
     total: 0,
@@ -23,6 +38,57 @@ const ListCard = () => {
 
   const [opened, { open, close }] = useDisclosure(false);
   const [selectedCard, setSelectedCard] = useState<CardDto | null>(null);
+
+  const handleDownloadTemplate = () => {
+    window.location.href = "/api/cards/export/template";
+  };
+
+  const handleExportExcel = async () => {
+    setExporting(true);
+    try {
+      window.location.href = "/api/cards/export";
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const handleImportExcel = async (file: File | null) => {
+    if (!file) return;
+
+    setImporting(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/cards/import", {
+        method: "POST",
+        body: formData,
+      });
+      const json = await res.json();
+
+      if (json.success) {
+        notifications.show({
+          title: "Import Success",
+          message: json.message,
+          color: "teal",
+          icon: <IconCheck size={16} />,
+        });
+        fetchCards();
+      } else {
+        throw new Error(json.message || "Import failed");
+      }
+    } catch (error: any) {
+      notifications.show({
+        title: "Import Error",
+        message: error.message,
+        color: "red",
+        icon: <IconX size={16} />,
+      });
+    } finally {
+      setImporting(false);
+      setImportFile(null);
+    }
+  };
 
   const [queryParams, setQueryParams] = useState({
     page: 1,
@@ -233,7 +299,33 @@ const ListCard = () => {
       <Flex justify="space-between" align="center" mb="lg">
         <Title order={3}>Product Cards</Title>
 
-        <Group>
+        <Group gap="xs">
+          <Button.Group>
+            <Tooltip label="Download Excel Template">
+              <Button variant="default" onClick={handleDownloadTemplate} leftSection={<IconFileSpreadsheet size={16} color="orange" />}>
+                Template
+              </Button>
+            </Tooltip>
+
+            <FileButton
+              key={importFile ? "active" : "reset"}
+              onChange={(file) => {
+                setImportFile(file);
+                handleImportExcel(file);
+              }}
+              accept=".xlsx"
+            >
+              {(props) => (
+                <Button {...props} variant="default" loading={importing} leftSection={<IconUpload size={16} color="green" />}>
+                  Import
+                </Button>
+              )}
+            </FileButton>
+
+            <Button variant="default" onClick={handleExportExcel} loading={exporting} leftSection={<IconDownload size={16} color="blue" />}>
+              Export
+            </Button>
+          </Button.Group>
           <ActionIcon variant="default" size="lg" onClick={fetchCards} loading={loading}>
             <IconRefresh size={18} />
           </ActionIcon>
@@ -247,7 +339,7 @@ const ListCard = () => {
         data={cards}
         columns={columns}
         metadata={metadata}
-        loading={loading}
+        loading={loading || importing}
         sortBy={queryParams.sortBy}
         sortOrder={queryParams.sortOrder}
         filterValues={queryParams.filters}

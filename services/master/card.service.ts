@@ -2,6 +2,7 @@ import { deleteFile, saveFile } from "@/helpers/file.helper";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
 import { generateSlug } from "@/utils";
+import ExcelJS from "exceljs";
 
 interface CreateCardParams {
   name: string;
@@ -345,4 +346,197 @@ export const deleteCard = async (id: string) => {
   }
 
   return deleted;
+};
+
+export const importCardsFromExcel = async (file: File, userId: string) => {
+  const workbook = new ExcelJS.Workbook();
+  const buffer = await file.arrayBuffer();
+  await workbook.xlsx.load(buffer);
+
+  const worksheet = workbook.getWorksheet(1);
+  if (!worksheet) throw new Error("Worksheet tidak ditemukan");
+
+  const allCategories = await prisma.category.findMany();
+
+  return await prisma.$transaction(
+    async (tx) => {
+      let successCount = 0;
+      let updatedCount = 0;
+
+      for (let i = 2; i <= worksheet.rowCount; i++) {
+        const row = worksheet.getRow(i);
+
+        const name = row.getCell(1).value?.toString();
+        const priceRaw = row.getCell(2).value;
+        const stockRaw = row.getCell(3).value;
+        const sku = row.getCell(4).value?.toString();
+        const categoryName = row.getCell(5).value?.toString();
+        const description = row.getCell(6).value?.toString();
+
+        if (!name && !priceRaw && !sku) continue;
+        if (!name || priceRaw === null || priceRaw === undefined) {
+          throw new Error(`Gagal di Baris ${i}: Nama dan Harga wajib diisi.`);
+        }
+
+        const category = allCategories.find((c) => c.name.toLowerCase() === categoryName?.toLowerCase());
+
+        const price = new Prisma.Decimal(Number(priceRaw));
+        const stock = Number(stockRaw) || 0;
+        const slug = generateSlug(name);
+
+        const existingCard = await tx.card.findFirst({
+          where: { OR: [{ sku: sku || undefined }, { slug: slug }] },
+        });
+
+        const cardData = {
+          name,
+          price,
+          stock,
+          description,
+          sku,
+          categories: category
+            ? {
+                deleteMany: {},
+                create: { categoryId: category.id },
+              }
+            : undefined,
+        };
+
+        if (existingCard) {
+          await tx.card.update({
+            where: { id: existingCard.id },
+            data: {
+              ...cardData,
+              histories: {
+                create: {
+                  name: existingCard.name,
+                  price: existingCard.price,
+                  stock: existingCard.stock,
+                  changeType: "UPDATE_VIA_IMPORT",
+                  changedBy: userId,
+                },
+              },
+            },
+          });
+          updatedCount++;
+        } else {
+          await tx.card.create({
+            data: {
+              ...cardData,
+              slug,
+              categories: category
+                ? {
+                    create: { categoryId: category.id },
+                  }
+                : undefined,
+            },
+          });
+          successCount++;
+        }
+      }
+
+      return {
+        success: true,
+        message: `Berhasil! ${successCount} baru, ${updatedCount} diperbarui.`,
+      };
+    },
+    { timeout: 30000 }
+  );
+};
+
+export const exportCardsToExcel = async () => {
+  const cards = await prisma.card.findMany({
+    include: {
+      categories: {
+        include: { category: true },
+      },
+      discount: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Data Card");
+
+  worksheet.columns = [
+    { header: "ID", key: "id", width: 35 },
+    { header: "Nama Produk", key: "name", width: 30 },
+    { header: "SKU", key: "sku", width: 20 },
+    { header: "Harga", key: "price", width: 15 },
+    { header: "Stok", key: "stock", width: 10 },
+    { header: "Kategori", key: "categories", width: 30 },
+    { header: "Diskon (%)", key: "discount", width: 15 },
+    { header: "Deskripsi", key: "description", width: 40 },
+  ];
+
+  const headerRow = worksheet.getRow(1);
+  headerRow.font = { bold: true, color: { argb: "FFFFFF" } };
+  headerRow.fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "2C3E50" },
+  };
+  headerRow.alignment = { vertical: "middle", horizontal: "center" };
+
+  cards.forEach((card) => {
+    worksheet.addRow({
+      id: card.id,
+      name: card.name,
+      sku: card.sku || "-",
+      price: Number(card.price),
+      stock: card.stock,
+      categories: card.categories.map((c) => c.category.name).join(", "),
+      discount: card.discount ? (card.discount?.type == "NOMINAL" ? card.discount.value : `${card.discount.value}%`) : "0",
+      description: card.description || "-",
+    });
+  });
+
+  worksheet.getColumn("price").numFmt = "#,##0";
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  return buffer;
+};
+
+export const generateCardTemplate = async () => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Template Import");
+
+  const categories = await prisma.category.findMany({ select: { name: true } });
+  const categoryNames = categories.map((c) => c.name);
+
+  worksheet.columns = [
+    { header: "Name (Wajib)", key: "name", width: 30 },
+    { header: "Price (Angka)", key: "price", width: 15 },
+    { header: "Stock (Angka)", key: "stock", width: 15 },
+    { header: "SKU (Unik)", key: "sku", width: 20 },
+    { header: "Category (Pilih)", key: "category", width: 20 },
+    { header: "Description", key: "description", width: 40 },
+  ];
+
+  const headerRow = worksheet.getRow(1);
+  headerRow.font = { bold: true, color: { argb: "FFFFFF" } };
+  headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "E67E22" } };
+
+  for (let i = 2; i <= 100; i++) {
+    worksheet.getCell(`E${i}`).dataValidation = {
+      type: "list",
+      allowBlank: true,
+      formulae: [`"${categoryNames.join(",")}"`],
+      showErrorMessage: true,
+      errorTitle: "Invalid Category",
+      error: "Silahkan pilih kategori dari daftar yang tersedia",
+    };
+  }
+
+  worksheet.addRow({
+    name: "Contoh Produk Kartu A",
+    price: 50000,
+    stock: 10,
+    sku: "SKU-001",
+    category: categoryNames[0] || "General",
+    description: "Kartu edisi terbatas",
+  });
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  return buffer;
 };
