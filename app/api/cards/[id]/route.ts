@@ -50,6 +50,8 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
     const description = formData.get("description") as string | undefined;
     const sku = formData.get("sku") as string | undefined;
     const file = formData.get("image") as File | null;
+    const minQtyRaw = formData.get("minQtyPurchase");
+    const maxQtyRaw = formData.get("maxQtyPurchase");
 
     let categoryIds: string[] | undefined;
     if (formData.has("categoryIds")) {
@@ -79,6 +81,9 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
       }
     }
 
+    const minQtyPurchase = minQtyRaw ? Number(minQtyRaw) : null;
+    const maxQtyPurchase = maxQtyRaw ? Number(maxQtyRaw) : null;
+
     const updatedCard = await updateCard({
       id,
       name,
@@ -90,6 +95,8 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
       sku,
       file,
       userId: session.user.id,
+      minQtyPurchase,
+      maxQtyPurchase,
     });
 
     return sendResponse({

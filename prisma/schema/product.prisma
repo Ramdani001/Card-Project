@@ -31,20 +31,22 @@ model Card {
 }
 
 model CardHistory {
-  id          String    @id @default(uuid())
-  cardId      String
-  name        String
-  price       Decimal   @db.Decimal(15, 2)
-  stock       Int
-  sku         String?
-  description String?
-  discountId  String?
-  changedBy   String?
-  changeType  String?
-  createdAt   DateTime  @default(now())
-  card        Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  user        User?     @relation(fields: [changedBy], references: [id])
-  discount    Discount? @relation(fields: [discountId], references: [id])
+  id             String    @id @default(uuid())
+  cardId         String
+  name           String
+  price          Decimal   @db.Decimal(15, 2)
+  stock          Int
+  sku            String?
+  maxQtyPurchase Int?
+  minQtyPurchase Int?
+  description    String?
+  discountId     String?
+  changedBy      String?
+  changeType     String?
+  createdAt      DateTime  @default(now())
+  card           Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user           User?     @relation(fields: [changedBy], references: [id])
+  discount       Discount? @relation(fields: [discountId], references: [id])
 }
 
 model CategoriesOnCards {

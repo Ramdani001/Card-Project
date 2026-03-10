@@ -46,6 +46,8 @@ export const POST = async (req: NextRequest) => {
     const discountId = formData.get("discountId") as string | null;
     const file = formData.get("image") as File | null;
     const categoryIds = formData.getAll("categoryIds") as string[];
+    const minQtyRaw = formData.get("minQtyPurchase");
+    const maxQtyRaw = formData.get("maxQtyPurchase");
 
     if (!name?.trim()) {
       return sendResponse({ success: false, message: "Card Name is required", status: 400 });
@@ -77,6 +79,9 @@ export const POST = async (req: NextRequest) => {
       return sendResponse({ success: false, message: "Image size must be less than 5MB", status: 400 });
     }
 
+    const minQtyPurchase = minQtyRaw ? Number(minQtyRaw) : null;
+    const maxQtyPurchase = maxQtyRaw ? Number(maxQtyRaw) : null;
+
     const cleanDiscountId = discountId === "null" || discountId === "" ? null : discountId;
 
     const newCard = await createCard({
@@ -89,6 +94,8 @@ export const POST = async (req: NextRequest) => {
       sku,
       file,
       userId: session.user.id,
+      minQtyPurchase,
+      maxQtyPurchase,
     });
 
     return sendResponse({

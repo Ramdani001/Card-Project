@@ -12,6 +12,8 @@ interface CreateCardParams {
   categoryIds: string[];
   discountId?: string | null;
   description?: string;
+  minQtyPurchase?: number | null;
+  maxQtyPurchase?: number | null;
   sku?: string;
   file: File;
   userId: string;
@@ -25,6 +27,8 @@ interface UpdateCardParams {
   categoryIds?: string[];
   discountId?: string | null;
   description?: string;
+  minQtyPurchase?: number | null;
+  maxQtyPurchase?: number | null;
   sku?: string;
   file?: File | null;
   userId: string;
@@ -173,7 +177,7 @@ export const getCardById = async (id: string) => {
 };
 
 export const createCard = async (params: CreateCardParams) => {
-  const { name, price, stock, categoryIds, discountId, description, sku, file } = params;
+  const { name, price, stock, categoryIds, discountId, description, sku, file, maxQtyPurchase, minQtyPurchase } = params;
 
   if (categoryIds.length > 0) {
     const count = await prisma.category.count({ where: { id: { in: categoryIds } } });
@@ -201,6 +205,8 @@ export const createCard = async (params: CreateCardParams) => {
           price: new Prisma.Decimal(price),
           stock,
           description,
+          maxQtyPurchase,
+          minQtyPurchase,
           sku,
           discountId: discountId || null,
           categories: {
@@ -241,7 +247,7 @@ export const createCard = async (params: CreateCardParams) => {
 };
 
 export const updateCard = async (params: UpdateCardParams) => {
-  const { id, name, price, stock, categoryIds, discountId, description, sku, file, userId } = params;
+  const { id, name, price, stock, categoryIds, discountId, description, sku, file, userId, maxQtyPurchase, minQtyPurchase } = params;
 
   const existingCard = await prisma.card.findUnique({
     where: { id },
@@ -266,6 +272,8 @@ export const updateCard = async (params: UpdateCardParams) => {
           name: existingCard.name,
           price: existingCard.price,
           stock: existingCard.stock,
+          maxQtyPurchase: existingCard.maxQtyPurchase || null,
+          minQtyPurchase: existingCard.minQtyPurchase || null,
           description: existingCard.description,
           sku: existingCard.sku,
           discountId: existingCard.discountId,
@@ -283,6 +291,8 @@ export const updateCard = async (params: UpdateCardParams) => {
           ...(price !== undefined && { price: new Prisma.Decimal(price) }),
           ...(stock !== undefined && { stock }),
           ...(description && { description }),
+          ...(maxQtyPurchase !== undefined && { maxQtyPurchase }),
+          ...(minQtyPurchase && { minQtyPurchase }),
           ...(sku && { sku }),
           discountId: discountId === undefined ? undefined : discountId,
         },

@@ -9,6 +9,8 @@ export interface CardDto {
   sku?: string;
   discountId?: string;
   discount?: DiscountDto;
+  minQtyPurchase?: number | null;
+  maxQtyPurchase?: number | null;
   description?: string;
   images: { id: string; url: string; isPrimary: boolean }[];
   categories: {

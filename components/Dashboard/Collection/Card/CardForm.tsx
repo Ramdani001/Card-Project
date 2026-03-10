@@ -26,6 +26,8 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
   const [price, setPrice] = useState<number | "">("");
   const [stock, setStock] = useState<number | "">("");
   const [description, setDescription] = useState("");
+  const [minQtyPurchase, setMinQtyPurchase] = useState<number | "">("");
+  const [maxQtyPurchase, setMaxQtyPurchase] = useState<number | "">("");
 
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [discountId, setDiscountId] = useState<string | null>(null);
@@ -74,6 +76,8 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
       setPrice(Number(cardToEdit.price));
       setStock(cardToEdit.stock);
       setDescription(cardToEdit.description || "");
+      setMinQtyPurchase(cardToEdit.minQtyPurchase ?? "");
+      setMaxQtyPurchase(cardToEdit.maxQtyPurchase ?? "");
 
       const selectedCats = cardToEdit.categories.map((c) => c.category.id);
       setCategoryIds(selectedCats);
@@ -96,6 +100,8 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
       setFile(null);
       setPreviewImage(null);
       setExistingImage(null);
+      setMinQtyPurchase("");
+      setMaxQtyPurchase("");
     }
   }, [cardToEdit, opened]);
 
@@ -119,6 +125,9 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
       formData.append("price", String(price));
       formData.append("stock", String(stock));
       formData.append("description", description);
+
+      if (minQtyPurchase !== "") formData.append("minQtyPurchase", String(minQtyPurchase));
+      if (maxQtyPurchase !== "") formData.append("maxQtyPurchase", String(maxQtyPurchase));
 
       categoryIds.forEach((id) => formData.append("categoryIds", id));
 
@@ -189,6 +198,25 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
             onChange={(val) => setStock(val === "" ? "" : Number(val))}
             style={{ flex: 1 }}
             withAsterisk
+          />
+        </Flex>
+
+        <Flex gap="md">
+          <NumberInput
+            label="Min. Purchase Qty"
+            placeholder="Optional"
+            value={minQtyPurchase}
+            onChange={(val) => setMinQtyPurchase(val === "" ? "" : Number(val))}
+            style={{ flex: 1 }}
+            min={1}
+          />
+          <NumberInput
+            label="Max. Purchase Qty"
+            placeholder="Optional"
+            value={maxQtyPurchase}
+            onChange={(val) => setMaxQtyPurchase(val === "" ? "" : Number(val))}
+            style={{ flex: 1 }}
+            min={1}
           />
         </Flex>
 
