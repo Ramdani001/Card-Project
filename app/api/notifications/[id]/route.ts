@@ -1,10 +1,13 @@
-import { NextRequest } from "next/server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import { deleteNotification } from "@/services/transaction/notification.service";
 
-export const DELETE = async (req: NextRequest, { params }: { params: { id: string } }) => {
+type RouteParams = {
+  params: Promise<{ id: string }>;
+};
+
+export const DELETE = async ({ params }: RouteParams) => {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     await deleteNotification(id);
 
