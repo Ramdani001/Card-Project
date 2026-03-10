@@ -5,12 +5,14 @@ import { Avatar, Container, Flex, Group, Indicator, Loader, Menu, ScrollArea, Te
 
 import { IconBell, IconChevronDown, IconLogout, IconRefresh, IconSettings, IconUser } from "@tabler/icons-react";
 import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 import { useEffect, useState } from "react";
 
 const Topbar = () => {
   const { data: session, status } = useSession();
 
+  const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationDto[]>([]);
   const [loadingNotif, setLoadingNotif] = useState(false);
 
@@ -146,9 +148,9 @@ const Topbar = () => {
               </Menu.Target>
 
               <Menu.Dropdown>
-                <Menu.Label>Settings</Menu.Label>
-
-                <Menu.Item leftSection={<IconUser style={{ width: rem(14), height: rem(14) }} />}>Profile</Menu.Item>
+                <Menu.Item leftSection={<IconUser style={{ width: rem(14), height: rem(14) }} onClick={() => router.push("/profile")} />}>
+                  Profile
+                </Menu.Item>
 
                 <Menu.Item leftSection={<IconSettings style={{ width: rem(14), height: rem(14) }} />}>Account settings</Menu.Item>
 

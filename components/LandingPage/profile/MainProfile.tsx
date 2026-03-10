@@ -56,7 +56,7 @@ export const MainProfile = () => {
   };
 
   return (
-    <Box mb={30} mt={50} px={30}>
+    <Box px={30}>
       <HeaderSection search={search} setSearch={setSearch} cartItems={cartItems} setIsDrawerOpen={setIsDrawerOpen} />
 
       <Grid gutter="xl" mt={10}>

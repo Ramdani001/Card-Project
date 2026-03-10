@@ -291,7 +291,7 @@ export const updateCard = async (params: UpdateCardParams) => {
           ...(price !== undefined && { price: new Prisma.Decimal(price) }),
           ...(stock !== undefined && { stock }),
           ...(description && { description }),
-          ...(maxQtyPurchase !== undefined && { maxQtyPurchase }),
+          ...(maxQtyPurchase && { maxQtyPurchase }),
           ...(minQtyPurchase && { minQtyPurchase }),
           ...(sku && { sku }),
           discountId: discountId === undefined ? undefined : discountId,

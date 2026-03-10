@@ -24,7 +24,7 @@ export const PageProfile = () => {
 
       try {
         setFetching(true);
-        const res = await fetch(`/api/auth/profile/${userId}`);
+        const res = await fetch(`/api/profile/${userId}`);
         const json = await res.json();
         if (json.success) {
           setName(json.data.name || "");
@@ -68,7 +68,7 @@ export const PageProfile = () => {
       formData.append("email", email);
       if (file) formData.append("file", file);
 
-      const res = await fetch(`/api/auth/profile/${userId}`, {
+      const res = await fetch(`/api/profile/${userId}`, {
         method: "PATCH",
         body: formData,
       });

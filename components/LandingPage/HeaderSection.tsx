@@ -3,7 +3,7 @@
 import { CartItemDto } from "@/types/dtos/CartItemDto";
 import { ActionIcon, Avatar, Box, Burger, Button, Container, Group, Indicator, Menu, Text, Title } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import { IconChevronDown, IconLayoutDashboard, IconLogin, IconLogout, IconReceipt2, IconShoppingCart, IconUser } from "@tabler/icons-react";
+import { IconChevronDown, IconLayoutDashboard, IconLogin, IconLogout, IconShoppingCart, IconUser } from "@tabler/icons-react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
