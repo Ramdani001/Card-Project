@@ -1,0 +1,36 @@
+model Notification {
+  id       String           @id @default(uuid())
+  toUserId String
+  title    String
+  message  String
+  type     NotificationType
+  isRead   Boolean          @default(false)
+  url      String?
+  metadata Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  toUser User @relation(fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@index([toUserId])
+}
+
+model RoleNotification {
+  id               String @id @default(uuid())
+  notificationCode String
+  roleId           String
+
+  toRole Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum NotificationType {
+  TRANSACTION
+  PAYMENT
+  SHIPPING
+  SYSTEM
+  PROMOTION
+}

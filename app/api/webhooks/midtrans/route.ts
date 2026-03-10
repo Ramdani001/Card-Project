@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { mapMidtransStatus, savePaymentLog, verifyMidtransSignature } from "@/services/transaction/payment.service";
 import { updateTransactionStatus } from "@/services/transaction/transaction.service";
+import { NotificationType } from "@/prisma/generated/prisma/client";
+import { createNotificationByCode } from "@/services/transaction/notification.service";
 
 export const POST = async (req: NextRequest) => {
   try {
@@ -24,6 +26,7 @@ export const POST = async (req: NextRequest) => {
     const newStatus = mapMidtransStatus(body.transaction_status, body.fraud_status);
 
     let paymentType = body.payment_type?.toUpperCase().replace("_", " ") || "UNKNOWN";
+
     if (body.payment_type === "bank_transfer" && body.va_numbers) {
       const bank = body.va_numbers[0]?.bank?.toUpperCase();
       paymentType = `BANK TRANSFER - ${bank}`;
@@ -31,11 +34,25 @@ export const POST = async (req: NextRequest) => {
       paymentType = "MANDIRI BILL";
     }
 
-    await updateTransactionStatus(body.order_id, newStatus, {
+    const transaction = await updateTransactionStatus(body.order_id, newStatus, {
       note: `Midtrans Webhook: ${body.transaction_status} (${body.status_message || "No Msg"})`,
       paymentMethod: paymentType,
       userId: "MIDTRANS_WEBHOOK",
     });
+
+    if (transaction) {
+      await createNotificationByCode({
+        notificationCode: "TRANSACTION_NOTIF",
+        title: "Update Pembayaran",
+        message: `Transaksi ${transaction.invoice} berubah menjadi ${newStatus}`,
+        type: NotificationType.TRANSACTION,
+        url: null,
+        metadata: {
+          transactionId: transaction.id,
+          status: newStatus,
+        },
+      });
+    }
 
     return NextResponse.json({ received: true });
   } catch (error) {

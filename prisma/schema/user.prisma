@@ -7,6 +7,7 @@ model Role {
   roleApiAccesses          RoleApiAccess[]
   roleMenuAccesses         RoleMenuAccess[]
   users                    User[]
+  roleNotifications        RoleNotification[]
 }
 
 model CardCategoryRoleAccess {
@@ -59,17 +60,18 @@ model ApiEndpoint {
 }
 
 model User {
-  id            String        @id @default(uuid())
-  email         String        @unique
+  id            String         @id @default(uuid())
+  email         String         @unique
   password      String
   name          String?
   phone         String?
   avatar        String?
   roleId        String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   cardHistories CardHistory[]
   carts         Cart[]
   transactions  Transaction[]
-  role          Role?         @relation(fields: [roleId], references: [id])
+  role          Role?          @relation(fields: [roleId], references: [id])
+  notifications Notification[]
 }

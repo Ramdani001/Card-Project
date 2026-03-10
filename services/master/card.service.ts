@@ -1,8 +1,9 @@
 import { deleteFile, saveFile } from "@/helpers/file.helper";
 import prisma from "@/lib/prisma";
-import { Prisma } from "@/prisma/generated/prisma/client";
+import { NotificationType, Prisma } from "@/prisma/generated/prisma/client";
 import { generateSlug } from "@/utils";
 import ExcelJS from "exceljs";
+import { createNotificationByCode } from "../transaction/notification.service";
 
 interface CreateCardParams {
   name: string;
@@ -221,6 +222,15 @@ export const createCard = async (params: CreateCardParams) => {
       return card;
     });
 
+    await createNotificationByCode({
+      notificationCode: "PRODUCT_NOTIF",
+      title: "Produk Baru",
+      message: `Produk ${name} berhasil ditambahkan`,
+      type: NotificationType.SYSTEM,
+      url: null,
+      metadata: { cardId: newCard.id },
+    });
+
     return newCard;
   } catch (error) {
     if (uploadedFileUrl) {
@@ -318,6 +328,15 @@ export const updateCard = async (params: UpdateCardParams) => {
       }
     }
 
+    await createNotificationByCode({
+      notificationCode: "PRODUCT_NOTIF",
+      title: "Produk Diperbarui",
+      message: `Produk ${existingCard.name} berhasil diperbarui`,
+      type: NotificationType.SYSTEM,
+      url: null,
+      metadata: { cardId: id },
+    });
+
     return updatedCard;
   } catch (error) {
     if (newUploadedPath) {
@@ -344,6 +363,15 @@ export const deleteCard = async (id: string) => {
       await deleteFile(img.path).catch(console.error);
     }
   }
+
+  await createNotificationByCode({
+    notificationCode: "PRODUCT_NOTIF",
+    title: "Produk Dihapus",
+    message: `Produk ${card.name} telah dihapus`,
+    type: NotificationType.SYSTEM,
+    url: "",
+    metadata: { cardId: card.id },
+  });
 
   return deleted;
 };
@@ -434,6 +462,14 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
           successCount++;
         }
       }
+
+      await createNotificationByCode({
+        notificationCode: "PRODUCT_NOTIF",
+        title: "Import Produk",
+        message: `${successCount} Card telah di import, ${updatedCount} diperbarui.`,
+        type: NotificationType.SYSTEM,
+        url: "",
+      });
 
       return {
         success: true,

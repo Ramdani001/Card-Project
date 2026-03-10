@@ -1,6 +1,8 @@
 import midtransClient from "midtrans-client";
 import { createHash } from "crypto";
 import prisma from "@/lib/prisma";
+import { createNotificationByCode } from "./notification.service";
+import { NotificationType } from "@/prisma/generated/prisma/enums";
 
 export interface MidtransItem {
   id: string;
@@ -106,4 +108,32 @@ export const mapMidtransStatus = (transactionStatus: string, fraudStatus?: strin
   }
 
   return "FAILED";
+};
+
+export const sendPaymentNotification = async (orderId: string, status: "PAID" | "PENDING" | "FAILED" | "CANCELLED") => {
+  try {
+    const transaction = await prisma.transaction.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        invoice: true,
+      },
+    });
+
+    if (!transaction) return;
+
+    await createNotificationByCode({
+      notificationCode: "TRANSACTION_NOTIF",
+      title: "Update Pembayaran",
+      message: `Pembayaran transaksi ${transaction.invoice} ${status}`,
+      type: NotificationType.TRANSACTION,
+      url: null,
+      metadata: {
+        transactionId: transaction.id,
+        status,
+      },
+    });
+  } catch (error) {
+    console.error("Failed to send payment notification:", error);
+  }
 };

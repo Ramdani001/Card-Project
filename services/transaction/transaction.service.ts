@@ -1,7 +1,8 @@
 import prisma from "@/lib/prisma";
 import { createPaymentToken } from "./payment.service";
-import { DiscountType, Prisma, TransactionStatus } from "@/prisma/generated/prisma/client";
+import { DiscountType, NotificationType, Prisma, TransactionStatus } from "@/prisma/generated/prisma/client";
 import { sendTransactionReceipt } from "../system/email.service";
+import { createNotificationByCode } from "./notification.service";
 
 interface CreateTransactionParams {
   userId: string;
@@ -274,12 +275,33 @@ export const updateTransactionStatus = async (
       }
     }
 
+    await createNotificationByCode({
+      notificationCode: "TRANSACTION_NOTIF",
+      title: "Transaksi Baru",
+      message: `Transaksi ${updatedTransaction.invoice} telah dibuat`,
+      type: NotificationType.TRANSACTION,
+      url: null,
+      metadata: { transactionId: updatedTransaction.id },
+    });
+
     return updatedTransaction;
   });
 
   // if (status === TransactionStatus.PAID && result) {
   sendTransactionReceipt(result).catch((err) => {
     console.error("Failed to send email receipt.", err);
+  });
+
+  await createNotificationByCode({
+    notificationCode: "TRANSACTION_NOTIF",
+    title: "Update Status Transaksi",
+    message: `Transaksi ${result.invoice} berubah menjadi ${status}`,
+    type: NotificationType.TRANSACTION,
+    url: null,
+    metadata: {
+      transactionId: result.id,
+      status,
+    },
   });
   // }
 
