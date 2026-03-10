@@ -77,8 +77,8 @@ const MainDashboard = () => {
         </Group>
       </AppShell.Header>
 
-      <AppShell.Navbar p="md" bg="#0f1536" c="white" visibleFrom="sm">
-        <AppShell.Section grow component={ScrollArea}>
+      <AppShell.Navbar w={260} p="xs" bg="#0f172a" style={{ borderRight: "1px solid rgba(255,255,255,0.05)" }} visibleFrom="sm">
+        <AppShell.Section grow component={ScrollArea} scrollbarSize={6}>
           <Sidebar menus={menus} activeMenu={activeUrl} onMenuClick={setActiveUrl} />
         </AppShell.Section>
       </AppShell.Navbar>

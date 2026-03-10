@@ -42,7 +42,7 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <NextAuthProvider>
-          <MantineProvider theme={theme} defaultColorScheme="auto">
+          <MantineProvider theme={theme} defaultColorScheme="light">
             <Notifications />
             <ModalsProvider>{children}</ModalsProvider>
           </MantineProvider>
