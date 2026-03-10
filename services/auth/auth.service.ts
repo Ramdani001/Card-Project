@@ -10,6 +10,14 @@ interface RegisterParams {
   file?: File | null;
 }
 
+interface UpdateProfileParams {
+  userId: string;
+  email?: string;
+  name?: string;
+  phone?: string;
+  file?: File | null;
+}
+
 export const register = async ({ email, password, name, phone, file }: RegisterParams) => {
   const existingUser = await prisma.user.findUnique({
     where: { email },
@@ -67,4 +75,77 @@ export const register = async ({ email, password, name, phone, file }: RegisterP
     }
     throw error;
   }
+};
+
+export const updateProfile = async ({ userId, email, name, phone, file }: UpdateProfileParams) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
+
+  if (!user) throw new Error("User tidak ditemukan");
+
+  if (email && email !== user.email) {
+    const emailExists = await prisma.user.findUnique({ where: { email } });
+    if (emailExists) throw new Error("Email sudah digunakan oleh akun lain");
+  }
+
+  let newAvatarUrl: string | null = null;
+
+  try {
+    if (file && file.size > 0) {
+      const uploadResult = await saveFile(file);
+      newAvatarUrl = uploadResult.url;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        email: email ?? user.email,
+        name: name ?? user.name,
+        phone: phone ?? user.phone,
+        avatar: newAvatarUrl,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        avatar: true,
+        role: {
+          select: { name: true },
+        },
+      },
+    });
+
+    if (newAvatarUrl && user.avatar) {
+      await deleteFile(user.avatar.replace(/[\\/]uploads[\\/]/g, "")).catch(console.error);
+    }
+
+    return updatedUser;
+  } catch (error) {
+    if (newAvatarUrl) {
+      await deleteFile(newAvatarUrl.replace(/[\\/]uploads[\\/]/g, "")).catch(console.error);
+    }
+    throw error;
+  }
+};
+
+export const getProfile = async (userId: string) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      name: true,
+      phone: true,
+      avatar: true,
+      role: {
+        select: { name: true },
+      },
+    },
+  });
+
+  if (!user) throw new Error("User tidak ditemukan");
+
+  return user;
 };
