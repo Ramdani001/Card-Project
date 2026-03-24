@@ -7,6 +7,7 @@ model Category {
   updatedAt                DateTime                 @updatedAt
   cardCategoryRoleAccesses CardCategoryRoleAccess[]
   cards                    CategoriesOnCards[]
+  voucherCardCategories    VoucherCardCategory[]
 }
 
 model Card {
@@ -28,6 +29,7 @@ model Card {
   categories       CategoriesOnCards[]
   images           ImageCard[]
   transactionItems TransactionItem[]
+  voucherCards     VoucherCard[]
 }
 
 model CardHistory {
@@ -86,21 +88,60 @@ model Discount {
 }
 
 model Voucher {
-  id           String        @id @default(uuid())
-  code         String        @unique
-  name         String
-  description  String?
-  type         DiscountType
-  value        Decimal       @db.Decimal(10, 2)
-  minPurchase  Decimal?      @db.Decimal(15, 2)
-  maxDiscount  Decimal?      @db.Decimal(15, 2)
-  stock        Int?
-  usedCount    Int           @default(0)
-  startDate    DateTime
-  endDate      DateTime
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  transactions Transaction[]
+  id                    String                @id @default(uuid())
+  code                  String                @unique
+  name                  String
+  description           String?
+  type                  DiscountType
+  value                 Decimal               @db.Decimal(10, 2)
+  minPurchase           Decimal?              @db.Decimal(15, 2)
+  maxDiscount           Decimal?              @db.Decimal(15, 2)
+  stock                 Int?
+  usedCount             Int                   @default(0)
+  startDate             DateTime
+  endDate               DateTime
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  transactions          Transaction[]
+  voucherCardCategories VoucherCardCategory[]
+  voucherCards          VoucherCard[]
+  voucherRoles          VoucherRole[]
+}
+
+model VoucherCardCategory {
+  id             String @id @default(uuid())
+  voucherId      String
+  cardCategoryId String
+
+  voucher      Voucher  @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  cardCategory Category @relation(fields: [cardCategoryId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VoucherCard {
+  id        String @id @default(uuid())
+  voucherId String
+  cardId    String
+
+  voucher Voucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  card    Card    @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VoucherRole {
+  id        String @id @default(uuid())
+  voucherId String
+  roleId    String
+
+  voucher Voucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  role    Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum DiscountType {

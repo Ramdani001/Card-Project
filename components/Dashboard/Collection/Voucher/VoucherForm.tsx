@@ -2,7 +2,8 @@
 
 import { DiscountTypeDto } from "@/types/dtos/DiscountDto";
 import { VoucherDto } from "@/types/dtos/VoucherDto";
-import { Button, Flex, Modal, NumberInput, SegmentedControl, Text, Textarea, TextInput } from "@mantine/core";
+import { SelectOption } from "@/types/SelectOption";
+import { Button, Flex, Modal, MultiSelect, NumberInput, SegmentedControl, Text, Textarea, TextInput } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -18,19 +19,24 @@ interface VoucherFormProps {
 export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: VoucherFormProps) => {
   const [loading, setLoading] = useState(false);
 
-  // States
   const [code, setCode] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<DiscountTypeDto>("NOMINAL");
   const [value, setValue] = useState<number | string>(0);
-
   const [minPurchase, setMinPurchase] = useState<number | string>("");
   const [maxDiscount, setMaxDiscount] = useState<number | string>("");
   const [stock, setStock] = useState<number | string>("");
+  const [startDate, setStartDate] = useState<Date | null | string>(new Date());
+  const [endDate, setEndDate] = useState<Date | null | string>(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
 
-  const [startDate, setStartDate] = useState<Date | string | null>(new Date());
-  const [endDate, setEndDate] = useState<Date | string | null>(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [selectedCards, setSelectedCards] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
+  const [categoryOptions, setCategoryOptions] = useState<SelectOption[]>([]);
+  const [roleOptions, setRoleOptions] = useState<SelectOption[]>([]);
+  const [cardOptions, setCardOptions] = useState<SelectOption[]>([]);
 
   useEffect(() => {
     if (voucherToEdit) {
@@ -44,6 +50,10 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
       setStock(voucherToEdit.stock ? Number(voucherToEdit.stock) : "");
       setStartDate(new Date(voucherToEdit.startDate));
       setEndDate(new Date(voucherToEdit.endDate));
+
+      setSelectedRoles(voucherToEdit.voucherRoles?.map((r: any) => r.roleId) || []);
+      setSelectedCards(voucherToEdit.voucherCards?.map((c: any) => c.cardId) || []);
+      setSelectedCategories(voucherToEdit.voucherCardCategories?.map((cat: any) => cat.cardCategoryId) || []);
     } else {
       resetForm();
     }
@@ -60,15 +70,53 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
     setStock("");
     setStartDate(new Date());
     setEndDate(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+    setSelectedRoles([]);
+    setSelectedCards([]);
+    setSelectedCategories([]);
   };
+
+  useEffect(() => {
+    const fetchMasters = async () => {
+      try {
+        const [resCats, resCards, resRoles] = await Promise.all([
+          fetch("/api/categories").then((res) => res.json()),
+          fetch("/api/cards").then((res) => res.json()),
+          fetch("/api/roles").then((res) => res.json()),
+        ]);
+
+        if (resCats.success) {
+          setCategoryOptions(resCats.data.map((c: any) => ({ value: c.id, label: c.name })));
+        }
+        if (resCards.success) {
+          setCardOptions(
+            resCards.data.map((d: any) => ({
+              value: d.id,
+              label: d.name,
+            }))
+          );
+        }
+        if (resRoles.success) {
+          setRoleOptions(
+            resRoles.data.map((d: any) => ({
+              value: d.id,
+              label: d.name,
+            }))
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching master data", error);
+        notifications.show({ title: "Error", message: "Failed to load options", color: "red" });
+      }
+    };
+
+    if (opened) {
+      fetchMasters();
+    }
+  }, [opened]);
 
   const handleSubmit = async () => {
     if (!code || !name || !startDate || !endDate || !value) {
       return notifications.show({ message: "Please fill required fields", color: "red" });
-    }
-
-    if (type === "PERCENTAGE" && Number(value) > 100) {
-      return notifications.show({ message: "Percentage cannot exceed 100%", color: "red" });
     }
 
     setLoading(true);
@@ -84,6 +132,9 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
         stock: stock ? Number(stock) : undefined,
         startDate,
         endDate,
+        voucherRoles: selectedRoles.map((id) => ({ roleId: id })),
+        voucherCards: selectedCards.map((id) => ({ cardId: id })),
+        voucherCardCategories: selectedCategories.map((id) => ({ cardCategoryId: id })),
       };
 
       const url = voucherToEdit ? `/api/vouchers/${voucherToEdit.id}` : "/api/vouchers";
@@ -100,6 +151,7 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
       if (json.success) {
         notifications.show({ title: "Success", message: json.message, color: "teal", icon: <IconCheck size={16} /> });
         onSuccess();
+        onClose();
       } else {
         notifications.show({ title: "Error", message: json.message, color: "red", icon: <IconX size={16} /> });
       }
@@ -148,7 +200,7 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
             </Text>
             <SegmentedControl
               value={type}
-              onChange={(v) => setType(v as "NOMINAL" | "PERCENTAGE")}
+              onChange={(v) => setType(v as DiscountTypeDto)}
               data={[
                 { label: "Fixed (Rp)", value: "NOMINAL" },
                 { label: "Percentage (%)", value: "PERCENTAGE" },
@@ -158,7 +210,6 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
           </div>
           <NumberInput
             label="Discount Value"
-            placeholder="0"
             value={value}
             onChange={setValue}
             withAsterisk
@@ -170,56 +221,48 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
           />
         </Flex>
 
+        <MultiSelect
+          label="Limit to Roles"
+          placeholder="Select roles"
+          data={roleOptions}
+          value={selectedRoles}
+          onChange={setSelectedRoles}
+          searchable
+          clearable
+        />
+
         <Flex gap="md">
-          <NumberInput
-            label="Min. Purchase"
-            description="Minimum transaction to use"
-            placeholder="Optional"
-            value={minPurchase}
-            onChange={setMinPurchase}
-            min={0}
+          <MultiSelect
+            label="Specific Cards"
+            placeholder="Select cards"
+            data={cardOptions}
+            value={selectedCards}
+            onChange={setSelectedCards}
             style={{ flex: 1 }}
-            leftSection="Rp"
           />
+          <MultiSelect
+            label="Specific Categories"
+            placeholder="Select categories"
+            data={categoryOptions}
+            value={selectedCategories}
+            onChange={setSelectedCategories}
+            style={{ flex: 1 }}
+          />
+        </Flex>
+
+        <Flex gap="md">
+          <NumberInput label="Min. Purchase" value={minPurchase} onChange={setMinPurchase} min={0} style={{ flex: 1 }} leftSection="Rp" />
           {type === "PERCENTAGE" && (
-            <NumberInput
-              label="Max. Discount"
-              description="Max cap for % discount"
-              placeholder="Optional"
-              value={maxDiscount}
-              onChange={setMaxDiscount}
-              min={0}
-              style={{ flex: 1 }}
-              leftSection="Rp"
-            />
+            <NumberInput label="Max. Discount" value={maxDiscount} onChange={setMaxDiscount} min={0} style={{ flex: 1 }} leftSection="Rp" />
           )}
         </Flex>
 
         <Flex gap="md">
-          <NumberInput
-            label="Stock / Quota"
-            description="Leave empty for unlimited"
-            placeholder="Unlimited"
-            value={stock}
-            onChange={setStock}
-            min={0}
-            style={{ flex: 1 }}
-          />
-          <div style={{ flex: 1 }}></div>
+          <NumberInput label="Stock / Quota" placeholder="Unlimited" value={stock} onChange={setStock} min={0} style={{ flex: 1 }} />
+          <DateTimePicker label="Start Date" value={startDate} onChange={setStartDate} withAsterisk style={{ flex: 1 }} />
         </Flex>
 
-        <Flex gap="md">
-          <DateTimePicker label="Start Date" value={startDate} onChange={setStartDate} withAsterisk style={{ flex: 1 }} clearable />
-          <DateTimePicker
-            label="End Date"
-            value={endDate}
-            onChange={setEndDate}
-            withAsterisk
-            style={{ flex: 1 }}
-            clearable
-            minDate={startDate || undefined}
-          />
-        </Flex>
+        <DateTimePicker label="End Date" value={endDate} onChange={setEndDate} withAsterisk minDate={startDate || undefined} />
 
         <Flex justify="flex-end" gap="sm" mt="md">
           <Button variant="default" onClick={onClose}>

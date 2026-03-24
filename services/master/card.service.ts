@@ -551,11 +551,11 @@ export const generateCardTemplate = async () => {
   const categoryNames = categories.map((c) => c.name);
 
   worksheet.columns = [
-    { header: "Name (Wajib)", key: "name", width: 30 },
-    { header: "Price (Angka)", key: "price", width: 15 },
-    { header: "Stock (Angka)", key: "stock", width: 15 },
-    { header: "SKU (Unik)", key: "sku", width: 20 },
-    { header: "Category (Pilih)", key: "category", width: 20 },
+    { header: "Card Name", key: "name", width: 30 },
+    { header: "Price", key: "price", width: 15 },
+    { header: "Stock", key: "stock", width: 15 },
+    { header: "SKU", key: "sku", width: 20 },
+    { header: "Category", key: "category", width: 20 },
     { header: "Description", key: "description", width: 40 },
   ];
 

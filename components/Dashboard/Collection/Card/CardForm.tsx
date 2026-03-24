@@ -1,6 +1,7 @@
 "use client";
 
 import { CardDto } from "@/types/dtos/CardDto";
+import { SelectOption } from "@/types/SelectOption";
 import { Button, FileInput, Flex, Image, Modal, MultiSelect, NumberInput, Paper, Select, Text, Textarea, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconUpload, IconX } from "@tabler/icons-react";
@@ -11,11 +12,6 @@ interface CardFormProps {
   onClose: () => void;
   cardToEdit: CardDto | null;
   onSuccess: () => void;
-}
-
-interface SelectOption {
-  value: string;
-  label: string;
 }
 
 export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormProps) => {

@@ -49,6 +49,9 @@ export const POST = async (req: NextRequest) => {
       stock: body.stock ? Number(body.stock) : undefined,
       startDate: new Date(body.startDate),
       endDate: new Date(body.endDate),
+      voucherCardCategories: body.voucherCardCategories || [],
+      voucherCards: body.voucherCards || [],
+      voucherRoles: body.voucherRoles || [],
     });
 
     return sendResponse({

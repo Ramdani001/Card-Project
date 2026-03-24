@@ -1,4 +1,7 @@
 import { DiscountTypeDto } from "./DiscountDto";
+import { VoucherCardCategoryDto } from "./VoucherCardCategoryDto";
+import { VoucherCardDto } from "./VoucherCardDto";
+import { VoucherRoleDto } from "./VoucherRoleDto";
 
 export interface VoucherDto {
   id: string;
@@ -13,6 +16,9 @@ export interface VoucherDto {
   usedCount: number;
   startDate: string | Date;
   endDate: string | Date;
+  voucherRoles: VoucherRoleDto[];
+  voucherCards: VoucherCardDto[];
+  voucherCardCategories: VoucherCardCategoryDto[];
   createdAt: string | Date;
   updatedAt: string | Date;
 }

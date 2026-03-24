@@ -8,6 +8,7 @@ model Role {
   roleMenuAccesses         RoleMenuAccess[]
   users                    User[]
   roleNotifications        RoleNotification[]
+  voucherRoles             VoucherRole[]
 }
 
 model CardCategoryRoleAccess {

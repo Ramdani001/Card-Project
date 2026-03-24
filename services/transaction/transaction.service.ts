@@ -33,7 +33,7 @@ export const checkout = async (params: CreateTransactionParams) => {
 
   const cart = await prisma.cart.findFirst({
     where: { userId },
-    include: { items: { include: { card: true } } },
+    include: { items: { include: { card: { include: { categories: true } } } } },
   });
 
   if (!cart || cart.items.length === 0) throw new Error("Your cart is empty.");
@@ -73,14 +73,42 @@ export const checkout = async (params: CreateTransactionParams) => {
       let finalTotal = subTotal;
 
       if (voucherCode) {
-        const voucher = await tx.voucher.findUnique({ where: { code: voucherCode } });
+        const voucher = await tx.voucher.findUnique({
+          where: { code: voucherCode },
+          include: {
+            voucherRoles: true,
+            voucherCards: true,
+            voucherCardCategories: true,
+          },
+        });
+
         if (!voucher) throw new Error("Invalid voucher code.");
 
         const now = new Date();
-        if (now < voucher.startDate || now > voucher.endDate) throw new Error("Voucher has expired or is not yet active.");
-        if (voucher.stock !== null && voucher.usedCount >= voucher.stock) throw new Error("Voucher usage limit has been reached.");
+        if (now < voucher.startDate || now > voucher.endDate) throw new Error("Voucher is not active.");
+        if (voucher.stock !== null && voucher.usedCount >= voucher.stock) throw new Error("Voucher out of stock.");
         if (voucher.minPurchase && subTotal < Number(voucher.minPurchase)) {
-          throw new Error(`Minimum purchase of Rp ${Number(voucher.minPurchase).toLocaleString()} required for this voucher.`);
+          throw new Error(`Min. purchase Rp ${Number(voucher.minPurchase).toLocaleString()} required.`);
+        }
+
+        if (voucher.voucherRoles.length > 0) {
+          const user = await tx.user.findUnique({ where: { id: userId } });
+          const isRoleAllowed = voucher.voucherRoles.some((vr) => vr.roleId === user?.roleId);
+          if (!isRoleAllowed) throw new Error("Your account level cannot use this voucher.");
+        }
+
+        const hasSpecificProductLimit = voucher.voucherCards.length > 0;
+        const hasSpecificCategoryLimit = voucher.voucherCardCategories.length > 0;
+
+        if (hasSpecificProductLimit || hasSpecificCategoryLimit) {
+          const cartCardIds = cart.items.map((item) => item.cardId);
+          const allowedByCard = voucher.voucherCards.some((vc) => cartCardIds.includes(vc.cardId));
+          const cartCategoryIds = cart.items.flatMap((item) => item.card.categories.map((e) => e.categoryId));
+          const allowedByCategory = voucher.voucherCardCategories.some((vcc) => cartCategoryIds.includes(vcc.cardCategoryId));
+
+          if (!allowedByCard && !allowedByCategory) {
+            throw new Error("This voucher is not applicable to any items in your cart.");
+          }
         }
 
         voucherAmount = voucher.type === DiscountType.NOMINAL ? Number(voucher.value) : subTotal * (Number(voucher.value) / 100);

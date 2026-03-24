@@ -10,7 +10,7 @@ import { CartItemDto } from "@/types/dtos/CartItemDto";
 import { Box, Center, Container, Grid, Group, Loader, Pagination, Select, Text } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconCheck } from "@tabler/icons-react";
+import { IconCheck, IconX } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -197,11 +197,18 @@ export default function MainCatalog() {
         body: JSON.stringify({ quantity: newQty }),
       });
 
-      if (res.ok) {
+      const json = await res.json();
+
+      if (json.success) {
         setCartItemsDto((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: newQty } : item)));
+      } else {
+        notifications.show({ title: "Error", message: json.message, color: "red", icon: <IconX size={16} /> });
+        setCartItemsDto((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: 1 } : item)));
       }
     } catch (error) {
       console.error(error);
+      notifications.show({ title: "Error", message: "Network error", color: "red" });
+        setCartItemsDto((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: 1 } : item)));
     } finally {
       setProcessingId(null);
     }

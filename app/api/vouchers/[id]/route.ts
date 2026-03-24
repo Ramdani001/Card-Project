@@ -39,6 +39,9 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
       ...(body.startDate && { startDate: new Date(body.startDate) }),
       ...(body.endDate && { endDate: new Date(body.endDate) }),
       ...(body.type && { type: body.type as DiscountType }),
+      ...(body.voucherCardCategories && { voucherCardCategories: body.voucherCardCategories }),
+      ...(body.voucherCards && { voucherCards: body.voucherCards }),
+      ...(body.voucherRoles && { voucherRoles: body.voucherRoles }),
     });
 
     return sendResponse({
