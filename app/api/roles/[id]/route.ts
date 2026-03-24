@@ -1,6 +1,6 @@
-import { NextRequest } from "next/server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import { deleteRole, getRoleById, updateRole } from "@/services/auth/role.service";
+import { NextRequest } from "next/server";
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -28,11 +28,12 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
     const { id } = await params;
 
     const body = await req.json();
-    const { name, categoryIds, menuIds, apiAccesses } = body;
+    const { name, categoryIds, menuIds, apiAccesses, canAccessDashboard } = body;
 
     const updatedRole = await updateRole({
       id,
       name: name || undefined,
+      canAccessDashboard: typeof canAccessDashboard === "boolean" ? canAccessDashboard : false,
       categoryIds: Array.isArray(categoryIds) ? categoryIds : undefined,
       menuIds: Array.isArray(menuIds) ? menuIds : undefined,
       apiAccesses: Array.isArray(apiAccesses) ? apiAccesses : undefined,

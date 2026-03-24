@@ -118,7 +118,7 @@ export const HeaderSection = ({ cartItems, setIsDrawerOpen, cartItemCount, onOpe
                       Profile
                     </Menu.Item>
 
-                    {(session?.user as any)?.role === "Administrator" && (
+                    {(session?.user as any)?.canAccessDashboard && (
                       <>
                         <Menu.Divider />
                         <Menu.Label>Admin Area</Menu.Label>

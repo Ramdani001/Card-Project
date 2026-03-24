@@ -1,6 +1,7 @@
 model Role {
   id                       String                   @id @default(uuid())
   name                     String                   @unique
+  canAccessDashboard       Boolean                  @default(false)
   createdAt                DateTime                 @default(now())
   updatedAt                DateTime                 @updatedAt
   cardCategoryRoleAccesses CardCategoryRoleAccess[]

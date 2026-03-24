@@ -12,6 +12,7 @@ export interface ApiAccessInput {
 
 interface CreateRoleParams {
   name: string;
+  canAccessDashboard: boolean;
   categoryIds?: string[];
   menuIds?: string[];
   apiAccesses?: ApiAccessInput[];
@@ -20,6 +21,7 @@ interface CreateRoleParams {
 interface UpdateRoleParams {
   id: string;
   name?: string;
+  canAccessDashboard: boolean;
   categoryIds?: string[];
   menuIds?: string[];
   apiAccesses?: ApiAccessInput[];
@@ -56,7 +58,7 @@ export const getRoleById = async (id: string) => {
   });
 };
 
-export const createRole = async ({ name, categoryIds = [], menuIds = [], apiAccesses = [] }: CreateRoleParams) => {
+export const createRole = async ({ name, canAccessDashboard, categoryIds = [], menuIds = [], apiAccesses = [] }: CreateRoleParams) => {
   const existingRole = await prisma.role.findUnique({ where: { name } });
   if (existingRole) throw new Error("Role name already exists");
 
@@ -64,6 +66,7 @@ export const createRole = async ({ name, categoryIds = [], menuIds = [], apiAcce
     const role = await tx.role.create({
       data: {
         name,
+        canAccessDashboard,
         cardCategoryRoleAccesses: {
           create: categoryIds.map((catId) => ({ categoryId: catId })),
         },
@@ -96,7 +99,7 @@ export const createRole = async ({ name, categoryIds = [], menuIds = [], apiAcce
   });
 };
 
-export const updateRole = async ({ id, name, categoryIds, menuIds, apiAccesses }: UpdateRoleParams) => {
+export const updateRole = async ({ id, name, categoryIds, menuIds, apiAccesses, canAccessDashboard }: UpdateRoleParams) => {
   const existingRole = await prisma.role.findUnique({ where: { id } });
   if (!existingRole) throw new Error("Role not found");
 
@@ -108,7 +111,7 @@ export const updateRole = async ({ id, name, categoryIds, menuIds, apiAccesses }
   return await prisma.$transaction(async (tx) => {
     await tx.role.update({
       where: { id },
-      data: { ...(name && { name }) },
+      data: { ...(name && { name }), ...(canAccessDashboard && { canAccessDashboard }) },
     });
 
     if (categoryIds !== undefined) {

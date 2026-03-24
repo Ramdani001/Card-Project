@@ -1,7 +1,7 @@
 "use client";
 
 import { ApiPermissionStateDto, RoleDto } from "@/types/dtos/RoleDto";
-import { Button, Divider, Group, Modal, MultiSelect, ScrollArea, Select, Stack, TextInput } from "@mantine/core";
+import { Button, Checkbox, Divider, Group, Modal, MultiSelect, ScrollArea, Select, Stack, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconLockAccess, IconPlus, IconX } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
@@ -21,6 +21,7 @@ export const RoleFormModal = ({ opened, onClose, role, onSuccess }: RoleFormModa
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedMenus, setSelectedMenus] = useState<string[]>([]);
   const [apiPermissions, setApiPermissions] = useState<ApiPermissionStateDto[]>([]);
+  const [canAccessDashboard, setCanAccessDashboard] = useState(false);
 
   const [categoriesList, setCategoriesList] = useState<{ value: string; label: string }[]>([]);
   const [menusList, setMenusList] = useState<{ value: string; label: string }[]>([]);
@@ -58,6 +59,7 @@ export const RoleFormModal = ({ opened, onClose, role, onSuccess }: RoleFormModa
       fetchAll();
       if (role) {
         setName(role.name);
+        setCanAccessDashboard(role.canAccessDashboard);
 
         const categoryIds = (role.cardCategoryRoleAccesses || []).map((a: any) => a.category.id).filter(Boolean);
         const menuIds = (role.roleMenuAccesses || []).map((a: any) => a.menuId).filter(Boolean);
@@ -74,6 +76,7 @@ export const RoleFormModal = ({ opened, onClose, role, onSuccess }: RoleFormModa
         );
       } else {
         setName("");
+        setCanAccessDashboard(false);
         setSelectedCategories([]);
         setSelectedMenus([]);
         setApiPermissions([]);
@@ -101,6 +104,7 @@ export const RoleFormModal = ({ opened, onClose, role, onSuccess }: RoleFormModa
           categoryIds: selectedCategories,
           menuIds: selectedMenus,
           apiAccesses: apiPermissions,
+          canAccessDashboard,
         }),
       });
 
@@ -137,6 +141,8 @@ export const RoleFormModal = ({ opened, onClose, role, onSuccess }: RoleFormModa
             <MultiSelect label="Category Access" data={categoriesList} value={selectedCategories} onChange={setSelectedCategories} searchable />
             <MultiSelect label="Menu Access" data={menusList} value={selectedMenus} onChange={setSelectedMenus} searchable />
           </Group>
+
+          <Checkbox label="Can Access Dashboard" checked={canAccessDashboard} onChange={(e) => setCanAccessDashboard(e.target.checked)} />
 
           <Divider
             label={

@@ -14,6 +14,7 @@ export interface RoleDto {
   id: string;
   name: string;
   createdAt: string;
+  canAccessDashboard: boolean;
   cardCategoryRoleAccesses?: {
     categoryId: string;
     category?: CategoryCardDto;

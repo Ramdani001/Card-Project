@@ -53,6 +53,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           role: user.role?.name,
           roleId: user.role?.id,
+          canAccessDashboard: user.role?.canAccessDashboard || false,
           name: user.name,
           avatar: user.avatar,
           permissions,
@@ -68,6 +69,7 @@ export const authOptions: NextAuthOptions = {
         token.roleId = user.roleId;
         token.avatar = user.avatar;
         token.permissions = (user as any).permissions;
+        token.canAccessDashboard = (user as any).canAccessDashboard;
       }
       return token;
     },
@@ -78,6 +80,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).roleId = token.roleId;
         (session.user as any).avatar = token.avatar;
         (session.user as any).permissions = token.permissions;
+        (session.user as any).canAccessDashboard = token.canAccessDashboard;
       }
 
       return session;
