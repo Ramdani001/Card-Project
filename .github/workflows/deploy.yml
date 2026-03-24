@@ -22,7 +22,7 @@ jobs:
           script: |
             cd /var/www/Card-Project
             git pull origin master
-            npm clean install
+            npm install
             npx prisma generate
             npx prisma db push
             npm run build
