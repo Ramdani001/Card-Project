@@ -68,6 +68,9 @@ model User {
   phone         String?
   avatar        String?
   roleId        String?
+  facebookUrl   String?
+  instagramUrl  String?
+  twitterUrl    String?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   cardHistories CardHistory[]

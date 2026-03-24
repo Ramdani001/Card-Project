@@ -31,12 +31,18 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
     const email = formData.get("email") as string | undefined;
     const phone = formData.get("phone") as string | undefined;
     const file = formData.get("file") as File | null;
+    const facebookUrl = formData.get("facebookUrl") as string | undefined;
+    const instagramUrl = formData.get("instagramUrl") as string | undefined;
+    const twitterUrl = formData.get("twitterUrl") as string | undefined;
 
     const updatedProfile = await updateProfile({
       userId: id,
       name,
       email,
       phone,
+      facebookUrl,
+      instagramUrl,
+      twitterUrl,
       file,
     });
 

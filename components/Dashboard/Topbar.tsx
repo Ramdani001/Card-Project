@@ -1,17 +1,14 @@
 "use client";
 
 import { NotificationDto } from "@/types/dtos/NotificationDto";
-import { Avatar, Container, Flex, Group, Indicator, Loader, Menu, ScrollArea, Text, UnstyledButton, rem } from "@mantine/core";
-
-import { IconBell, IconChevronDown, IconLogout, IconRefresh, IconSettings, IconUser } from "@tabler/icons-react";
+import { Avatar, Box, Container, Flex, Group, Indicator, Loader, Menu, ScrollArea, Text, UnstyledButton, rem } from "@mantine/core";
+import { IconBell, IconChevronDown, IconLogout, IconRefresh, IconUser } from "@tabler/icons-react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-
 import { useEffect, useState } from "react";
 
 const Topbar = () => {
   const { data: session, status } = useSession();
-
   const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationDto[]>([]);
   const [loadingNotif, setLoadingNotif] = useState(false);
@@ -21,10 +18,8 @@ const Topbar = () => {
   async function fetchNotifications() {
     try {
       setLoadingNotif(true);
-
       const res = await fetch("/api/notifications");
       const responseData = await res.json();
-
       setNotifications(responseData.data);
     } finally {
       setLoadingNotif(false);
@@ -36,9 +31,7 @@ const Topbar = () => {
       method: "PATCH",
       body: JSON.stringify({ id }),
     });
-
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
-
     if (url) window.location.href = url;
   }
 
@@ -48,13 +41,11 @@ const Topbar = () => {
 
   return (
     <Container fluid h="100%" py="xs">
-      <Flex align="center" justify="space-between" h="100%">
-        <h3 style={{ margin: 0 }}></h3>
-
+      <Flex align="center" justify="flex-end" h="100%">
         {status === "loading" ? (
           <Loader size="xs" />
         ) : (
-          <Group>
+          <Group gap="sm">
             <Menu shadow="md" width={320} position="bottom-end">
               <Menu.Target>
                 <Indicator inline disabled={unreadCount === 0} label={unreadCount} size={16}>
@@ -67,16 +58,17 @@ const Topbar = () => {
               <Menu.Dropdown>
                 <Flex justify="space-between" align="center" px="sm" py={6}>
                   <Menu.Label style={{ padding: 0 }}>Notifications</Menu.Label>
-
                   <IconRefresh size={16} style={{ cursor: "pointer" }} onClick={fetchNotifications} />
                 </Flex>
+
+                <Menu.Divider />
 
                 {loadingNotif ? (
                   <Flex justify="center" p="sm">
                     <Loader size="xs" />
                   </Flex>
                 ) : notifications.length === 0 ? (
-                  <Text size="sm" p="sm" c="dimmed">
+                  <Text size="sm" p="sm" c="dimmed" ta="center">
                     No notifications
                   </Text>
                 ) : (
@@ -85,26 +77,25 @@ const Topbar = () => {
                       <Menu.Item key={notif.id} onClick={() => markAsRead(notif.id, notif.url)}>
                         <Flex align="flex-start" gap="xs">
                           {!notif.isRead && (
-                            <div
+                            <Box
+                              mt={6}
                               style={{
                                 width: 8,
                                 height: 8,
                                 borderRadius: "50%",
                                 backgroundColor: "#228be6",
-                                marginTop: 6,
+                                flexShrink: 0,
                               }}
                             />
                           )}
-
-                          <div style={{ flex: 1 }}>
+                          <Box style={{ flex: 1 }}>
                             <Text size="sm" fw={notif.isRead ? 400 : 600}>
                               {notif.title}
                             </Text>
-
-                            <Text size="xs" c="dimmed">
+                            <Text size="xs" c="dimmed" mt={2}>
                               {notif.message}
                             </Text>
-                          </div>
+                          </Box>
                         </Flex>
                       </Menu.Item>
                     ))}
@@ -113,47 +104,35 @@ const Topbar = () => {
               </Menu.Dropdown>
             </Menu>
 
+            {/* User Menu */}
             <Menu shadow="md" width={200} position="bottom-end" transitionProps={{ transition: "pop-top-right" }}>
               <Menu.Target>
-                <UnstyledButton style={{ padding: "5px", borderRadius: "4px" }}>
-                  <Group gap={10}>
+                <UnstyledButton style={{ padding: "5px", borderRadius: "6px" }}>
+                  <Group gap={10} wrap="nowrap">
                     <Avatar src={session?.user?.avatar} radius="xl" size={36} color="blue">
                       {session?.user?.email?.charAt(0).toUpperCase()}
                     </Avatar>
-
-                    <div
-                      style={{
-                        flex: 1,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "2px",
-                      }}
-                    >
+                    <Box style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                       <Text size="sm" fw={600} lineClamp={1}>
                         {session?.user?.name || "User"}
                       </Text>
-
-                      <Text size="xs" c="dimmed" truncate="end" w={130}>
+                      <Text size="xs" c="dimmed" truncate="end" w={120}>
                         {session?.user?.email}
                       </Text>
-
                       <Text size="xs" c="dimmed" style={{ fontSize: 10 }}>
                         {session?.user?.role || "User"}
                       </Text>
-                    </div>
-
+                    </Box>
                     <IconChevronDown style={{ width: rem(12), height: rem(12) }} stroke={1.5} />
                   </Group>
                 </UnstyledButton>
               </Menu.Target>
 
               <Menu.Dropdown>
-                <Menu.Item leftSection={<IconUser style={{ width: rem(14), height: rem(14) }} onClick={() => router.push("/profile")} />}>
+                <Menu.Item leftSection={<IconUser style={{ width: rem(14), height: rem(14) }} />} onClick={() => router.push("/profile")}>
                   Profile
                 </Menu.Item>
-
-                <Menu.Item leftSection={<IconSettings style={{ width: rem(14), height: rem(14) }} />}>Account settings</Menu.Item>
-
+                <Menu.Divider />
                 <Menu.Item
                   color="red"
                   leftSection={<IconLogout style={{ width: rem(14), height: rem(14) }} />}

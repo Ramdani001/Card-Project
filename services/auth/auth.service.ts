@@ -7,6 +7,9 @@ interface RegisterParams {
   password: string;
   name?: string;
   phone?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  twitterUrl?: string;
   file?: File | null;
 }
 
@@ -15,10 +18,13 @@ interface UpdateProfileParams {
   email?: string;
   name?: string;
   phone?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  twitterUrl?: string;
   file?: File | null;
 }
 
-export const register = async ({ email, password, name, phone, file }: RegisterParams) => {
+export const register = async ({ email, password, name, phone, file, facebookUrl, instagramUrl, twitterUrl }: RegisterParams) => {
   const existingUser = await prisma.user.findUnique({
     where: { email },
   });
@@ -53,6 +59,9 @@ export const register = async ({ email, password, name, phone, file }: RegisterP
         password: hashedPassword,
         name,
         phone,
+        facebookUrl,
+        twitterUrl,
+        instagramUrl,
         roleId: defaultRole.id,
         avatar: avatarUrl,
       },
@@ -77,7 +86,7 @@ export const register = async ({ email, password, name, phone, file }: RegisterP
   }
 };
 
-export const updateProfile = async ({ userId, email, name, phone, file }: UpdateProfileParams) => {
+export const updateProfile = async ({ userId, email, name, phone, file, facebookUrl, twitterUrl, instagramUrl }: UpdateProfileParams) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
   });
@@ -103,7 +112,10 @@ export const updateProfile = async ({ userId, email, name, phone, file }: Update
         email: email ?? user.email,
         name: name ?? user.name,
         phone: phone ?? user.phone,
-        avatar: newAvatarUrl,
+        facebookUrl: facebookUrl ?? user.facebookUrl,
+        twitterUrl: twitterUrl ?? user.twitterUrl,
+        instagramUrl: instagramUrl ?? user.instagramUrl,
+        avatar: newAvatarUrl ?? user.avatar,
       },
       select: {
         id: true,
@@ -139,6 +151,9 @@ export const getProfile = async (userId: string) => {
       name: true,
       phone: true,
       avatar: true,
+      facebookUrl: true,
+      instagramUrl: true,
+      twitterUrl: true,
       role: {
         select: { name: true },
       },

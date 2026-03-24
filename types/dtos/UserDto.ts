@@ -8,5 +8,8 @@ export interface UserDto {
   avatar: string | null;
   roleId: string | null;
   role: RoleDto;
+  facebookUrl: string;
+  instagramUrl: string;
+  twitterUrl: string;
   createdAt: string;
 }

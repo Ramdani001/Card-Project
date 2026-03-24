@@ -9,6 +9,9 @@ interface CreateUserParams {
   password: string;
   phone?: string;
   roleId?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  twitterUrl?: string;
   file?: File | null;
 }
 
@@ -19,6 +22,9 @@ interface UpdateUserParams {
   password?: string;
   phone?: string;
   roleId?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  twitterUrl?: string;
   file?: File | null;
 }
 
@@ -28,6 +34,9 @@ const userSelectScope = {
   email: true,
   phone: true,
   avatar: true,
+  facebookUrl: true,
+  instagramUrl: true,
+  twitterUrl: true,
   role: {
     select: { id: true, name: true },
   },
@@ -53,7 +62,7 @@ export const getUsers = async (options: Prisma.UserFindManyArgs) => {
 };
 
 export const createUser = async (data: CreateUserParams) => {
-  const { email, password, name, phone, roleId, file } = data;
+  const { email, password, name, phone, roleId, file, facebookUrl, instagramUrl, twitterUrl } = data;
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
@@ -77,6 +86,9 @@ export const createUser = async (data: CreateUserParams) => {
         phone,
         roleId: roleId || null,
         avatar: avatarUrl,
+        facebookUrl,
+        instagramUrl,
+        twitterUrl,
       },
       select: userSelectScope,
     });
@@ -88,7 +100,7 @@ export const createUser = async (data: CreateUserParams) => {
   }
 };
 
-export const updateUser = async ({ id, name, email, phone, password, roleId, file }: UpdateUserParams) => {
+export const updateUser = async ({ id, name, email, phone, password, roleId, file, facebookUrl, instagramUrl, twitterUrl }: UpdateUserParams) => {
   const existingUser = await prisma.user.findUnique({ where: { id } });
   if (!existingUser) throw new Error("User not found");
 
@@ -97,6 +109,9 @@ export const updateUser = async ({ id, name, email, phone, password, roleId, fil
     ...(email && { email }),
     ...(phone && { phone }),
     ...(roleId && { roleId }),
+    ...(facebookUrl && { facebookUrl }),
+    ...(instagramUrl && { instagramUrl }),
+    ...(twitterUrl && { twitterUrl }),
   };
 
   if (password) {

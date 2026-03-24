@@ -10,6 +10,9 @@ export const POST = async (req: NextRequest) => {
     const password = formData.get("password") as string;
     const name = formData.get("name") as string;
     const phone = formData.get("phone") as string;
+    const facebookUrl = formData.get("facebookUrl") as string;
+    const instagramUrl = formData.get("instagramUrl") as string;
+    const twitterUrl = formData.get("twitterUrl") as string;
 
     const file = formData.get("file") as File | null;
 
@@ -34,6 +37,9 @@ export const POST = async (req: NextRequest) => {
       password,
       name: name || undefined,
       phone: phone || undefined,
+      facebookUrl: facebookUrl || undefined,
+      twitterUrl: twitterUrl || undefined,
+      instagramUrl: instagramUrl || undefined,
       file: file,
     });
 

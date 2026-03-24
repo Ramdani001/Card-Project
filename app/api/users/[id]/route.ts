@@ -43,6 +43,9 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
       phone: (formData.get("phone") as string) || undefined,
       password: (formData.get("password") as string) || undefined,
       roleId: (formData.get("roleId") as string) || undefined,
+      facebookUrl: (formData.get("facebookUrl") as string) || undefined,
+      instagramUrl: (formData.get("instagramUrl") as string) || undefined,
+      twitterUrl: (formData.get("twitterUrl") as string) || undefined,
       file: formData.get("file") as File | null,
     });
 

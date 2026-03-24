@@ -24,6 +24,9 @@ export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSucce
   const [phone, setPhone] = useState("");
   const [roleId, setRoleId] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [twitterUrl, setTwitterUrl] = useState("");
 
   useEffect(() => {
     if (userToEdit) {
@@ -32,7 +35,10 @@ export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSucce
       setPhone(userToEdit.phone || "");
       setRoleId(userToEdit.role?.id || null);
       setPassword("");
-      setFile(null); 
+      setFile(null);
+      setFacebookUrl(userToEdit.facebookUrl || "");
+      setInstagramUrl(userToEdit.instagramUrl || "");
+      setTwitterUrl(userToEdit.twitterUrl || "");
     } else {
       setName("");
       setEmail("");
@@ -40,6 +46,9 @@ export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSucce
       setPhone("");
       setRoleId(null);
       setFile(null);
+      setFacebookUrl("");
+      setInstagramUrl("");
+      setTwitterUrl("");
     }
   }, [userToEdit, opened]);
 
@@ -53,6 +62,9 @@ export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSucce
       formData.append("name", name);
       formData.append("email", email);
       formData.append("phone", phone);
+      formData.append("facebookUrl", facebookUrl);
+      formData.append("instagramUrl", instagramUrl);
+      formData.append("twitterUrl", twitterUrl);
       if (roleId) formData.append("roleId", roleId);
       if (password) formData.append("password", password);
 
@@ -113,6 +125,23 @@ export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSucce
         />
 
         <TextInput label="Phone Number" placeholder="0812..." value={phone} onChange={(e) => setPhone(e.target.value)} />
+
+        <Group grow>
+          <TextInput
+            label="Facebook URL"
+            placeholder="https://facebook.com/..."
+            value={facebookUrl}
+            onChange={(e) => setFacebookUrl(e.target.value)}
+          />
+          <TextInput
+            label="Instagram URL"
+            placeholder="https://instagram.com/..."
+            value={instagramUrl}
+            onChange={(e) => setInstagramUrl(e.target.value)}
+          />
+        </Group>
+
+        <TextInput label="Twitter URL" placeholder="https://twitter.com/..." value={twitterUrl} onChange={(e) => setTwitterUrl(e.target.value)} />
 
         <FileInput
           label="Profile Picture (Avatar)"
