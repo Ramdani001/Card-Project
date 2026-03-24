@@ -1,4 +1,5 @@
 import { Prisma } from "@/prisma/generated/prisma/client";
+import { formatRupiah } from "@/utils";
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
@@ -11,14 +12,6 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(amount);
-};
-
 type TransactionWithDetails = Prisma.TransactionGetPayload<{
   include: { items: true; user: true; voucher: true };
 }>;
@@ -28,14 +21,20 @@ export const sendTransactionReceipt = async (transaction: TransactionWithDetails
     return;
   }
 
-  const recipientEmail = transaction.customerEmail || transaction.user?.email;
+  const isdevEmailExist = process.env.EMAIL_DEV?.split(";");
+  let recipientEmail = transaction.customerEmail || transaction.user?.email;
+
+  if (isdevEmailExist && isdevEmailExist.length > 0) {
+    recipientEmail = isdevEmailExist.join(",");
+  }
+
   const itemsHtml = transaction.items
     .map(
       (item) => `
     <tr>
       <td style="padding: 8px; border-bottom: 1px solid #ddd;">${item.productName}</td>
       <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: center;">${item.quantity}</td>
-      <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">${formatCurrency(Number(item.subTotal))}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #ddd; text-align: right;">${formatRupiah(Number(item.subTotal))}</td>
     </tr>
   `
     )
@@ -46,7 +45,7 @@ export const sendTransactionReceipt = async (transaction: TransactionWithDetails
       ? `
     <tr>
       <td colspan="2" style="padding: 8px; text-align: right;"><strong>Discount (Voucher):</strong></td>
-      <td style="padding: 8px; text-align: right; color: red;">- ${formatCurrency(Number(transaction.voucherAmount))}</td>
+      <td style="padding: 8px; text-align: right; color: red;">- ${formatRupiah(Number(transaction.voucherAmount))}</td>
     </tr>
   `
       : "";
@@ -81,12 +80,12 @@ export const sendTransactionReceipt = async (transaction: TransactionWithDetails
         <tfoot>
           <tr>
             <td colspan="2" style="padding: 8px; text-align: right;"><strong>Subtotal:</strong></td>
-            <td style="padding: 8px; text-align: right;">${formatCurrency(Number(transaction.subTotal))}</td>
+            <td style="padding: 8px; text-align: right;">${formatRupiah(Number(transaction.subTotal))}</td>
           </tr>
           ${voucherHtml}
           <tr>
             <td colspan="2" style="padding: 8px; text-align: right; font-size: 1.1em;"><strong>Total Paid:</strong></td>
-            <td style="padding: 8px; text-align: right; font-size: 1.1em;"><strong>${formatCurrency(Number(transaction.totalPrice))}</strong></td>
+            <td style="padding: 8px; text-align: right; font-size: 1.1em;"><strong>${formatRupiah(Number(transaction.totalPrice))}</strong></td>
           </tr>
         </tfoot>
       </table>

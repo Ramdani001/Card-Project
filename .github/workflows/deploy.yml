@@ -1,0 +1,29 @@
+name: Deploy Card App
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.SSH_PASS }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd /var/www/Card-Project
+            git pull origin master
+            npm clean install
+            npx prisma generate
+            npx prisma db push
+            npm run build
+            pm2 restart card-app || pm2 start npm --name "card-app" -- start
