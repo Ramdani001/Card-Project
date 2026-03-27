@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "next-auth/middleware";
 import prisma from "@/lib/prisma";
+import { CONSTANT } from "./constants";
 
 export default withAuth(
   async function middleware(req) {
@@ -12,7 +13,7 @@ export default withAuth(
       return NextResponse.next();
     }
 
-    let userRole: string = "Guest";
+    let userRole: string = CONSTANT.ROLE_GUEST_NAME;
     let permissions: Record<string, any> = {};
 
     if (token) {
@@ -20,7 +21,7 @@ export default withAuth(
       permissions = (token.permissions as any) || {};
     } else {
       const guestRoleData = await prisma.role.findUnique({
-        where: { name: "Guest" },
+        where: { name: CONSTANT.ROLE_GUEST_NAME },
         include: {
           roleApiAccesses: { include: { apiEndpoints: true } },
         },
@@ -40,7 +41,7 @@ export default withAuth(
       }
     }
 
-    if (userRole.toUpperCase() === "ADMINISTRATOR") return NextResponse.next();
+    if (userRole === CONSTANT.ROLE_ADMIN_NAME) return NextResponse.next();
 
     if (pathname.startsWith("/api")) {
       const activePermissions = permissions || {};
@@ -57,7 +58,7 @@ export default withAuth(
       return NextResponse.json({ success: false, message: "Access Denied" }, { status: 403 });
     }
 
-    if (pathname.startsWith("/dashboard") && userRole === "Guest") {
+    if (pathname.startsWith("/dashboard") && userRole === CONSTANT.ROLE_GUEST_NAME) {
       return NextResponse.redirect(new URL("/login", req.url));
     }
 

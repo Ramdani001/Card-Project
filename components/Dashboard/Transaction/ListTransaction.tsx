@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { TransactionDetailModal } from "./TransactionDetailModal";
 import { TransactionHistoryModal } from "./TransactionHistoryModal";
 import { StatusBadge } from "../../layout/StatusBadge";
+import { CONSTANT } from "@/constants";
 
 interface Transaction {
   id: string;
@@ -116,7 +117,7 @@ const ListTransaction = () => {
       render: (item) => (
         <Flex direction="column">
           <Text size="sm" fw={500}>
-            {item.customerName || item.user?.name || "Guest"}
+            {item.customerName || item.user?.name || CONSTANT.ROLE_GUEST_NAME}
           </Text>
           <Text size="xs" c="dimmed">
             {item.customerEmail || "-"}

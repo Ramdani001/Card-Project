@@ -1,3 +1,4 @@
+import { CONSTANT } from "@/constants";
 import prisma from "@/lib/prisma";
 import { TransactionStatus } from "@/prisma/generated/prisma/client";
 
@@ -171,7 +172,7 @@ export const getRecentTransactions = async () => {
 
   return transactions.map((t) => ({
     id: t.id,
-    user: t.user?.name || t.customerName || t.user?.email || "Guest",
+    user: t.user?.name || t.customerName || t.user?.email || CONSTANT.ROLE_GUEST_NAME,
     total: Number(t.totalPrice),
     status: t.status,
     date: t.createdAt.toISOString(),

@@ -1,3 +1,4 @@
+import { CONSTANT } from "@/constants";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
 
@@ -79,9 +80,7 @@ export const getUserMenus = async (userId: string) => {
   const roleName = user.role.name;
   const roleId = user.role.id;
 
-  const isAdmin = ["ADMIN", "SUPER_ADMIN", "ADMINISTRATOR"].includes(roleName.toUpperCase());
-
-  if (isAdmin) {
+  if (roleName === CONSTANT.ROLE_ADMIN_NAME) {
     return await prisma.menu.findMany({
       where: {
         parentId: null,

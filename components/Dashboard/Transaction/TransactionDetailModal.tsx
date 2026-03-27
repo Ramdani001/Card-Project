@@ -1,6 +1,6 @@
 "use client";
 
-import { ALLOWED_NEXT_STATUS } from "@/constants";
+import { ALLOWED_NEXT_STATUS, CONSTANT } from "@/constants";
 import { formatDate, formatRupiah } from "@/utils";
 import {
   Badge,
@@ -200,7 +200,7 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
             <Text size="xs" c="dimmed" tt="uppercase" fw={700} mb={5}>
               Billed To
             </Text>
-            <Text fw={600}>{transaction.user?.name || "Guest"}</Text>
+            <Text fw={600}>{transaction.user?.name || CONSTANT.ROLE_GUEST_NAME}</Text>
             <Text size="sm" c="dimmed">
               {transaction.customerEmail || transaction.user?.email}
             </Text>

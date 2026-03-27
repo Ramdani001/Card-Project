@@ -3,26 +3,26 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import "dotenv/config";
 import bcrypt from "bcrypt";
 import { Pool } from "pg";
+import { CONSTANT } from "@/constants";
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-
 const roleData: Prisma.RoleCreateInput[] = [
-  { name: "Administrator" },
+  { name: CONSTANT.ROLE_ADMIN_NAME },
   { name: "B2B" },
   { name: "B2C" },
   { name: "Admin Toko" },
   { name: "Staff Toko" },
-  { name: "Guest" },
+  { name: CONSTANT.ROLE_GUEST_NAME },
 ];
 
 const userData = [
   {
     email: "admin@gmail.com",
     password: "test123321",
-    roleName: "Administrator",
+    roleName: CONSTANT.ROLE_ADMIN_NAME,
     name: "Super Admin",
   },
 ];
@@ -165,7 +165,6 @@ export async function main() {
   }
 
   console.warn("Menus seeded.");
-
 }
 
 main()

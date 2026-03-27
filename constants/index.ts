@@ -1,7 +1,6 @@
 export const CONSTANT = {
-  APP_CONFIG: {
-    DEFAULT_ID_ROLE_CODE: "DEFAULT_ID_ROLE_REGISTER",
-  },
+  ROLE_ADMIN_NAME: "Administrator",
+  ROLE_GUEST_NAME: "Guest",
 };
 
 export const ALLOWED_NEXT_STATUS: Record<string, string[]> = {

@@ -1,3 +1,4 @@
+import { CONSTANT } from "@/constants";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
 import { generateSlug } from "@/utils";
@@ -27,9 +28,7 @@ export const getCategories = async (options: Prisma.CategoryFindManyArgs, userId
     });
 
     if (user && user.role) {
-      const adminRoleNames = ["Admin", "Administrator", "SuperAdmin", "superadmin", "admin"];
-
-      if (adminRoleNames.includes(user.role.name || "")) {
+      if (user.role.name === CONSTANT.ROLE_ADMIN_NAME) {
         roleSecurityFilter = {};
       } else {
         const allowedCategoryIds = user.role.cardCategoryRoleAccesses.map((access) => access.categoryId);
@@ -41,7 +40,7 @@ export const getCategories = async (options: Prisma.CategoryFindManyArgs, userId
     }
   } else {
     const guestRole = await prisma.role.findUnique({
-      where: { name: "Guest" },
+      where: { name: CONSTANT.ROLE_GUEST_NAME },
       include: { cardCategoryRoleAccesses: true },
     });
 

@@ -4,6 +4,7 @@ import { NotificationType, Prisma } from "@/prisma/generated/prisma/client";
 import { generateSlug } from "@/utils";
 import ExcelJS from "exceljs";
 import { createNotificationByCode } from "../transaction/notification.service";
+import { CONSTANT } from "@/constants";
 
 interface CreateCardParams {
   name: string;
@@ -102,9 +103,7 @@ export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string
       },
     });
 
-    const adminRoleNames = ["Admin", "Administrator", "SuperAdmin", "superadmin", "admin"];
-
-    if (user && user.role && adminRoleNames.includes(user.role.name || "")) {
+    if (user && user.role && user.role.name == CONSTANT.ROLE_ADMIN_NAME) {
       roleSecurityFilter = {};
     } else if (user && user.role) {
       const allowedCategoryIds = user.role.cardCategoryRoleAccesses.map((access) => access.categoryId);
@@ -124,7 +123,7 @@ export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string
     }
   } else {
     const guestRole = await prisma.role.findUnique({
-      where: { name: "Guest" },
+      where: { name: CONSTANT.ROLE_GUEST_NAME },
       include: { cardCategoryRoleAccesses: true },
     });
 
