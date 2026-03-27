@@ -13,11 +13,46 @@ interface UpdateCategoryParams {
   note?: string;
 }
 
-export const getCategories = async (options: Prisma.CategoryFindManyArgs) => {
+export const getCategories = async (options: Prisma.CategoryFindManyArgs, userId?: string) => {
+  let roleSecurityFilter: Prisma.CategoryWhereInput = {};
+
+  if (userId) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        role: {
+          include: { cardCategoryRoleAccesses: true },
+        },
+      },
+    });
+
+    if (user && user.role) {
+      const allowedCategoryIds = user.role.cardCategoryRoleAccesses.map((access) => access.categoryId);
+
+      roleSecurityFilter = {
+        id: { in: allowedCategoryIds },
+      };
+    }
+  } else {
+    const guestRole = await prisma.role.findUnique({
+      where: { name: "Guest" },
+      include: { cardCategoryRoleAccesses: true },
+    });
+
+    if (guestRole) {
+      const allowedCategoryIds = guestRole.cardCategoryRoleAccesses.map((access) => access.categoryId);
+
+      roleSecurityFilter = {
+        id: { in: allowedCategoryIds },
+      };
+    }
+  }
+
   const finalOptions: Prisma.CategoryFindManyArgs = {
     ...options,
     where: {
       ...options.where,
+      ...roleSecurityFilter,
     },
     include: {
       _count: {

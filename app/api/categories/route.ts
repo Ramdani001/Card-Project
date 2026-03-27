@@ -2,12 +2,16 @@ import { NextRequest } from "next/server";
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import { createCategory, getCategories } from "@/services/master/category.service";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export const GET = async (req: NextRequest) => {
   try {
-    const { options, page, limit } = getQueryPaginationOptions(req);
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
 
-    const { categories, total } = await getCategories(options);
+    const { options, page, limit } = getQueryPaginationOptions(req);
+    const { categories, total } = await getCategories(options, userId);
 
     return sendResponse({
       success: true,
