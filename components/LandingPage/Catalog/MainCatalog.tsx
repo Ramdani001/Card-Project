@@ -61,7 +61,7 @@ export default function MainCatalog() {
           setCategoriesList(json.data);
         }
       } catch (error) {
-        console.error("Gagal ambil kategori:", error);
+        console.error("Failed to fetch categories:", error);
       }
     };
 
@@ -99,8 +99,8 @@ export default function MainCatalog() {
         setTotalPages(1);
       }
     } catch (error) {
-      console.error("Error fetch cards:", error);
-      notifications.show({ title: "Error", message: "Gagal mengambil data produk.", color: "red" });
+      console.error("Error fetching cards:", error);
+      notifications.show({ title: "Error", message: "Failed to load products.", color: "red" });
     } finally {
       setLoadingProducts(false);
     }
@@ -140,7 +140,7 @@ export default function MainCatalog() {
 
   const handleAddToCart = async (product: CardDto) => {
     if (status !== "authenticated") {
-      notifications.show({ title: "Login Required", message: "Silakan login untuk berbelanja.", color: "red" });
+      notifications.show({ title: "Login Required", message: "Please log in to start shopping.", color: "red" });
       return router.push("/login");
     }
 
@@ -154,16 +154,15 @@ export default function MainCatalog() {
 
       if (res.ok) {
         notifications.show({
-          title: "Berhasil",
-          message: "Item ditambahkan ke keranjang.",
+          title: "Added to Cart",
+          message: "Item successfully added to your cart.",
           color: "teal",
           icon: <IconCheck size={16} />,
         });
         fetchCart();
-        // setIsDrawerOpen(true);
       } else {
         const json = await res.json();
-        throw new Error(json.message || "Gagal menambahkan ke keranjang");
+        throw new Error(json.message || "Failed to add item to cart");
       }
     } catch (error: any) {
       notifications.show({ title: "Error", message: error.message, color: "red" });
@@ -178,7 +177,7 @@ export default function MainCatalog() {
       const res = await fetch(`/api/cart/${id}`, { method: "DELETE" });
       if (res.ok) {
         setCartItemsDto((prev) => prev.filter((item) => item.id !== id));
-        notifications.show({ message: "Item dihapus", color: "gray" });
+        notifications.show({ message: "Item removed from cart", color: "gray" });
       }
     } catch (error) {
       console.error(error);
@@ -208,7 +207,7 @@ export default function MainCatalog() {
     } catch (error) {
       console.error(error);
       notifications.show({ title: "Error", message: "Network error", color: "red" });
-        setCartItemsDto((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: 1 } : item)));
+      setCartItemsDto((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: 1 } : item)));
     } finally {
       setProcessingId(null);
     }
@@ -216,7 +215,7 @@ export default function MainCatalog() {
 
   const handleCheckout = async (voucherCodeFromCart?: string) => {
     if (!address) {
-      notifications.show({ message: "Alamat pengiriman wajib diisi.", color: "red" });
+      notifications.show({ message: "Shipping address is required.", color: "red" });
       return;
     }
 
@@ -235,7 +234,7 @@ export default function MainCatalog() {
       const json = await res.json();
 
       if (res.ok) {
-        notifications.show({ title: "Order Berhasil!", message: "Silakan selesaikan pembayaran.", color: "blue" });
+        notifications.show({ title: "Order Placed!", message: "Please complete your payment.", color: "blue" });
         setCartItemsDto([]);
         setIsDrawerOpen(false);
 
@@ -245,10 +244,10 @@ export default function MainCatalog() {
           router.push("/transactions");
         }
       } else {
-        throw new Error(json.message || "Gagal checkout");
+        throw new Error(json.message || "Checkout failed");
       }
     } catch (err: any) {
-      notifications.show({ title: "Gagal Checkout", message: err.message, color: "red" });
+      notifications.show({ title: "Checkout Failed", message: err.message, color: "red" });
     } finally {
       setIsCheckoutLoading(false);
     }

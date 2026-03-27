@@ -36,13 +36,13 @@ export default function LoginPage() {
     try {
       const res = await signIn("credentials", { email, password, redirect: false });
       if (res?.error) {
-        setError("Email atau password salah!");
+        setError("Incorrect email or password!");
       } else {
         router.push("/dashboard/main");
         router.refresh();
       }
     } catch {
-      setError("Terjadi kesalahan pada server.");
+      setError("An error occurred on the server.");
     } finally {
       setLoading(false);
     }
@@ -210,7 +210,7 @@ export default function LoginPage() {
                 <TextInput
                   className="login-field"
                   label="Email"
-                  placeholder="john@example.com"
+                  placeholder="Email"
                   required
                   type="email"
                   value={email}
@@ -231,15 +231,15 @@ export default function LoginPage() {
                 />
 
                 <Button type="submit" className="login-btn" fullWidth mt="sm" loading={loading} loaderProps={{ type: "dots" }}>
-                  Masuk
+                  Login
                 </Button>
               </Stack>
             </form>
 
             <Text ta="center" mt="xl" size="sm" c="dimmed">
-              Belum punya akun?{" "}
+              Don`t have an account yet?{" "}
               <Anchor component={Link} href="/register" fw={700} c="indigo">
-                Daftar sekarang
+                Register now
               </Anchor>
             </Text>
           </Paper>

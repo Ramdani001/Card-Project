@@ -86,7 +86,7 @@ export const PreOrder = () => {
                   />
                 </Center>
                 <Button variant="light" fullWidth mt="md" onClick={() => setSelectedDate(null)} disabled={!selectedDate}>
-                  Tampilkan Semua Tanggal
+                  Show All Dates
                 </Button>
               </Card>
             </Grid.Col>
@@ -94,7 +94,7 @@ export const PreOrder = () => {
             <Grid.Col span={{ base: 12, md: 7 }}>
               {filteredPreOrder.length === 0 && (
                 <Center h={100} bg="white" style={{ borderRadius: 8 }}>
-                  <Text c="dimmed">Tidak ada event pada tanggal ini</Text>
+                  <Text c="dimmed">There are no events on this date</Text>
                 </Center>
               )}
 

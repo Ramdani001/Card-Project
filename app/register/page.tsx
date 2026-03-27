@@ -78,7 +78,7 @@ function StepIndicator({ step, current }: { step: number; current: number }) {
         {isCompleted ? <IconCheck size={16} /> : step}
       </Box>
       <Text size="xs" c={isActive ? "blue" : isCompleted ? "teal" : "dimmed"} fw={isActive ? 600 : 400}>
-        {step === 1 ? "Akun" : step === 2 ? "Sosmed" : "Profil"}
+        {step === 1 ? "Account" : step === 2 ? "Social" : "Profile"}
       </Text>
     </Box>
   );
@@ -111,8 +111,8 @@ export default function RegisterPage() {
     if (step === 1) {
       if (!form.name || !form.email || !form.password || !form.confirmPassword) {
         notifications.show({
-          title: "Lengkapi Data",
-          message: "Harap isi semua field yang wajib diisi",
+          title: "Complete Data",
+          message: "Please fill in all required fields",
           color: "orange",
           icon: <IconAlertCircle size={16} />,
         });
@@ -120,8 +120,8 @@ export default function RegisterPage() {
       }
       if (form.password !== form.confirmPassword) {
         notifications.show({
-          title: "Password Tidak Cocok",
-          message: "Password dan konfirmasi password harus sama",
+          title: "Password Doesn't Match",
+          message: "Password and password confirmation must be the same",
           color: "red",
           icon: <IconAlertCircle size={16} />,
         });
@@ -129,8 +129,8 @@ export default function RegisterPage() {
       }
       if (form.password.length < 6) {
         notifications.show({
-          title: "Password Terlalu Pendek",
-          message: "Password minimal 6 karakter",
+          title: "Password Too Short",
+          message: "Password must be at least 6 characters",
           color: "red",
           icon: <IconAlertCircle size={16} />,
         });
@@ -158,11 +158,11 @@ export default function RegisterPage() {
       });
 
       const json = await res.json();
-      if (!json.success) throw new Error(json.message || "Gagal melakukan registrasi");
+      if (!json.success) throw new Error(json.message || "Failed to register");
 
       notifications.show({
-        title: "Registrasi Berhasil",
-        message: "Akun Anda berhasil dibuat. Mengarahkan ke halaman login...",
+        title: "Registration Successful",
+        message: "Your account has been successfully created. Redirecting to the login page....",
         color: "teal",
         icon: <IconCheck size={16} />,
       });
@@ -170,8 +170,8 @@ export default function RegisterPage() {
       setTimeout(() => router.push("/login"), 1500);
     } catch (err: any) {
       notifications.show({
-        title: "Registrasi Gagal",
-        message: err.message || "Terjadi kesalahan pada server.",
+        title: "Failed to register",
+        message: err.message || "An error occurred on the server.",
         color: "red",
         icon: <IconAlertCircle size={16} />,
       });
@@ -387,8 +387,8 @@ export default function RegisterPage() {
 
                   <TextInput
                     className="field-input"
-                    label="Nama Lengkap"
-                    placeholder="John Doe"
+                    label="Full name"
+                    placeholder="Full name"
                     required
                     value={form.name}
                     onChange={(e) => handleChange("name", e.currentTarget.value)}
@@ -398,8 +398,8 @@ export default function RegisterPage() {
 
                   <TextInput
                     className="field-input"
-                    label="Alamat Email"
-                    placeholder="john@example.com"
+                    label="Email address"
+                    placeholder="Email address"
                     required
                     type="email"
                     value={form.email}
@@ -412,7 +412,7 @@ export default function RegisterPage() {
                     <PasswordInput
                       className="field-input"
                       label="Password"
-                      placeholder="Minimal 6 karakter"
+                      placeholder="Minimum 6 characters"
                       required
                       value={form.password}
                       onChange={(e) => handleChange("password", e.currentTarget.value)}
@@ -423,7 +423,7 @@ export default function RegisterPage() {
                       <Box mt={8}>
                         <Group justify="space-between" mb={4}>
                           <Text size="xs" c="dimmed">
-                            Kekuatan password
+                            Password strength
                           </Text>
                           <Text size="xs" c={passwordStrength.color} fw={600}>
                             {passwordStrength.label}
@@ -436,13 +436,13 @@ export default function RegisterPage() {
 
                   <PasswordInput
                     className="field-input"
-                    label="Konfirmasi Password"
-                    placeholder="Ulangi password"
+                    label="Confirm Password"
+                    placeholder="Repeat password"
                     required
                     value={form.confirmPassword}
                     onChange={(e) => handleChange("confirmPassword", e.currentTarget.value)}
                     leftSection={<IconLock size={16} color={passwordMismatch ? "red" : "#6366f1"} />}
-                    error={passwordMismatch ? "Password tidak cocok" : undefined}
+                    error={passwordMismatch ? "Passwords do not match" : undefined}
                     styles={{ label: { fontWeight: 600, marginBottom: 6, color: "#374151" } }}
                   />
 
@@ -456,10 +456,10 @@ export default function RegisterPage() {
                 <Stack gap="md">
                   <Box mb={4}>
                     <Title order={3} fw={700} style={{ color: "#1e1b4b" }}>
-                      Sosial Media
+                      Social media
                     </Title>
                     <Text size="sm" c="dimmed" mt={4}>
-                      Opsional — tambahkan link sosial mediamu
+                      Optional — add your social media links
                     </Text>
                   </Box>
 
@@ -518,16 +518,16 @@ export default function RegisterPage() {
                 <Stack gap="md">
                   <Box mb={4}>
                     <Title order={3} fw={700} style={{ color: "#1e1b4b" }}>
-                      Foto Profil
+                      Profile picture
                     </Title>
                     <Text size="sm" c="dimmed" mt={4}>
-                      Opsional — tambahkan foto profilmu
+                      Optional — add your profile picture
                     </Text>
                   </Box>
 
                   <FileInput
-                    label="Upload Foto"
-                    placeholder="Klik untuk memilih gambar"
+                    label="Upload Photos"
+                    placeholder="Click to select an image"
                     leftSection={<IconPhoto size={16} color="#6366f1" />}
                     accept="image/png,image/jpeg,image/webp"
                     value={file}
@@ -565,13 +565,13 @@ export default function RegisterPage() {
                     </Box>
                   )}
 
-                  <Divider my="sm" label="Ringkasan Akun" labelPosition="center" styles={{ label: { color: "#9ca3af", fontSize: 12 } }} />
+                  <Divider my="sm" label="Account Summary" labelPosition="center" styles={{ label: { color: "#9ca3af", fontSize: 12 } }} />
 
                   <Box style={{ background: "#f8faff", borderRadius: 12, padding: "16px 20px" }}>
                     <Stack gap={8}>
                       <Group justify="space-between">
                         <Text size="sm" c="dimmed">
-                          Nama
+                          Name
                         </Text>
                         <Text size="sm" fw={600} c="#1e1b4b">
                           {form.name || "—"}
@@ -587,7 +587,7 @@ export default function RegisterPage() {
                       </Group>
                       <Group justify="space-between">
                         <Text size="sm" c="dimmed">
-                          Sosial Media
+                          Social Media
                         </Text>
                         <Text size="sm" fw={600} c="#1e1b4b">
                           {[form.facebookUrl, form.instagramUrl, form.twitterUrl].filter(Boolean).length} terhubung
@@ -598,19 +598,19 @@ export default function RegisterPage() {
 
                   <Group mt="sm">
                     <Button variant="default" radius="xl" onClick={() => setStep(2)} style={{ flex: 1 }}>
-                      Kembali
+                      Back
                     </Button>
                     <Button className="submit-btn" onClick={handleSubmit} loading={loading} style={{ flex: 2 }}>
-                      Buat Akun
+                      Create Account
                     </Button>
                   </Group>
                 </Stack>
               )}
 
               <Text ta="center" mt="xl" size="sm" c="dimmed">
-                Sudah punya akun?{" "}
+                Already have an account?{" "}
                 <Anchor component={Link} href="/login" fw={700} c="indigo">
-                  Login sekarang
+                  Login now
                 </Anchor>
               </Text>
             </Paper>

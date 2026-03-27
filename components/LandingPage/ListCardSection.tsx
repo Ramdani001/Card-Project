@@ -1,5 +1,5 @@
 import { CardDto } from "@/types/dtos/CardDto";
-import { Badge, Box, Button, Card, Group, LoadingOverlay, Paper, SimpleGrid, Stack, Text, Image } from "@mantine/core";
+import { Badge, Box, Button, Card, Group, Image, LoadingOverlay, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
 import { IconSearch, IconShoppingCart } from "@tabler/icons-react";
 import { Dispatch, SetStateAction } from "react";
 
@@ -98,7 +98,7 @@ export const ListCardSection = ({ loadingProducts, products, setSearch, handleAd
                     )}
                     {item.categories?.length > 3 && (
                       <Text size="xs" c="dimmed" mt={2}>
-                        +{item.categories.length - 3} lainnya
+                        +{item.categories.length - 3} more
                       </Text>
                     )}
                   </Group>
@@ -112,7 +112,7 @@ export const ListCardSection = ({ loadingProducts, products, setSearch, handleAd
                   </Text>
 
                   <Text size="xs" c={item.stock > 0 ? "teal" : "red"} fw={700} mt="4px">
-                    {item.stock > 0 ? `${item.stock} tersedia` : "Tidak tersedia"}
+                    {item.stock > 0 ? `${item.stock} in stock` : "Out of stock"}
                   </Text>
                 </Box>
 
@@ -141,7 +141,7 @@ export const ListCardSection = ({ loadingProducts, products, setSearch, handleAd
                     loading={loadingAction === item.id}
                     leftSection={item.stock > 0 ? <IconShoppingCart size={14} /> : undefined}
                   >
-                    {item.stock === 0 ? "Habis" : "Tambah ke Keranjang"}
+                    {item.stock === 0 ? "Out of Stock" : "Add to Cart"}
                   </Button>
                 </Box>
               </Stack>
