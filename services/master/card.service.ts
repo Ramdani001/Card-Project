@@ -119,16 +119,19 @@ export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string
       };
     }
   } else {
-    const singleCardCategory = await prisma.category.findFirst({
-      where: { name: "Single Card" },
+    const guestRole = await prisma.role.findUnique({
+      where: { name: "Guest" },
+      include: { cardCategoryRoleAccesses: true },
     });
 
-    if (singleCardCategory) {
+    if (guestRole && guestRole.cardCategoryRoleAccesses.length > 0) {
+      const allowedCategoryIds = guestRole.cardCategoryRoleAccesses.map((access) => access.categoryId);
+
       roleSecurityFilter = {
         OR: [
           {
             categories: {
-              some: { categoryId: singleCardCategory.id },
+              some: { categoryId: { in: allowedCategoryIds } },
             },
           },
           {
@@ -137,9 +140,7 @@ export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string
         ],
       };
     } else {
-      roleSecurityFilter = {
-        categories: { none: {} },
-      };
+      roleSecurityFilter = { id: { in: [] } };
     }
   }
 
