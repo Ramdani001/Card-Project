@@ -185,10 +185,10 @@ export default function RegisterPage() {
       <style>{`
         .register-bg {
           min-height: 100vh;
-          background: #f8f9ff;
+          background: linear-gradient(160deg, #f2f6ff 0%, #e9efff 45%, #f9fbff 100%);
           background-image:
-            radial-gradient(ellipse 80% 50% at 20% -20%, rgba(99, 102, 241, 0.08) 0%, transparent 60%),
-            radial-gradient(ellipse 60% 40% at 80% 110%, rgba(20, 184, 166, 0.07) 0%, transparent 60%);
+            radial-gradient(circle at 20% 20%, rgba(73, 126, 236, 0.14) 0%, transparent 40%),
+            radial-gradient(circle at 80% 15%, rgba(34, 119, 255, 0.08) 0%, transparent 50%);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -196,7 +196,7 @@ export default function RegisterPage() {
         }
 
         .register-left {
-          background: linear-gradient(145deg, #312e81, #1e1b4b);
+          background: linear-gradient(145deg, #1e3a8a, #2563eb);
           border-radius: 20px 0 0 20px;
           padding: 48px 40px;
           display: flex;
@@ -208,14 +208,14 @@ export default function RegisterPage() {
         }
 
         .register-left::before {
-          content: '';
+          content: 'DEV CARD';
           position: absolute;
-          top: -60px;
-          right: -60px;
-          width: 240px;
-          height: 240px;
-          border-radius: 50%;
-          background: rgba(99, 102, 241, 0.25);
+          top: 30px;
+          left: 24px;
+          font-size: 72px;
+          font-weight: 900;
+          color: rgba(255, 255, 255, 0.15);
+          transform: rotate(-10deg);
         }
 
         .register-left::after {
@@ -231,15 +231,21 @@ export default function RegisterPage() {
 
         .register-card {
           border-radius: 0 20px 20px 0;
-          border: none !important;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08) !important;
+          border: 1px solid rgba(59, 130, 246, 0.25) !important;
+          box-shadow: 0 20px 45px rgba(44, 84, 140, 0.2) !important;
+          background: linear-gradient(160deg, #ffffff, #f4f7ff);
         }
 
         .field-input input,
         .field-input input:focus {
-          border-radius: 10px;
-          border: 1.5px solid #e2e8f0;
+          border-radius: 12px;
+          border: 1.5px solid #dbe6fb;
           transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .field-input input:focus {
+          border-color: #2563eb;
+          box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
         }
 
         .field-input input:focus {
@@ -261,14 +267,15 @@ export default function RegisterPage() {
         }
 
         .submit-btn {
-          background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+          background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
           border: none !important;
-          border-radius: 12px !important;
-          height: 48px !important;
+          border-radius: 14px !important;
+          height: 50px !important;
           font-size: 15px !important;
-          font-weight: 600 !important;
-          letter-spacing: 0.3px;
+          font-weight: 700 !important;
+          letter-spacing: 0.5px;
           transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+          color: #fff !important;
         }
 
         .submit-btn:hover:not(:disabled) {
@@ -373,12 +380,9 @@ export default function RegisterPage() {
               {step === 1 && (
                 <Stack gap="md">
                   <Box mb={4}>
-                    <Title order={3} fw={700} style={{ color: "#1e1b4b" }}>
-                      Info Akun
+                    <Title order={3} fw={700} style={{ color: "#1f3d7a" }}>
+                      Buat Akun Dev Card
                     </Title>
-                    <Text size="sm" c="dimmed" mt={4}>
-                      Buat kredensial login kamu
-                    </Text>
                   </Box>
 
                   <TextInput

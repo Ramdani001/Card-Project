@@ -53,18 +53,18 @@ export default function LoginPage() {
       <style>{`
         .login-bg {
           min-height: 100vh;
-          background: #f8f9ff;
-          background-image:
-            radial-gradient(ellipse 80% 50% at 20% -20%, rgba(99,102,241,0.08) 0%, transparent 60%),
-            radial-gradient(ellipse 60% 40% at 80% 110%, rgba(20,184,166,0.07) 0%, transparent 60%);
+          background: linear-gradient(160deg, #f2f6ff 0%, #e9efff 45%, #f9fbff 100%);
+          background-image: radial-gradient(circle at 20% 20%, rgba(73, 126, 236, 0.14) 0%, transparent 40%),
+            radial-gradient(circle at 80% 15%, rgba(34, 119, 255, 0.08) 0%, transparent 50%);
           display: flex;
           align-items: center;
           justify-content: center;
-          padding: 40px 16px;
+          padding: 40px 12px;
+          color: #1f3d7a;
         }
 
         .login-left {
-          background: linear-gradient(145deg, #312e81, #1e1b4b);
+          background: linear-gradient(145deg, #1e3a8a, #2563eb);
           border-radius: 20px 0 0 20px;
           display: flex;
           flex-direction: column;
@@ -78,54 +78,62 @@ export default function LoginPage() {
         }
 
         .login-left::before {
-          content: '';
+          content: 'DEV CARD';
           position: absolute;
-          top: -60px; right: -60px;
-          width: 220px; height: 220px;
-          border-radius: 50%;
-          background: rgba(99,102,241,0.25);
+          top: 30px;
+          left: 24px;
+          font-size: 72px;
+          font-weight: 900;
+          color: rgba(255, 255, 255, 0.15);
+          transform: rotate(-10deg);
         }
 
         .login-left::after {
           content: '';
           position: absolute;
-          bottom: -80px; left: -40px;
-          width: 200px; height: 200px;
+          bottom: -50px;
+          left: -40px;
+          width: 260px;
+          height: 260px;
           border-radius: 50%;
-          background: rgba(20,184,166,0.15);
+          background: rgba(255, 255, 255, 0.12);
+          border: 5px solid rgba(255, 255, 255, 0.22);
         }
 
         .login-card {
           border-radius: 0 20px 20px 0 !important;
-          border: none !important;
-          box-shadow: none !important;
+          border: 1px solid rgba(59, 130, 246, 0.25) !important;
+          box-shadow: 0 20px 45px rgba(44, 84, 140, 0.2) !important;
+          background: linear-gradient(160deg, #ffffff, #f4f7ff);
+          overflow: hidden;
         }
 
         .login-field input {
-          border-radius: 10px;
-          border: 1.5px solid #e2e8f0;
+          border-radius: 12px;
+          border: 1.5px solid #dbe6fb;
           transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
 
         .login-field input:focus {
-          border-color: #6366f1;
-          box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+          border-color: #2563eb;
+          box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
         }
 
         .login-btn {
-          background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
+          background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
           border: none !important;
-          border-radius: 12px !important;
-          height: 48px !important;
+          border-radius: 14px !important;
+          height: 50px !important;
           font-size: 15px !important;
-          font-weight: 600 !important;
-          letter-spacing: 0.3px;
+          font-weight: 700 !important;
+          letter-spacing: 0.5px;
           transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+          color: #fff !important;
         }
 
         .login-btn:hover:not(:disabled) {
-          transform: translateY(-1px);
-          box-shadow: 0 8px 20px rgba(99,102,241,0.4) !important;
+          transform: translateY(-2px);
+          box-shadow: 0 10px 28px rgba(37, 99, 235, 0.4) !important;
         }
 
         .login-btn:active:not(:disabled) {
@@ -133,8 +141,8 @@ export default function LoginPage() {
         }
 
         .error-box {
-          background: #fff1f2;
-          border: 1px solid #fecdd3;
+          background: rgba(239, 68, 68, 0.12);
+          border: 1px solid rgba(239, 68, 68, 0.2);
           border-radius: 10px;
           padding: 12px 16px;
           display: flex;
@@ -183,12 +191,9 @@ export default function LoginPage() {
 
           <Paper className="login-card" style={{ width: 400, padding: "48px 40px", background: "white" }}>
             <Box mb={36}>
-              <Title order={2} fw={800} style={{ color: "#1e1b4b", fontSize: 26 }}>
-                Selamat datang
+              <Title order={2} fw={800} style={{ color: "#1f3d7a", fontSize: 28 }}>
+                Dev Card Login
               </Title>
-              <Text size="sm" c="dimmed" mt={6}>
-                Masuk ke akun Dev-Card kamu
-              </Text>
             </Box>
 
             <form onSubmit={handleSubmit}>

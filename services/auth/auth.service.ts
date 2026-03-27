@@ -50,7 +50,7 @@ export const register = async ({ email, password, name, phone, file, facebookUrl
   try {
     if (file && file.size > 0) {
       const uploadResult = await saveFile(file);
-      avatarUrl = uploadResult.path;
+      avatarUrl = uploadResult.url;
     }
 
     const newUser = await prisma.user.create({
