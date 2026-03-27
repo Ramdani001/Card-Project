@@ -43,5 +43,5 @@ jobs:
             git pull origin master
             npm ci --production
             npx prisma generate
-            npx prisma migrate deploy
+            npx prisma db push
             pm2 restart card-app || pm2 start npm --name "card-app" -- start
