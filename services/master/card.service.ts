@@ -102,7 +102,11 @@ export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string
       },
     });
 
-    if (user && user.role) {
+    const adminRoleNames = ["Admin", "Administrator", "SuperAdmin", "superadmin", "admin"];
+
+    if (user && user.role && adminRoleNames.includes(user.role.name || "")) {
+      roleSecurityFilter = {};
+    } else if (user && user.role) {
       const allowedCategoryIds = user.role.cardCategoryRoleAccesses.map((access) => access.categoryId);
 
       roleSecurityFilter = {

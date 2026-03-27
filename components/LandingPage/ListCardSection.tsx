@@ -31,7 +31,6 @@ export const ListCardSection = ({ loadingProducts, products, setSearch, handleAd
             variant="outline"
             onClick={() => {
               setSearch("");
-              // setSelectedCategoryIds([]);
             }}
           >
             Clear Search
@@ -43,23 +42,25 @@ export const ListCardSection = ({ loadingProducts, products, setSearch, handleAd
             <Card
               key={item.id}
               padding="0"
-              radius="xs"
+              radius="md"
               withBorder
               bg="white"
               style={{
-                border: "1px solid #dee2e6",
-                transition: "all 0.2s ease",
+                border: "1px solid #e4e8ed",
+                transition: "transform 0.2s ease, box-shadow 0.2s ease",
                 cursor: "pointer",
+                overflow: "hidden",
+                minHeight: 360,
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-3px)";
-                e.currentTarget.style.boxShadow = "0 10px 20px rgba(0,0,0,0.08)";
-                e.currentTarget.style.borderColor = "#adb5bd";
+                e.currentTarget.style.transform = "translateY(-6px)";
+                e.currentTarget.style.boxShadow = "0 14px 30px rgba(15, 40, 75, 0.18)";
+                e.currentTarget.style.borderColor = "#a8b8ce";
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = "translateY(0)";
                 e.currentTarget.style.boxShadow = "none";
-                e.currentTarget.style.borderColor = "#dee2e6";
+                e.currentTarget.style.borderColor = "#e4e8ed";
               }}
             >
               <Card.Section style={{ position: "relative", borderBottom: "1px solid #f1f3f5" }}>
@@ -81,36 +82,66 @@ export const ListCardSection = ({ loadingProducts, products, setSearch, handleAd
                 </Box>
               </Card.Section>
 
-              <Stack gap={6} p="sm" h={160} justify="space-between" bg="white">
+              <Stack gap={8} p="md" h="auto" justify="space-between" bg="white">
                 <Box>
-                  <Text size="10px" c="dimmed" tt="uppercase" fw={700} style={{ letterSpacing: 0.5 }}>
-                    {item.categories?.[0]?.category?.name || "General"}
-                  </Text>
-                  <Text size="sm" fw={700} lineClamp={2} style={{ lineHeight: 1.3, minHeight: 38 }} title={item.name}>
+                  <Group gap={6} mb={4}>
+                    {(item.categories?.length ?? 0) > 0 ? (
+                      item.categories.slice(0, 3).map((cat) => (
+                        <Badge key={cat.category.id} color="blue" variant="light" radius="xs" size="xs" style={{ textTransform: "uppercase" }}>
+                          {cat.category.name}
+                        </Badge>
+                      ))
+                    ) : (
+                      <Badge color="gray" variant="light" radius="xs" size="xs" style={{ textTransform: "uppercase" }}>
+                        General
+                      </Badge>
+                    )}
+                    {item.categories?.length > 3 && (
+                      <Text size="xs" c="dimmed" mt={2}>
+                        +{item.categories.length - 3} lainnya
+                      </Text>
+                    )}
+                  </Group>
+
+                  <Text size="sm" fw={700} lineClamp={2} mt="2px" title={item.name} style={{ minHeight: 42 }}>
                     {item.name}
                   </Text>
+
                   <Text size="xs" c="dimmed" lineClamp={1}>
-                    {item.sku || " "}
+                    SKU: {item.sku || "-"}
+                  </Text>
+
+                  <Text size="xs" c={item.stock > 0 ? "teal" : "red"} fw={700} mt="4px">
+                    {item.stock > 0 ? `${item.stock} tersedia` : "Tidak tersedia"}
                   </Text>
                 </Box>
 
                 <Box>
-                  <Group gap={5} align="flex-end" mb={8}>
-                    <Text fw={800} size="md" c="blue">
+                  <Group align="center" mb={8}>
+                    <Text fw={800} size="lg" c="blue">
                       Rp {Number(item.price).toLocaleString("id-ID")}
                     </Text>
+                    {item.discount && Number(item.discount.value) > 0 && (
+                      <Text size="xs" c="red" fw={700}>
+                        -
+                        {item.discount.type === "PERCENTAGE"
+                          ? `${item.discount.value}%`
+                          : `Rp ${Number(item.discount.value).toLocaleString("id-ID")}`}
+                      </Text>
+                    )}
                   </Group>
+
                   <Button
                     fullWidth
                     radius="xs"
                     size="xs"
-                    color="dark"
+                    color={item.stock === 0 ? "gray" : "dark"}
                     disabled={item.stock === 0}
                     onClick={() => handleAddToCart(item)}
                     loading={loadingAction === item.id}
-                    leftSection={item.stock > 0 && <IconShoppingCart size={14} />}
+                    leftSection={item.stock > 0 ? <IconShoppingCart size={14} /> : undefined}
                   >
-                    {item.stock === 0 ? "Out of Stock" : "Add to Cart"}
+                    {item.stock === 0 ? "Habis" : "Tambah ke Keranjang"}
                   </Button>
                 </Box>
               </Stack>

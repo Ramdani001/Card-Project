@@ -1,3 +1,4 @@
+import { CategoryCardDto } from "./CategoryCardDto";
 import { DiscountDto } from "./DiscountDto";
 
 export interface CardDto {
@@ -14,10 +15,6 @@ export interface CardDto {
   description?: string;
   images: { id: string; url: string; isPrimary: boolean }[];
   categories: {
-    category: {
-      id: string;
-      name: string;
-      slug: string;
-    };
+    category: CategoryCardDto;
   }[];
 }

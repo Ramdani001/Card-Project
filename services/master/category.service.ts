@@ -27,11 +27,17 @@ export const getCategories = async (options: Prisma.CategoryFindManyArgs, userId
     });
 
     if (user && user.role) {
-      const allowedCategoryIds = user.role.cardCategoryRoleAccesses.map((access) => access.categoryId);
+      const adminRoleNames = ["Admin", "Administrator", "SuperAdmin", "superadmin", "admin"];
 
-      roleSecurityFilter = {
-        id: { in: allowedCategoryIds },
-      };
+      if (adminRoleNames.includes(user.role.name || "")) {
+        roleSecurityFilter = {};
+      } else {
+        const allowedCategoryIds = user.role.cardCategoryRoleAccesses.map((access) => access.categoryId);
+
+        roleSecurityFilter = {
+          id: { in: allowedCategoryIds },
+        };
+      }
     }
   } else {
     const guestRole = await prisma.role.findUnique({
