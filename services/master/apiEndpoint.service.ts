@@ -69,3 +69,13 @@ export const deleteApiEndpoint = async (id: string) => {
     where: { id },
   });
 };
+
+export const deleteUnusedApiEndpoints = async () => {
+  await prisma.apiEndpoint.deleteMany({
+    where: {
+      roleApiAccesses: {
+        none: {},
+      },
+    },
+  });
+};

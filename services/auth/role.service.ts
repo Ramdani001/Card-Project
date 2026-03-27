@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
+import { deleteUnusedApiEndpoints } from "../master/apiEndpoint.service";
 
 export interface ApiAccessInput {
   url: string;
@@ -95,6 +96,8 @@ export const createRole = async ({ name, canAccessDashboard, categoryIds = [], m
       });
     }
 
+    await deleteUnusedApiEndpoints();
+
     return role;
   });
 };
@@ -155,6 +158,8 @@ export const updateRole = async ({ id, name, categoryIds, menuIds, apiAccesses, 
       }
     }
 
+    await deleteUnusedApiEndpoints();
+
     return await tx.role.findUnique({
       where: { id },
       include: {
@@ -176,6 +181,8 @@ export const deleteRole = async (id: string) => {
   if (existingRole._count.users > 0) {
     throw new Error("Cannot delete role: It is assigned to one or more users");
   }
+
+  await deleteUnusedApiEndpoints();
 
   return await prisma.role.delete({ where: { id } });
 };
