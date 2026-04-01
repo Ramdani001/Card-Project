@@ -72,7 +72,7 @@ export const TransactionHistoryModal = ({ opened, onClose, transactionId, invoic
       return { icon: <IconRobot size={14} />, name: "System Automation" };
     }
 
-    if (creator === "SYSTEM_WEBHOOK") {
+    if (creator === "SYSTEM_WEBHOOK" || creator === "MIDTRANS_WEBHOOK") {
       return { icon: <IconCreditCard size={14} />, name: "Midtrans Payment" };
     }
 
