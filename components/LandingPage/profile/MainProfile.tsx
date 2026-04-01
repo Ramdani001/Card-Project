@@ -59,7 +59,7 @@ export const MainProfile = () => {
     <Box px={30}>
       <HeaderSection search={search} setSearch={setSearch} cartItems={cartItems} setIsDrawerOpen={setIsDrawerOpen} />
 
-      <Grid gutter="xl" mt={10}>
+      <Grid mt={10}>
         <Grid.Col span={{ base: 12, md: 3 }} visibleFrom="md">
           <Paper p="md" radius="sm" withBorder>
             <Text fw={700} mb="md" size="lg">

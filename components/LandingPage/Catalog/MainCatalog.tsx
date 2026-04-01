@@ -267,7 +267,7 @@ export default function MainCatalog() {
       />
 
       <Container size="xl" py="xl">
-        <Grid gutter="xl">
+        <Grid>
           <Grid.Col span={{ base: 12, md: 3 }} visibleFrom="md">
             <FilterSection
               categories={categoriesList}

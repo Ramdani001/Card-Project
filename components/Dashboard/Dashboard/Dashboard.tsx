@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { KPICard } from "./KPICard";
 import { StatusBadge } from "./StatusBadge";
+import { ValueType, NameType, Formatter } from "recharts/types/component/DefaultTooltipContent";
 
 interface SummaryData {
   revenue: number;
@@ -120,7 +121,7 @@ const Dashboard = () => {
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="date" tickFormatter={(str) => str.substring(8, 10)} tick={{ fontSize: 12 }} />
                   <YAxis tickFormatter={(val) => new Intl.NumberFormat("en", { notation: "compact" }).format(val)} tick={{ fontSize: 12 }} />
-                  <Tooltip formatter={(value: number | undefined) => formatRupiah(value ?? 0)} labelFormatter={(label) => `Date: ${label}`} />
+                  <Tooltip formatter={(value: any) => formatRupiah(Number(value) || 0)} labelFormatter={(label) => `Date: ${label}`} />{" "}
                   <Line type="monotone" dataKey="revenue" stroke="#228be6" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 8 }} />
                 </LineChart>
               </ResponsiveContainer>
@@ -139,7 +140,7 @@ const Dashboard = () => {
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value: number | undefined) => formatRupiah(value ?? 0)} />
+                  <Tooltip formatter={(value: any) => formatRupiah(value ?? 0)} />
                   <Legend verticalAlign="bottom" height={36} />
                 </PieChart>
               </ResponsiveContainer>

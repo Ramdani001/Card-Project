@@ -13,7 +13,6 @@ export const PreOrder = () => {
 
   const [opened, { open, close }] = useDisclosure(false);
 
-
   useEffect(() => {
     const fetchPreOrder = async () => {
       try {
@@ -38,7 +37,6 @@ export const PreOrder = () => {
 
   return (
     <Container mb={30} size="xl">
-
       <Modal opened={opened} onClose={close} withCloseButton={false}>
         Modal without header, press escape or click on overlay to close
       </Modal>
@@ -53,7 +51,7 @@ export const PreOrder = () => {
             <Loader size="lg" />
           </Center>
         ) : (
-          <Grid gutter="xl">
+          <Grid>
             <Grid.Col span={{ base: 12, md: 5 }}>
               <Card shadow="sm" padding="lg" radius="md" withBorder>
                 <Center>
