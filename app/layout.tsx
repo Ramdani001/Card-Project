@@ -1,11 +1,14 @@
+import "@mantine/core/styles.css";
+
+import "@mantine/dates/styles.css";
+import "@mantine/notifications/styles.css";
+import "@mantine/tiptap/styles.css";
+
 import { ColorSchemeScript, MantineProvider, createTheme } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { ModalsProvider } from "@mantine/modals";
-import "@mantine/notifications/styles.css";
-import "@mantine/dates/styles.css";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import '@mantine/tiptap/styles.css';
 
 import "@mantine/core/styles.css";
 import "./globals.css";

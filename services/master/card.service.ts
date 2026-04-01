@@ -523,7 +523,7 @@ export const exportCardsToExcel = async () => {
     { header: "SKU", key: "sku", width: 20 },
     { header: "Category", key: "categories", width: 20 },
     { header: "Description", key: "description", width: 30 },
-    { header: "Image", key: "image", width: 25 },
+    // { header: "Image", key: "image", width: 25 },
   ];
 
   const headerRow = worksheet.getRow(1);
@@ -546,32 +546,32 @@ export const exportCardsToExcel = async () => {
     row.height = 75;
     row.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
 
-    const primaryImg = card.images.find((img) => img.isPrimary) || card.images[0];
+    // const primaryImg = card.images.find((img) => img.isPrimary) || card.images[0];
 
-    if (primaryImg && primaryImg.path) {
-      try {
-        const filePath = path.join(process.cwd(), "public", "uploads/" + primaryImg.path);
-        const imageBuffer = await fs.readFile(filePath);
+    // if (primaryImg && primaryImg.path) {
+    //   try {
+    //     const filePath = path.join(process.cwd(), "public", "uploads/" + primaryImg.path);
+    //     const imageBuffer = await fs.readFile(filePath);
 
-        let extension = primaryImg.path.split(".").pop()?.toLowerCase() || "png";
-        if (!["jpeg", "png", "gif"].includes(extension)) {
-          extension = "png";
-        }
-        const imageId = workbook.addImage({
-          buffer: Buffer.from(imageBuffer) as any,
-          extension: extension as any,
-        });
+    //     let extension = primaryImg.path.split(".").pop()?.toLowerCase() || "png";
+    //     if (!["jpeg", "png", "gif"].includes(extension)) {
+    //       extension = "png";
+    //     }
+    //     const imageId = workbook.addImage({
+    //       buffer: Buffer.from(imageBuffer) as any,
+    //       extension: extension as any,
+    //     });
 
-        worksheet.addImage(imageId, {
-          tl: { col: 6, row: i + 1 },
-          ext: { width: 100, height: 100 },
-          editAs: "oneCell",
-        });
-      } catch (error) {
-        console.error(`Gagal sematkan gambar untuk ${card.name}:`, error);
-        worksheet.getCell(`G${currentRow}`).value = "Gagal memuat gambar";
-      }
-    }
+    //     worksheet.addImage(imageId, {
+    //       tl: { col: 6, row: i + 1 },
+    //       ext: { width: 100, height: 100 },
+    //       editAs: "oneCell",
+    //     });
+    //   } catch (error) {
+    //     console.error(`Gagal sematkan gambar untuk ${card.name}:`, error);
+    //     worksheet.getCell(`G${currentRow}`).value = "Gagal memuat gambar";
+    //   }
+    // }
   }
 
   worksheet.getColumn("price").numFmt = "#,##0";

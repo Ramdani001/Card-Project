@@ -11,6 +11,8 @@ import { TransactionDetailModal } from "./TransactionDetailModal";
 import { TransactionHistoryModal } from "./TransactionHistoryModal";
 import { StatusBadge } from "../../layout/StatusBadge";
 import { CONSTANT } from "@/constants";
+import { DatePickerInput } from "@mantine/dates";
+import dayjs from "dayjs";
 
 interface Transaction {
   id: string;
@@ -29,6 +31,7 @@ const ListTransaction = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [metadata, setMetadata] = useState<PaginationMetaDataDto>({ total: 0, page: 1, limit: 10, totalPages: 0 });
   const [loading, setLoading] = useState(false);
+  const [dateRange, setDateRange] = useState<[Date | null | string, Date | null | string]>([null, null]);
 
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [searchInvoice, setSearchInvoice] = useState("");
@@ -58,6 +61,9 @@ const ListTransaction = () => {
 
       if (filterStatus) params.append("status", filterStatus);
       if (searchInvoice) params.append("invoice", searchInvoice);
+
+      if (dateRange[0]) params.append("startDate", dayjs(dateRange[0]).startOf("day").toISOString());
+      if (dateRange[1]) params.append("endDate", dayjs(dateRange[1]).endOf("day").toISOString());
 
       const res = await fetch(`/api/transactions?${params.toString()}`);
       const json = await res.json();
@@ -192,22 +198,35 @@ const ListTransaction = () => {
         </Group>
       </Flex>
 
-      <Group mb="md">
+      <Group mb="md" align="flex-end">
         <TextInput
+          label="Search"
           placeholder="Search Invoice..."
           leftSection={<IconSearch size={16} />}
           value={searchInvoice}
           onChange={(e) => setSearchInvoice(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
         />
+
         <Select
-          placeholder="Filter Status"
+          label="Status"
+          placeholder="All Status"
           data={["PENDING", "PAID", "PROCESSED", "SHIPPED", "COMPLETED", "CANCELLED", "FAILED"]}
           value={filterStatus}
           onChange={setFilterStatus}
           clearable
         />
-        <Button variant="light" onClick={handleSearch}>
+
+        <DatePickerInput
+          label="Date Range"
+          type="range"
+          placeholder="Pick date range"
+          value={dateRange}
+          onChange={setDateRange}
+          clearable
+        />
+
+        <Button variant="light" onClick={handleSearch} leftSection={<IconSearch size={16} />}>
           Apply
         </Button>
       </Group>
