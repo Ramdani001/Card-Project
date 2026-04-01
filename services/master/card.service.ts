@@ -5,6 +5,8 @@ import { generateSlug } from "@/utils";
 import ExcelJS from "exceljs";
 import { createNotificationByCode } from "../transaction/notification.service";
 import { CONSTANT } from "@/constants";
+import fs from "fs/promises";
+import path from "path";
 
 interface CreateCardParams {
   name: string;
@@ -548,26 +550,23 @@ export const exportCardsToExcel = async () => {
 
     if (primaryImg && primaryImg.path) {
       try {
-        const response = await fetch(`/uploads/${primaryImg.path}`);
-        if (!response.ok) throw new Error("Fetch failed");
-
-        // const arrayBuffer = await response.arrayBuffer();
+        const filePath = path.join(process.cwd(), "public", "uploads/" + primaryImg.path);
+        const imageBuffer = await fs.readFile(filePath);
 
         let extension = primaryImg.path.split(".").pop()?.toLowerCase() || "png";
         if (!["jpeg", "png", "gif"].includes(extension)) {
           extension = "png";
         }
+        const imageId = workbook.addImage({
+          buffer: Buffer.from(imageBuffer) as any,
+          extension: extension as any,
+        });
 
-        // const imageId = workbook.addImage({
-        //   buffer: Buffer.from(arrayBuffer),
-        //   extension: extension as any,
-        // });
-
-        // worksheet.addImage(imageId, {
-        //   tl: { col: 6, row: i + 1 },
-        //   ext: { width: 100, height: 100 },
-        //   editAs: "oneCell",
-        // });
+        worksheet.addImage(imageId, {
+          tl: { col: 6, row: i + 1 },
+          ext: { width: 100, height: 100 },
+          editAs: "oneCell",
+        });
       } catch (error) {
         console.error(`Gagal sematkan gambar untuk ${card.name}:`, error);
         worksheet.getCell(`G${currentRow}`).value = "Gagal memuat gambar";
@@ -599,7 +598,6 @@ export const generateCardTemplate = async () => {
   headerRow.font = { bold: true, color: { argb: "FFFFFF" } };
   headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "E67E22" } };
 
-  // Dropdown kategori
   if (categories.length > 0) {
     const list = `"${categories.map((c) => c.name).join(",")}"`;
     for (let i = 2; i <= 50; i++) {
