@@ -7,10 +7,10 @@ import { HeaderSection } from "@/components/LandingPage/HeaderSection";
 import { ListCardSection } from "@/components/LandingPage/ListCardSection";
 import { CardDto } from "@/types/dtos/CardDto";
 import { CartItemDto } from "@/types/dtos/CartItemDto";
-import { Box, Center, Container, Grid, Group, Loader, Pagination, Select, Text } from "@mantine/core";
+import { Box, Center, Container, Grid, Group, Loader, Pagination, Select, Text, TextInput } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconX } from "@tabler/icons-react";
+import { IconCheck, IconSearch, IconX } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -75,7 +75,7 @@ export default function MainCatalog() {
       params.append("page", activePage.toString());
       params.append("limit", "12");
 
-      if (debouncedSearch) params.append("search", debouncedSearch);
+      if (debouncedSearch) params.append("name", debouncedSearch);
       if (sortValue) {
         const [field, direction] = sortValue.split("|");
         params.append("sortBy", field);
@@ -279,13 +279,23 @@ export default function MainCatalog() {
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, md: 9 }}>
-            <Group justify="flex-end" mb="lg" align="center">
+            <Group justify="space-between" mb="lg" align="flex-end">
+              <TextInput
+                placeholder="Search..."
+                leftSection={<IconSearch size={16} stroke={1.5} />}
+                value={search}
+                onChange={(e) => setSearch(e.currentTarget.value)}
+                size="xs"
+                w={250}
+              />
+
               <Select
                 placeholder="Sort by"
-                data={["Newest", "Price: Low to High", "Price: High to Low"]}
-                value={SORT_OPTIONS.find((e) => e.value == sortValue)?.label || "Newest"}
-                onChange={(e) => {
-                  setSortValue(SORT_OPTIONS.find((x) => x.label == e)?.value || "");
+                data={SORT_OPTIONS.map((opt) => opt.label)}
+                value={SORT_OPTIONS.find((e) => e.value === sortValue)?.label || "Newest"}
+                onChange={(val) => {
+                  const selected = SORT_OPTIONS.find((x) => x.label === val);
+                  if (selected) setSortValue(selected.value);
                 }}
                 size="xs"
                 w={200}
