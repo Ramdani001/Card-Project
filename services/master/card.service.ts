@@ -450,19 +450,15 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
             stock: Number(stockRaw) || 0,
             description,
             sku,
-            categories: category ? { deleteMany: {}, create: { categoryId: category.id } } : undefined,
           };
 
           if (existingCard) {
-            if (newImageData) {
-              for (const img of existingCard.images) await deleteFile(img.path).catch(console.error);
-              (commonData as any).images = { deleteMany: {}, create: { ...newImageData, isPrimary: true } };
-            }
-
             await tx.card.update({
               where: { id: existingCard.id },
               data: {
                 ...commonData,
+                categories: category ? { deleteMany: {}, create: { categoryId: category.id } } : undefined,
+                images: newImageData ? { deleteMany: {}, create: { ...newImageData, isPrimary: true } } : undefined,
                 histories: {
                   create: {
                     name: existingCard.name,
@@ -480,6 +476,7 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
               data: {
                 ...commonData,
                 slug,
+                categories: category ? { create: { categoryId: category.id } } : undefined,
                 images: newImageData ? { create: { ...newImageData, isPrimary: true } } : undefined,
               },
             });
@@ -507,7 +504,10 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
 
 export const exportCardsToExcel = async () => {
   const cards = await prisma.card.findMany({
-    include: { categories: { include: { category: true } }, images: true },
+    include: {
+      categories: { include: { category: true } },
+      images: true,
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -515,16 +515,23 @@ export const exportCardsToExcel = async () => {
   const worksheet = workbook.addWorksheet("Data Card");
 
   worksheet.columns = [
-    { header: "Gambar", key: "image", width: 15 },
-    { header: "Nama Produk", key: "name", width: 30 },
+    { header: "Card Name*", key: "name", width: 30 },
+    { header: "Price*", key: "price", width: 15 },
+    { header: "Stock", key: "stock", width: 10 },
     { header: "SKU", key: "sku", width: 20 },
-    { header: "Harga", key: "price", width: 15 },
-    { header: "Stok", key: "stock", width: 10 },
-    { header: "Kategori", key: "categories", width: 25 },
+    { header: "Category", key: "category", width: 20 },
+    { header: "Description", key: "description", width: 30 },
+    { header: "Image", key: "image", width: 25 },
   ];
+
+  const headerRow = worksheet.getRow(1);
+  headerRow.font = { bold: true };
+  headerRow.alignment = { horizontal: "center", vertical: "middle" };
 
   for (let i = 0; i < cards.length; i++) {
     const card = cards[i];
+    const currentRow = i + 2;
+
     const row = worksheet.addRow({
       name: card.name,
       sku: card.sku || "-",
@@ -532,27 +539,42 @@ export const exportCardsToExcel = async () => {
       stock: card.stock,
       categories: card.categories.map((c) => c.category.name).join(", "),
     });
-    row.height = 65;
-    row.alignment = { vertical: "middle" };
+
+    row.height = 75;
+    row.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
 
     const primaryImg = card.images.find((img) => img.isPrimary) || card.images[0];
-    if (primaryImg) {
+
+    if (primaryImg && primaryImg.path) {
       try {
-        const response = await fetch(primaryImg.path);
+        const response = await fetch(primaryImg.url);
+        if (!response.ok) throw new Error("Fetch failed");
+
         const arrayBuffer = await response.arrayBuffer();
+
+        let extension = primaryImg.path.split(".").pop()?.toLowerCase() || "png";
+        if (!["jpeg", "png", "gif"].includes(extension)) {
+          extension = "png";
+        }
+
         const imageId = workbook.addImage({
-          buffer: arrayBuffer,
-          extension: (primaryImg.path.split(".").pop() as any) || "png",
+          buffer: Buffer.from(arrayBuffer),
+          extension: extension as any,
         });
+
         worksheet.addImage(imageId, {
           tl: { col: 0.1, row: i + 1.1 },
-          ext: { width: 60, height: 60 },
+          ext: { width: 90, height: 90 },
+          editAs: "oneCell",
         });
-      } catch {
-        console.error("Gagal sematkan gambar di export");
+      } catch (error) {
+        console.error(`Gagal sematkan gambar untuk ${card.name}:`, error);
+        worksheet.getCell(`A${currentRow}`).value = "Gagal memuat gambar";
       }
     }
   }
+
+  worksheet.getColumn("price").numFmt = "#,##0";
 
   return await workbook.xlsx.writeBuffer();
 };

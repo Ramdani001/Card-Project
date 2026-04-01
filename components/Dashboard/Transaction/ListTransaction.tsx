@@ -105,6 +105,7 @@ const ListTransaction = () => {
     {
       key: "invoice",
       label: "Invoice",
+      sortable: true,
       render: (item) => (
         <Text fw={600} size="sm">
           {item.invoice}
@@ -114,6 +115,7 @@ const ListTransaction = () => {
     {
       key: "user",
       label: "Customer",
+      sortable: true,
       render: (item) => (
         <Flex direction="column">
           <Text size="sm" fw={500}>
@@ -128,6 +130,7 @@ const ListTransaction = () => {
     {
       key: "totalPrice",
       label: "Total",
+      sortable: true,
       render: (item) => (
         <Text size="sm" fw={500}>
           {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR" }).format(Number(item.totalPrice))}
@@ -137,11 +140,13 @@ const ListTransaction = () => {
     {
       key: "status",
       label: "Status",
+      sortable: true,
       render: (item) => <StatusBadge status={item.status} />,
     },
     {
       key: "createdAt",
       label: "Date",
+      sortable: true,
       render: (item) => (
         <Text size="xs">
           {new Date(item.createdAt).toLocaleString("id-ID", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
