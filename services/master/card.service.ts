@@ -394,114 +394,120 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
   const workbook = new ExcelJS.Workbook();
   const buffer = await file.arrayBuffer();
   await workbook.xlsx.load(buffer);
-
   const worksheet = workbook.getWorksheet(1);
   if (!worksheet) throw new Error("Worksheet tidak ditemukan");
 
+  const imageMap: Record<number, { buffer: Buffer; extension: string }> = {};
+  worksheet.getImages().forEach((imgRef) => {
+    const img = workbook.getImage(Number(imgRef.imageId));
+    const rowNumber = Math.floor(imgRef.range.tl.row) + 1;
+    imageMap[rowNumber] = {
+      buffer: Buffer.from(img.buffer as ArrayBuffer),
+      extension: img.extension,
+    };
+  });
+
   const allCategories = await prisma.category.findMany();
+  const tempUploadedFiles: string[] = [];
 
-  return await prisma.$transaction(
-    async (tx) => {
-      let successCount = 0;
-      let updatedCount = 0;
+  try {
+    return await prisma.$transaction(
+      async (tx) => {
+        let successCount = 0;
+        let updatedCount = 0;
 
-      for (let i = 2; i <= worksheet.rowCount; i++) {
-        const row = worksheet.getRow(i);
+        for (let i = 2; i <= worksheet.rowCount; i++) {
+          const row = worksheet.getRow(i);
+          const name = row.getCell(1).value?.toString();
+          const priceRaw = row.getCell(2).value;
+          const stockRaw = row.getCell(3).value;
+          const sku = row.getCell(4).value?.toString();
+          const categoryName = row.getCell(5).value?.toString();
+          const description = row.getCell(6).value?.toString();
 
-        const name = row.getCell(1).value?.toString();
-        const priceRaw = row.getCell(2).value;
-        const stockRaw = row.getCell(3).value;
-        const sku = row.getCell(4).value?.toString();
-        const categoryName = row.getCell(5).value?.toString();
-        const description = row.getCell(6).value?.toString();
+          if (!name && !priceRaw) continue;
+          if (!name || priceRaw === null) throw new Error(`Baris ${i}: Nama & Harga wajib.`);
 
-        if (!name && !priceRaw && !sku) continue;
-        if (!name || priceRaw === null || priceRaw === undefined) {
-          throw new Error(`Gagal di Baris ${i}: Nama dan Harga wajib diisi.`);
-        }
+          const slug = generateSlug(name);
+          const category = allCategories.find((c) => c.name.toLowerCase() === categoryName?.toLowerCase());
 
-        const category = allCategories.find((c) => c.name.toLowerCase() === categoryName?.toLowerCase());
+          let newImageData: any = null;
+          if (imageMap[i]) {
+            const { buffer, extension } = imageMap[i];
+            const fileMock = new File([buffer as BlobPart], `import_${slug}.${extension}`, { type: `image/${extension}` });
+            newImageData = await saveFile(fileMock);
+            tempUploadedFiles.push(newImageData.path);
+          }
 
-        const price = new Prisma.Decimal(Number(priceRaw));
-        const stock = Number(stockRaw) || 0;
-        const slug = generateSlug(name);
+          const existingCard = await tx.card.findFirst({
+            where: { OR: [{ sku: sku || undefined }, { slug }] },
+            include: { images: true },
+          });
 
-        const existingCard = await tx.card.findFirst({
-          where: { OR: [{ sku: sku || undefined }, { slug: slug }] },
-        });
+          const commonData = {
+            name,
+            price: new Prisma.Decimal(Number(priceRaw)),
+            stock: Number(stockRaw) || 0,
+            description,
+            sku,
+            categories: category ? { deleteMany: {}, create: { categoryId: category.id } } : undefined,
+          };
 
-        const cardData = {
-          name,
-          price,
-          stock,
-          description,
-          sku,
-          categories: category
-            ? {
-                deleteMany: {},
-                create: { categoryId: category.id },
-              }
-            : undefined,
-        };
+          if (existingCard) {
+            if (newImageData) {
+              for (const img of existingCard.images) await deleteFile(img.path).catch(console.error);
+              (commonData as any).images = { deleteMany: {}, create: { ...newImageData, isPrimary: true } };
+            }
 
-        if (existingCard) {
-          await tx.card.update({
-            where: { id: existingCard.id },
-            data: {
-              ...cardData,
-              histories: {
-                create: {
-                  name: existingCard.name,
-                  price: existingCard.price,
-                  stock: existingCard.stock,
-                  changeType: "UPDATE_VIA_IMPORT",
-                  changedBy: userId,
+            await tx.card.update({
+              where: { id: existingCard.id },
+              data: {
+                ...commonData,
+                histories: {
+                  create: {
+                    name: existingCard.name,
+                    price: existingCard.price,
+                    stock: existingCard.stock,
+                    changeType: "UPDATE_VIA_IMPORT",
+                    changedBy: userId,
+                  },
                 },
               },
-            },
-          });
-          updatedCount++;
-        } else {
-          await tx.card.create({
-            data: {
-              ...cardData,
-              slug,
-              categories: category
-                ? {
-                    create: { categoryId: category.id },
-                  }
-                : undefined,
-            },
-          });
-          successCount++;
+            });
+            updatedCount++;
+          } else {
+            await tx.card.create({
+              data: {
+                ...commonData,
+                slug,
+                images: newImageData ? { create: { ...newImageData, isPrimary: true } } : undefined,
+              },
+            });
+            successCount++;
+          }
         }
-      }
 
-      await createNotificationByCode({
-        notificationCode: "PRODUCT_NOTIF",
-        title: "Import Produk",
-        message: `${successCount} Card telah di import, ${updatedCount} diperbarui.`,
-        type: NotificationType.SYSTEM,
-        url: "",
-      });
+        await createNotificationByCode({
+          notificationCode: "PRODUCT_NOTIF",
+          title: "Import Produk",
+          message: `${successCount} baru, ${updatedCount} diperbarui.`,
+          type: NotificationType.SYSTEM,
+          url: "",
+        });
 
-      return {
-        success: true,
-        message: `Berhasil! ${successCount} baru, ${updatedCount} diperbarui.`,
-      };
-    },
-    { timeout: 30000 }
-  );
+        return { success: true, message: `Berhasil import ${successCount} data.` };
+      },
+      { timeout: 60000 }
+    );
+  } catch (error) {
+    for (const path of tempUploadedFiles) await deleteFile(path).catch(console.error);
+    throw error;
+  }
 };
 
 export const exportCardsToExcel = async () => {
   const cards = await prisma.card.findMany({
-    include: {
-      categories: {
-        include: { category: true },
-      },
-      discount: true,
-    },
+    include: { categories: { include: { category: true } }, images: true },
     orderBy: { createdAt: "desc" },
   });
 
@@ -509,84 +515,74 @@ export const exportCardsToExcel = async () => {
   const worksheet = workbook.addWorksheet("Data Card");
 
   worksheet.columns = [
-    { header: "ID", key: "id", width: 35 },
+    { header: "Gambar", key: "image", width: 15 },
     { header: "Nama Produk", key: "name", width: 30 },
     { header: "SKU", key: "sku", width: 20 },
     { header: "Harga", key: "price", width: 15 },
     { header: "Stok", key: "stock", width: 10 },
-    { header: "Kategori", key: "categories", width: 30 },
-    { header: "Diskon (%)", key: "discount", width: 15 },
-    { header: "Deskripsi", key: "description", width: 40 },
+    { header: "Kategori", key: "categories", width: 25 },
   ];
 
-  const headerRow = worksheet.getRow(1);
-  headerRow.font = { bold: true, color: { argb: "FFFFFF" } };
-  headerRow.fill = {
-    type: "pattern",
-    pattern: "solid",
-    fgColor: { argb: "2C3E50" },
-  };
-  headerRow.alignment = { vertical: "middle", horizontal: "center" };
-
-  cards.forEach((card) => {
-    worksheet.addRow({
-      id: card.id,
+  for (let i = 0; i < cards.length; i++) {
+    const card = cards[i];
+    const row = worksheet.addRow({
       name: card.name,
       sku: card.sku || "-",
       price: Number(card.price),
       stock: card.stock,
       categories: card.categories.map((c) => c.category.name).join(", "),
-      discount: card.discount ? (card.discount?.type == "NOMINAL" ? card.discount.value : `${card.discount.value}%`) : "0",
-      description: card.description || "-",
     });
-  });
+    row.height = 65;
+    row.alignment = { vertical: "middle" };
 
-  worksheet.getColumn("price").numFmt = "#,##0";
+    const primaryImg = card.images.find((img) => img.isPrimary) || card.images[0];
+    if (primaryImg) {
+      try {
+        const response = await fetch(primaryImg.path);
+        const arrayBuffer = await response.arrayBuffer();
+        const imageId = workbook.addImage({
+          buffer: arrayBuffer,
+          extension: (primaryImg.path.split(".").pop() as any) || "png",
+        });
+        worksheet.addImage(imageId, {
+          tl: { col: 0.1, row: i + 1.1 },
+          ext: { width: 60, height: 60 },
+        });
+      } catch {
+        console.error("Gagal sematkan gambar di export");
+      }
+    }
+  }
 
-  const buffer = await workbook.xlsx.writeBuffer();
-  return buffer;
+  return await workbook.xlsx.writeBuffer();
 };
 
 export const generateCardTemplate = async () => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Template Import");
-
   const categories = await prisma.category.findMany({ select: { name: true } });
-  const categoryNames = categories.map((c) => c.name);
 
   worksheet.columns = [
-    { header: "Card Name", key: "name", width: 30 },
-    { header: "Price", key: "price", width: 15 },
-    { header: "Stock", key: "stock", width: 15 },
+    { header: "Card Name*", key: "name", width: 30 },
+    { header: "Price*", key: "price", width: 15 },
+    { header: "Stock", key: "stock", width: 10 },
     { header: "SKU", key: "sku", width: 20 },
     { header: "Category", key: "category", width: 20 },
-    { header: "Description", key: "description", width: 40 },
+    { header: "Description", key: "description", width: 30 },
+    { header: "Image", key: "image", width: 25 },
   ];
 
   const headerRow = worksheet.getRow(1);
   headerRow.font = { bold: true, color: { argb: "FFFFFF" } };
   headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "E67E22" } };
 
-  for (let i = 2; i <= 100; i++) {
-    worksheet.getCell(`E${i}`).dataValidation = {
-      type: "list",
-      allowBlank: true,
-      formulae: [`"${categoryNames.join(",")}"`],
-      showErrorMessage: true,
-      errorTitle: "Invalid Category",
-      error: "Silahkan pilih kategori dari daftar yang tersedia",
-    };
+  // Dropdown kategori
+  if (categories.length > 0) {
+    const list = `"${categories.map((c) => c.name).join(",")}"`;
+    for (let i = 2; i <= 50; i++) {
+      worksheet.getCell(`E${i}`).dataValidation = { type: "list", formulae: [list] };
+    }
   }
 
-  worksheet.addRow({
-    name: "Contoh Produk Kartu A",
-    price: 50000,
-    stock: 10,
-    sku: "SKU-001",
-    category: categoryNames[0] || "General",
-    description: "Kartu edisi terbatas",
-  });
-
-  const buffer = await workbook.xlsx.writeBuffer();
-  return buffer;
+  return await workbook.xlsx.writeBuffer();
 };
