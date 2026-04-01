@@ -156,7 +156,7 @@ const Sidebar = ({ menus = [], activeMenu, onMenuClick, onClose }: SidebarProps)
               </div>
               <Box>
                 <Text fw={800} size="sm" c="white" lh={1.2} style={{ letterSpacing: 0.5 }}>
-                  DEV CARD
+                  TOKO KARTU
                 </Text>
                 <span className="version-badge">v1.0.0</span>
               </Box>

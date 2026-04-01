@@ -1,11 +1,19 @@
-import { NextRequest } from "next/server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
+import { authOptions } from "@/lib/auth";
 import { markAllNotificationsAsRead } from "@/services/transaction/notification.service";
+import { getServerSession } from "next-auth";
 
-export const PATCH = async (req: NextRequest) => {
+export const PATCH = async () => {
   try {
-    const body = await req.json();
-    const { userId } = body;
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return sendResponse({ success: false, message: "Unauthorized", status: 401 });
+    }
+
+    const userId = session.user.id;
+    if (!userId) {
+      return sendResponse({ success: false, message: "Unauthorized", status: 401 });
+    }
 
     if (!userId) {
       return sendResponse({

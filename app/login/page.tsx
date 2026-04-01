@@ -78,7 +78,7 @@ export default function LoginPage() {
         }
 
         .login-left::before {
-          content: 'DEV CARD';
+          content: 'TOKO KARTU';
           position: absolute;
           top: 30px;
           left: 24px;
@@ -192,7 +192,7 @@ export default function LoginPage() {
           <Paper className="login-card" style={{ width: 400, padding: "48px 40px", background: "white" }}>
             <Box mb={36}>
               <Title order={2} fw={800} style={{ color: "#1f3d7a", fontSize: 28 }}>
-                Dev Card Login
+                Login
               </Title>
             </Box>
 

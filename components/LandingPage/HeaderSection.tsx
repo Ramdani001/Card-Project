@@ -46,9 +46,9 @@ export const HeaderSection = ({ cartItems, setIsDrawerOpen, cartItemCount, onOpe
                 style={{ fontFamily: "Impact, sans-serif", letterSpacing: 1, color: "#212529", cursor: "pointer" }}
                 onClick={() => router.push("/")}
               >
-                DEV
+                TOKO
                 <Text span c="blue" inherit>
-                  CARD
+                  KARTU
                 </Text>
               </Title>
             </Group>

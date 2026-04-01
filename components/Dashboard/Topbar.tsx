@@ -35,6 +35,13 @@ const Topbar = () => {
     if (url) window.location.href = url;
   }
 
+  async function markAllAsRead() {
+    await fetch("/api/notifications/read-all", {
+      method: "PATCH",
+    });
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+  }
+
   useEffect(() => {
     if (session?.user) fetchNotifications();
   }, [session]);
@@ -58,7 +65,15 @@ const Topbar = () => {
               <Menu.Dropdown>
                 <Flex justify="space-between" align="center" px="sm" py={6}>
                   <Menu.Label style={{ padding: 0 }}>Notifications</Menu.Label>
-                  <IconRefresh size={16} style={{ cursor: "pointer" }} onClick={fetchNotifications} />
+
+                  <Flex gap="xs" align="center">
+                    {unreadCount > 0 && (
+                      <Text size="xs" c="blue" style={{ cursor: "pointer", fontWeight: 500 }} onClick={markAllAsRead}>
+                        Mark all as read
+                      </Text>
+                    )}
+                    <IconRefresh size={16} style={{ cursor: "pointer", color: "var(--mantine-color-dimmed)" }} onClick={fetchNotifications} />
+                  </Flex>
                 </Flex>
 
                 <Menu.Divider />
@@ -104,7 +119,6 @@ const Topbar = () => {
               </Menu.Dropdown>
             </Menu>
 
-            {/* User Menu */}
             <Menu shadow="md" width={200} position="bottom-end" transitionProps={{ transition: "pop-top-right" }}>
               <Menu.Target>
                 <UnstyledButton style={{ padding: "5px", borderRadius: "6px" }}>

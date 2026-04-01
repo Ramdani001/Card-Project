@@ -8,7 +8,7 @@ export const FooterSection = () => {
         <Grid>
           <Grid.Col span={{ base: 12, md: 4 }}>
             <Title order={4} c="white" mb="md" ff="Impact" style={{ letterSpacing: 1 }}>
-              DEVCARD
+              TOKO KARTU
             </Title>
             <Text size="sm" maw={300}>
               The ultimate destination for trading card games. We sell singles, sealed products, and accessories for all your favorite games.
@@ -44,7 +44,7 @@ export const FooterSection = () => {
         </Grid>
         <Divider my="xl" color="dark.4" />
         <Group justify="space-between">
-          <Text size="xs">© 2026 DevCard. All Rights Reserved.</Text>
+          <Text size="xs">© 2026 TOKO KARTU. All Rights Reserved.</Text>
           <Text size="xs">Privacy Policy | Terms of Service</Text>
         </Group>
       </Container>

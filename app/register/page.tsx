@@ -208,7 +208,7 @@ export default function RegisterPage() {
         }
 
         .register-left::before {
-          content: 'DEV CARD';
+          content: 'TOKO KARTU';
           position: absolute;
           top: 30px;
           left: 24px;
@@ -381,7 +381,7 @@ export default function RegisterPage() {
                 <Stack gap="md">
                   <Box mb={4}>
                     <Title order={3} fw={700} style={{ color: "#1f3d7a" }}>
-                      Buat Akun Dev Card
+                      Register
                     </Title>
                   </Box>
 
