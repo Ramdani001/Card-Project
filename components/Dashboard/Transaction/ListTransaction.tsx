@@ -220,7 +220,7 @@ const ListTransaction = () => {
         <DatePickerInput
           label="Date Range"
           type="range"
-          placeholder="Pick date range"
+          placeholder="Payment Date"
           value={dateRange}
           onChange={setDateRange}
           clearable
