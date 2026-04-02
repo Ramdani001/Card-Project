@@ -30,9 +30,10 @@ interface TransactionDetailProps {
   onClose: () => void;
   transaction: any;
   onUpdateSuccess: () => void;
+  isNonDashboard: boolean;
 }
 
-export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateSuccess }: TransactionDetailProps) => {
+export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateSuccess, isNonDashboard = false }: TransactionDetailProps) => {
   const [loading, setLoading] = useState(false);
 
   const [status, setStatus] = useState<string | null>(transaction?.status || null);
@@ -342,39 +343,41 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
         </Paper>
       )}
 
-      <Paper p="md" radius="md" withBorder>
-        <Group justify="space-between">
-          <Stack gap={2}>
-            <Text size="sm" fw={600}>
-              Management Actions
-            </Text>
-            <Text size="xs" c="dimmed">
-              Update status or print invoice
-            </Text>
-          </Stack>
+      {!isNonDashboard && (
+        <Paper p="md" radius="md" withBorder>
+          <Group justify="space-between">
+            <Stack gap={2}>
+              <Text size="sm" fw={600}>
+                Management Actions
+              </Text>
+              <Text size="xs" c="dimmed">
+                Update status or print invoice
+              </Text>
+            </Stack>
 
-          <Group>
-            <Button variant="default" leftSection={<IconPrinter size={16} />} onClick={handlePrint}>
-              Print / PDF
-            </Button>
-
-            <Group gap="xs">
-              <Select
-                onChange={handleStatusChange}
-                data={statusOptions}
-                value={status}
-                placeholder="Select next status"
-                style={{ width: 200 }}
-                disabled={loadingOptions || statusOptions.length <= 1}
-                rightSection={loadingOptions ? <Loader size={16} /> : null}
-              />
-              <Button onClick={handleUpdateStatus} loading={loading} disabled={!isDirty}>
-                Update Status
+            <Group>
+              <Button variant="default" leftSection={<IconPrinter size={16} />} onClick={handlePrint}>
+                Print / PDF
               </Button>
+
+              <Group gap="xs">
+                <Select
+                  onChange={handleStatusChange}
+                  data={statusOptions}
+                  value={status}
+                  placeholder="Select next status"
+                  style={{ width: 200 }}
+                  disabled={loadingOptions || statusOptions.length <= 1}
+                  rightSection={loadingOptions ? <Loader size={16} /> : null}
+                />
+                <Button onClick={handleUpdateStatus} loading={loading} disabled={!isDirty}>
+                  Update Status
+                </Button>
+              </Group>
             </Group>
           </Group>
-        </Group>
-      </Paper>
+        </Paper>
+      )}
     </Modal>
   );
 };

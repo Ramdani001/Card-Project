@@ -27,7 +27,11 @@ interface Transaction {
   items: any[];
 }
 
-const ListTransaction = () => {
+interface ListTransactionProps {
+  isNonDashboard: boolean;
+}
+
+const ListTransaction = ({ isNonDashboard = false }: ListTransactionProps) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [metadata, setMetadata] = useState<PaginationMetaDataDto>({ total: 0, page: 1, limit: 10, totalPages: 0 });
   const [loading, setLoading] = useState(false);
@@ -65,7 +69,8 @@ const ListTransaction = () => {
       if (dateRange[0]) params.append("startDate", dayjs(dateRange[0]).startOf("day").toISOString());
       if (dateRange[1]) params.append("endDate", dayjs(dateRange[1]).endOf("day").toISOString());
 
-      const res = await fetch(`/api/transactions?${params.toString()}`);
+      const urlListTransaction = isNonDashboard ? `/api/users/transactions?${params.toString()}` : `/api/transactions?${params.toString()}`;
+      const res = await fetch(urlListTransaction);
       const json = await res.json();
 
       if (json.success) {
@@ -217,14 +222,7 @@ const ListTransaction = () => {
           clearable
         />
 
-        <DatePickerInput
-          label="Date Range"
-          type="range"
-          placeholder="Payment Date"
-          value={dateRange}
-          onChange={setDateRange}
-          clearable
-        />
+        <DatePickerInput label="Date Range" type="range" placeholder="Payment Date" value={dateRange} onChange={setDateRange} clearable miw={240} />
 
         <Button variant="light" onClick={handleSearch} leftSection={<IconSearch size={16} />}>
           Apply
@@ -245,7 +243,13 @@ const ListTransaction = () => {
         onFilterChange={() => {}}
       />
 
-      <TransactionDetailModal opened={detailOpened} onClose={closeDetail} transaction={selectedTrx} onUpdateSuccess={fetchTransactions} />
+      <TransactionDetailModal
+        opened={detailOpened}
+        onClose={closeDetail}
+        transaction={selectedTrx}
+        onUpdateSuccess={fetchTransactions}
+        isNonDashboard={isNonDashboard}
+      />
 
       <TransactionHistoryModal
         opened={historyOpened}

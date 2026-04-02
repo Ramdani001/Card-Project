@@ -19,6 +19,9 @@ export const GET = async (req: NextRequest) => {
     const status = searchParams.get("status");
     const invoice = searchParams.get("invoice");
 
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+
     const additionalWhere: Prisma.TransactionWhereInput = {};
 
     if (status) {
@@ -27,6 +30,13 @@ export const GET = async (req: NextRequest) => {
 
     if (invoice) {
       additionalWhere.invoice = { contains: invoice, mode: "insensitive" };
+    }
+    
+    if (startDate || endDate) {
+      additionalWhere.createdAt = {
+        ...(startDate && { gte: new Date(startDate) }),
+        ...(endDate && { lte: new Date(endDate) }),
+      };
     }
 
     const { transactions, total } = await getUserTransactions(session.user.id, {

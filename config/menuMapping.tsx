@@ -50,7 +50,7 @@ export const ICON_MAP: Record<string, any> = {
 
 export const COMPONENT_MAP: Record<string, React.ReactNode> = {
   "/dashboard": <Dashboard />,
-  "/transactions": <ListTransaction />,
+  "/transactions": <ListTransaction isNonDashboard={false} />,
   "/members": <ListMember />,
   "/roles": <ListRole />,
   "/cards": <ListCard />,
