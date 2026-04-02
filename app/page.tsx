@@ -18,14 +18,16 @@ export default function TcgCornerClone() {
   const [search, setSearch] = useState("");
 
   return (
-    <Box>
+    <Box style={{ backgroundColor: "#f7f8fb", color: "#1f2a44", minHeight: "100vh" }}>
       <HeaderSection search={search} setSearch={setSearch} cartItems={cartItems} setIsDrawerOpen={setIsDrawerOpen} />
-      <HeroSection />
-      <SwiperCard />
-      <SingleCard />
-      <PreOrder />
-      <CaseBoxCard />
-      <ArticleMain />
+      <Box component="main">
+        <HeroSection />
+        <SwiperCard />
+        <SingleCard />
+        <PreOrder />
+        <CaseBoxCard />
+        <ArticleMain />
+      </Box>
       <FooterSection />
     </Box>
   );

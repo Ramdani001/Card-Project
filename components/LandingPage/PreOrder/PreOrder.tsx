@@ -41,7 +41,7 @@ export const PreOrder = () => {
         Modal without header, press escape or click on overlay to close
       </Modal>
 
-      <Box style={{ minHeight: 800 }} bg={"#f5f6fa"} p="md" mt="xl">
+      <Box bg={"#f5f6fa"} p="md" mt="xl">
         <Center mb="xl">
           <h1 style={{ color: "#05004f", margin: 0 }}>Pre Order Event</h1>
         </Center>

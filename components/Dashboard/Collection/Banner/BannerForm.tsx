@@ -120,7 +120,7 @@ export const BannerForm = ({ opened, onClose, bannerToEdit, onSuccess }: BannerF
           <DateTimePicker
             label="Start Date"
             placeholder="Pick date & time"
-            value={startDate instanceof Date ? startDate : null}
+            value={startDate}
             onChange={setStartDate}
             style={{ flex: 1 }}
             withAsterisk
@@ -129,9 +129,9 @@ export const BannerForm = ({ opened, onClose, bannerToEdit, onSuccess }: BannerF
           <DateTimePicker
             label="End Date"
             placeholder="Pick date & time"
-            value={endDate instanceof Date ? endDate : null}
+            value={endDate}
             onChange={setEndDate}
-            minDate={startDate instanceof Date ? startDate : undefined}
+            minDate={startDate || new Date()}
             style={{ flex: 1 }}
             withAsterisk
             clearable

@@ -7,7 +7,7 @@ import { HeaderSection } from "@/components/LandingPage/HeaderSection";
 import { ListCardSection } from "@/components/LandingPage/ListCardSection";
 import { CardDto } from "@/types/dtos/CardDto";
 import { CartItemDto } from "@/types/dtos/CartItemDto";
-import { Box, Center, Container, Grid, Group, Loader, Pagination, Select, Text, TextInput } from "@mantine/core";
+import { Box, Center, Container, Grid, Group, Loader, Pagination, Paper, Select, Text, TextInput } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconSearch, IconX } from "@tabler/icons-react";
@@ -73,7 +73,7 @@ export default function MainCatalog() {
     try {
       const params = new URLSearchParams();
       params.append("page", activePage.toString());
-      params.append("limit", "12");
+      params.append("limit", "8");
 
       if (debouncedSearch) params.append("name", debouncedSearch);
       if (sortValue) {
@@ -256,7 +256,7 @@ export default function MainCatalog() {
   const totalAmount = cartItems.reduce((acc, item) => acc + getCardPrice(item.card) * item.quantity, 0);
 
   return (
-    <Box style={{ backgroundColor: "#f4f6f8", minHeight: "100vh", color: "#212529", fontFamily: "Arial, sans-serif" }}>
+    <Box style={{ backgroundColor: "#f7f8fb", minHeight: "100vh", color: "#1f2a44", fontFamily: "Inter, Arial, sans-serif" }}>
       <HeaderSection
         search={search}
         setSearch={setSearch}
@@ -267,19 +267,20 @@ export default function MainCatalog() {
       />
 
       <Container size="xl" py="xl">
-        <Grid>
-          <Grid.Col span={{ base: 12, md: 3 }} visibleFrom="md">
-            <FilterSection
-              categories={categoriesList}
-              selectedCategoryIds={selectedCategoryIds}
-              setSelectedCategoryIds={setSelectedCategoryIds}
-              setSelectedFilterStock={setSelectedFilterStock}
-              selectedFilterStock={selectedFilterStock}
-            />
-          </Grid.Col>
+        <Paper p="lg" radius="md" withBorder shadow="sm" style={{ borderColor: "#e4e8ed" }}>
+          <Grid>
+            <Grid.Col span={{ base: 12, md: 3 }} visibleFrom="md">
+              <FilterSection
+                categories={categoriesList}
+                selectedCategoryIds={selectedCategoryIds}
+                setSelectedCategoryIds={setSelectedCategoryIds}
+                setSelectedFilterStock={setSelectedFilterStock}
+                selectedFilterStock={selectedFilterStock}
+              />
+            </Grid.Col>
 
-          <Grid.Col span={{ base: 12, md: 9 }}>
-            <Group justify="space-between" mb="lg" align="flex-end">
+            <Grid.Col span={{ base: 12, md: 9 }}>
+              <Group justify="space-between" mb="lg" align="flex-end">
               <TextInput
                 placeholder="Search..."
                 leftSection={<IconSearch size={16} stroke={1.5} />}
@@ -328,6 +329,7 @@ export default function MainCatalog() {
             )}
           </Grid.Col>
         </Grid>
+      </Paper>
       </Container>
 
       <CartSection
