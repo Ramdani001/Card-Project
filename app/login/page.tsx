@@ -1,9 +1,8 @@
 "use client";
 
-import { Anchor, Box, Button, Center, Loader, Paper, PasswordInput, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Box, Button, Center, Loader, Paper, PasswordInput, Stack, Text, TextInput, Title } from "@mantine/core";
 import { IconAlertCircle, IconLock, IconMail } from "@tabler/icons-react";
 import { signIn, useSession } from "next-auth/react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -236,12 +235,12 @@ export default function LoginPage() {
               </Stack>
             </form>
 
-            <Text ta="center" mt="xl" size="sm" c="dimmed">
-              Don`t have an account yet?{" "}
+            {/* <Text ta="center" mt="xl" size="sm" c="dimmed">
+              Don`t have an account yet?
               <Anchor component={Link} href="/register" fw={700} c="indigo">
                 Register now
               </Anchor>
-            </Text>
+            </Text> */}
           </Paper>
         </Box>
       </div>

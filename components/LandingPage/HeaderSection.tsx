@@ -137,7 +137,7 @@ export const HeaderSection = ({ cartItems, setIsDrawerOpen, cartItemCount, onOpe
                 </Menu>
               ) : (
                 <Button variant="subtle" color="dark" leftSection={<IconLogin size={18} />} onClick={() => router.push("/login")} size="xs">
-                  Login / Register
+                  Login
                 </Button>
               )}
 
