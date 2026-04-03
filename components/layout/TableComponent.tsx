@@ -36,6 +36,7 @@ interface TableProps<T> {
   onLimitChange: (limit: number) => void;
   onSortChange: (key: string, order: "asc" | "desc") => void;
   onFilterChange?: (key: string, value: string) => void;
+  height?: number | string;
 }
 
 const ColumnFilter = ({ initialValue, onChange }: { initialValue: string; onChange: (val: string) => void }) => {
@@ -92,6 +93,7 @@ export function TableComponent<T extends { id?: number | string; [key: string]: 
   onLimitChange,
   onSortChange,
   onFilterChange,
+  height = "60vh",
 }: TableProps<T>) {
   const handleSortClick = (key: string) => {
     if (sortBy === key) {
@@ -111,12 +113,12 @@ export function TableComponent<T extends { id?: number | string; [key: string]: 
 
   return (
     <Paper shadow="xs" radius="md" p="md" withBorder>
-      <ScrollArea>
-        <Table verticalSpacing="sm" striped highlightOnHover withTableBorder>
-          <Table.Thead>
+      <ScrollArea h={height}>
+        <Table verticalSpacing="sm" striped highlightOnHover withTableBorder stickyHeader stickyHeaderOffset={0}>
+          <Table.Thead style={{ zIndex: 1 }}>
             <Table.Tr>
               {columns.map((col) => (
-                <Table.Th key={String(col.key)} style={{ width: col.width }}>
+                <Table.Th key={String(col.key)} style={{ width: col.width, backgroundColor: "var(--mantine-color-body)" }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     <Group justify="space-between" wrap="nowrap">
                       <Text fw={600} size="sm">
