@@ -1,4 +1,5 @@
 import { CONSTANT } from "@/constants";
+import { deleteFile, saveFile } from "@/helpers/file.helper";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
 import { generateSlug } from "@/utils";
@@ -6,12 +7,14 @@ import { generateSlug } from "@/utils";
 interface CreateCategoryParams {
   name: string;
   note?: string;
+  file?: File | null;
 }
 
 interface UpdateCategoryParams {
   id: string;
   name?: string;
   note?: string;
+  file?: File | null;
 }
 
 export const getCategories = async (options: Prisma.CategoryFindManyArgs, userId?: string) => {
@@ -83,7 +86,7 @@ export const getCategoryById = async (id: string) => {
 };
 
 export const createCategory = async (params: CreateCategoryParams) => {
-  const { name, note } = params;
+  const { name, note, file } = params;
   const slug = generateSlug(name);
 
   const existingSlug = await prisma.category.findUnique({
@@ -94,17 +97,29 @@ export const createCategory = async (params: CreateCategoryParams) => {
     throw new Error("Category with this name already exists");
   }
 
-  return await prisma.category.create({
-    data: {
-      name,
-      slug,
-      note,
-    },
-  });
+  let fileData: { url: string; path: string } | null = null;
+  if (file && file.size > 0) {
+    fileData = await saveFile(file, "categories");
+  }
+
+  try {
+    return await prisma.category.create({
+      data: {
+        name,
+        slug,
+        note,
+        urlImage: fileData?.url ?? null,
+        pathImage: fileData?.path ?? null,
+      },
+    });
+  } catch (error) {
+    if (fileData) await deleteFile(fileData.path).catch(console.error);
+    throw error;
+  }
 };
 
 export const updateCategory = async (params: UpdateCategoryParams) => {
-  const { id, name, note } = params;
+  const { id, name, note, file } = params;
 
   const existingCategory = await prisma.category.findUnique({
     where: { id },
@@ -117,21 +132,36 @@ export const updateCategory = async (params: UpdateCategoryParams) => {
   let slug = undefined;
   if (name && name !== existingCategory.name) {
     slug = generateSlug(name);
-    const slugExist = await prisma.category.findUnique({
-      where: { slug },
-    });
+    const slugExist = await prisma.category.findUnique({ where: { slug } });
     if (slugExist && slugExist.id !== id) {
       throw new Error("Category name already taken");
     }
   }
 
-  return await prisma.category.update({
-    where: { id },
-    data: {
-      ...(name && { name, slug }),
-      ...(note && { note }),
-    },
-  });
+  let fileData: { url: string; path: string } | null = null;
+  if (file && file.size > 0) {
+    fileData = await saveFile(file, "categories");
+  }
+
+  try {
+    const updated = await prisma.category.update({
+      where: { id },
+      data: {
+        ...(name && { name, slug }),
+        note,
+        ...(fileData && { urlImage: fileData.url, pathImage: fileData.path }),
+      },
+    });
+
+    if (fileData && existingCategory.pathImage) {
+      await deleteFile(existingCategory.pathImage).catch(console.error);
+    }
+
+    return updated;
+  } catch (error) {
+    if (fileData) await deleteFile(fileData.path).catch(console.error);
+    throw error;
+  }
 };
 
 export const deleteCategory = async (id: string) => {
@@ -143,7 +173,13 @@ export const deleteCategory = async (id: string) => {
     throw new Error("Category not found");
   }
 
-  return await prisma.category.delete({
+  const deletedCategory = await prisma.category.delete({
     where: { id },
   });
+
+  if (deletedCategory.pathImage) {
+    await deleteFile(deletedCategory.pathImage).catch(console.error);
+  }
+
+  return deletedCategory;
 };

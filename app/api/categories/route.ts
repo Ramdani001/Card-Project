@@ -31,16 +31,24 @@ export const GET = async (req: NextRequest) => {
 
 export const POST = async (req: NextRequest) => {
   try {
-    const body = await req.json();
-    const { name, note } = body;
+    const formData = await req.formData();
 
-    if (!name || typeof name !== "string" || name.trim() === "") {
-      return sendResponse({ success: false, message: "Category Name is required", status: 400 });
+    const name = formData.get("name") as string;
+    const note = formData.get("note") as string;
+    const file = formData.get("file") as File | null;
+
+    if (!name || name.trim() === "") {
+      return sendResponse({
+        success: false,
+        message: "Category Name is required",
+        status: 400,
+      });
     }
 
     const newCategory = await createCategory({
       name,
       note,
+      file,
     });
 
     return sendResponse({

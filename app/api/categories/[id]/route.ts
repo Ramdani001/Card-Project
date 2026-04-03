@@ -29,17 +29,21 @@ export const GET = async (_req: NextRequest, { params }: RouteParams) => {
 export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
   try {
     const { id } = await params;
-    const body = await req.json();
-    const { name, note } = body;
+    const formData = await req.formData();
 
-    if (name !== undefined && (typeof name !== "string" || name.trim() === "")) {
-      return sendResponse({ success: false, message: "Valid Category Name is required", status: 400 });
+    const name = formData.get("name") as string | null;
+    const note = formData.get("note") as string | null;
+    const file = formData.get("file") as File | null;
+
+    if (name !== null && name.trim() === "") {
+      return sendResponse({ success: false, message: "Category Name cannot be empty", status: 400 });
     }
 
     const updatedCategory = await updateCategory({
       id,
-      name,
-      note,
+      name: name ?? undefined,
+      note: note ?? undefined,
+      file: file ?? undefined,
     });
 
     return sendResponse({

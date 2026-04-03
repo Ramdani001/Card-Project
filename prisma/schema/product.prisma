@@ -3,6 +3,8 @@ model Category {
   name                     String
   slug                     String                   @unique
   note                     String?
+  urlImage                 String?
+  pathImage                String?
   createdAt                DateTime                 @default(now())
   updatedAt                DateTime                 @updatedAt
   cardCategoryRoleAccesses CardCategoryRoleAccess[]

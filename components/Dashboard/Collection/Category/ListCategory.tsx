@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { IconPencil, IconPlus, IconTrash, IconCheck, IconX, IconTag, IconRefresh } from "@tabler/icons-react";
-import { TableComponent, ColumnDef } from "@/components/layout/TableComponent";
-import { PaginationMetaDataDto } from "@/types/dtos/PaginationMetaDataDto";
-import { notifications } from "@mantine/notifications";
-import { openConfirmModal } from "@mantine/modals";
-import { CategoryForm } from "./CategoryForm";
+import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
 import { CategoryCardDto } from "@/types/dtos/CategoryCardDto";
+import { PaginationMetaDataDto } from "@/types/dtos/PaginationMetaDataDto";
+import { ActionIcon, Avatar, Badge, Box, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
+import { openConfirmModal } from "@mantine/modals";
+import { notifications } from "@mantine/notifications";
+import { IconCategory, IconCheck, IconPencil, IconPlus, IconRefresh, IconTrash, IconX } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+import { CategoryForm } from "./CategoryForm";
 
 const ListCategory = () => {
   const [categories, setCategories] = useState<CategoryCardDto[]>([]);
@@ -98,16 +98,10 @@ const ListCategory = () => {
             });
             fetchCategories();
           } else {
-            notifications.show({
-              title: "Error",
-              message: json.message,
-              color: "red",
-              icon: <IconX size={16} />,
-            });
+            throw new Error(json.message);
           }
-        } catch (error) {
-          console.error("Delete error:", error);
-          notifications.show({ title: "Error", message: "Network error", color: "red", icon: <IconX size={16} /> });
+        } catch (error: any) {
+          notifications.show({ title: "Error", message: error.message || "Network error", color: "red", icon: <IconX size={16} /> });
         }
       },
     });
@@ -127,7 +121,6 @@ const ListCategory = () => {
     {
       key: "no",
       label: "No",
-      sortable: false,
       width: 60,
       render: (_, index) => (metadata.page - 1) * metadata.limit + index + 1,
     },
@@ -137,23 +130,36 @@ const ListCategory = () => {
       sortable: true,
       filterable: true,
       render: (item) => (
-        <Group gap="xs">
-          <Badge size="md" variant="light" color="indigo" leftSection={<IconTag size={12} />}>
-            {item.name}
-          </Badge>
-          <Text size="xs" c="dimmed">
-            ({item.slug})
-          </Text>
+        <Group gap="sm">
+          <Avatar src={item.urlImage || null} radius="sm" size="md" color="blue">
+            <IconCategory size={20} />
+          </Avatar>
+          <Box>
+            <Text fw={500} size="sm" style={{ lineHeight: 1.2 }}>
+              {item.name}
+            </Text>
+            <Text size="xs" c="dimmed">
+              {item.slug}
+            </Text>
+          </Box>
         </Group>
+      ),
+    },
+    {
+      key: "cards_count",
+      label: "Total Cards",
+      width: 120,
+      render: (item) => (
+        <Badge variant="dot" color="blue">
+          {item._count?.cards || 0} items
+        </Badge>
       ),
     },
     {
       key: "note",
       label: "Note",
-      sortable: true,
-      filterable: true,
       render: (item) => (
-        <Text size="sm" c={!item.note ? "dimmed" : undefined}>
+        <Text size="xs" lineClamp={2} c={!item.note ? "dimmed" : undefined}>
           {item.note || "-"}
         </Text>
       ),
@@ -180,15 +186,15 @@ const ListCategory = () => {
   ];
 
   return (
-    <Paper shadow="xs" p="md" radius="md">
+    <Paper shadow="xs" p="md" radius="md" withBorder>
       <Flex justify="space-between" align="center" mb="lg">
-        <Title order={3}>Categories</Title>
+        <Title order={3}>Categories Management</Title>
 
         <Group>
           <ActionIcon variant="default" size="lg" onClick={fetchCategories} loading={loading}>
             <IconRefresh size={18} />
           </ActionIcon>
-          <Button leftSection={<IconPlus size={18} />} onClick={handleOpenAdd}>
+          <Button leftSection={<IconPlus size={18} />} onClick={handleOpenAdd} variant="filled">
             Add Category
           </Button>
         </Group>
@@ -208,14 +214,7 @@ const ListCategory = () => {
         onFilterChange={handleFilterChange}
       />
 
-      <CategoryForm
-        opened={opened}
-        onClose={close}
-        categoryToEdit={selectedCategory}
-        onSuccess={() => {
-          fetchCategories();
-        }}
-      />
+      <CategoryForm opened={opened} onClose={close} categoryToEdit={selectedCategory} onSuccess={fetchCategories} />
     </Paper>
   );
 };
