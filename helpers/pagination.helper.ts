@@ -30,8 +30,12 @@ export const getQueryPaginationOptions = (req: NextRequest) => {
 
   searchParams.forEach((value, key) => {
     if (!reservedParams.includes(key) && value) {
+      const isBoolean = value.toLowerCase() === "true" || value.toLowerCase() === "false";
       const isNumber = !isNaN(Number(value)) && value.trim() !== "";
-      if (isNumber && key != "name") {
+
+      if (isBoolean) {
+        options.where[key] = value.toLowerCase() === "true";
+      } else if (isNumber && key !== "name") {
         options.where[key] = Number(value);
       } else {
         options.where[key] = {
