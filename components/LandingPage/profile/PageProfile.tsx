@@ -1,8 +1,8 @@
 "use client";
 
-import { Avatar, Box, Button, FileInput, Group, LoadingOverlay, Stack, Text, TextInput, ThemeIcon, Title } from "@mantine/core";
+import { Avatar, Box, Button, FileInput, Group, LoadingOverlay, Paper, SimpleGrid, Stack, Text, TextInput, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconCamera, IconCheck, IconDeviceFloppy, IconMail, IconUser } from "@tabler/icons-react";
+import { IconBrandFacebook, IconBrandInstagram, IconBrandTwitter, IconCamera, IconCheck, IconDeviceFloppy, IconUser } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
@@ -37,7 +37,7 @@ export const PageProfile = () => {
           setTwitterUrl(json.data.twitterUrl || "");
         }
       } catch {
-        notifications.show({ title: "Error", message: "Gagal mengambil data", color: "red" });
+        notifications.show({ title: "Error", message: "Failed to fetch profile data", color: "red" });
       } finally {
         setFetching(false);
       }
@@ -56,7 +56,7 @@ export const PageProfile = () => {
 
   const handleUpdate = async () => {
     if (file && file.size > 2 * 1024 * 1024) {
-      return notifications.show({ title: "File Terlalu Besar", message: "Ukuran maksimal adalah 2MB", color: "orange" });
+      return notifications.show({ title: "File too large", message: "Maximum size is 2MB", color: "orange" });
     }
     setLoading(true);
     try {
@@ -72,13 +72,18 @@ export const PageProfile = () => {
       const json = await res.json();
 
       if (json.success) {
-        notifications.show({ title: "Berhasil", message: "Profil berhasil diperbarui!", color: "teal", icon: <IconCheck size={16} /> });
+        notifications.show({
+          title: "Success",
+          message: "Profile updated successfully!",
+          color: "teal",
+          icon: <IconCheck size={16} />,
+        });
         setFile(null);
       } else {
         throw new Error(json.message);
       }
     } catch (error: any) {
-      notifications.show({ title: "Gagal", message: error.message, color: "red" });
+      notifications.show({ title: "Failed", message: error.message || "Server Error", color: "red" });
     } finally {
       setLoading(false);
     }
@@ -90,211 +95,142 @@ export const PageProfile = () => {
         .profile-field input {
           border-radius: 10px;
           border: 1.5px solid #e2e8f0;
-          transition: border-color 0.2s ease, box-shadow 0.2s ease;
+          transition: all 0.2s ease;
         }
         .profile-field input:focus {
           border-color: #6366f1;
           box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
         }
-
         .save-btn {
           background: linear-gradient(135deg, #6366f1, #4f46e5) !important;
-          border: none !important;
           border-radius: 12px !important;
-          height: 46px !important;
+          height: 48px !important;
           font-weight: 600 !important;
-          font-size: 14px !important;
-          transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+          width: 100%;
         }
-        .save-btn:hover:not(:disabled) {
-          transform: translateY(-1px);
-          box-shadow: 0 8px 20px rgba(99,102,241,0.35) !important;
+        @media (min-width: 768px) {
+          .save-btn { width: auto; padding: 0 40px !important; }
         }
-
-        .avatar-ring {
-          border-radius: 50%;
-          padding: 3px;
-          background: linear-gradient(135deg, #6366f1, #a5b4fc);
-        }
-
-        .avatar-upload-trigger {
-          position: absolute;
-          bottom: 2px;
-          right: 2px;
-          width: 30px;
-          height: 30px;
-          border-radius: 50%;
-          background: linear-gradient(135deg, #6366f1, #4f46e5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          box-shadow: 0 2px 8px rgba(99,102,241,0.4);
-          border: 2px solid white;
-        }
-
         .section-card {
           background: white;
           border-radius: 16px;
           border: 1px solid #e8eaf0;
-          padding: 28px;
-        }
-
-        .social-icon-wrap {
-          border-radius: 8px;
-          padding: 4px 6px;
-          display: flex;
-          align-items: center;
+          padding: 24px;
         }
       `}</style>
 
-      <Box className="profile-wrap" w="100%" pos="relative" style={{ maxWidth: 760 }}>
+      <Box pos="relative" style={{ maxWidth: 800, margin: "0 auto" }}>
         <LoadingOverlay visible={fetching || status === "loading"} overlayProps={{ blur: 2, radius: 16 }} />
 
-        <Box mb={28}>
-          <Title order={3} fw={800} style={{ color: "#1e1b4b" }}>
-            Edit Profil
+        <Box mb={30}>
+          <Title order={3} fw={800} c="#1e1b4b">
+            Profile
           </Title>
           <Text size="sm" c="dimmed" mt={4}>
-            Perbarui informasi dan tampilan kartu developer kamu
+            Update your personal information.
           </Text>
         </Box>
 
-        <Stack gap={16}>
-          <div className="section-card">
-            <Group gap={24} align="center">
-              <Box style={{ position: "relative", display: "inline-block" }}>
-                <div className="avatar-ring">
-                  <Avatar src={previewUrl} size={80} radius="50%" style={{ border: "2px solid white" }}>
-                    {name ? name[0].toUpperCase() : "?"}
+        <Stack gap="xl">
+          <Paper className="section-card" withBorder={false}>
+            <Group gap={25} align="center" wrap="wrap">
+              <Box pos="relative" style={{ display: "inline-block" }}>
+                <Box p={3} style={{ borderRadius: "50%", background: "linear-gradient(135deg, #6366f1, #a5b4fc)" }}>
+                  <Avatar src={previewUrl} size={100} radius="100%" style={{ border: "3px solid white" }}>
+                    {name ? name[0].toUpperCase() : <IconUser size={40} />}
                   </Avatar>
-                </div>
-                <div className="avatar-upload-trigger" onClick={() => document.getElementById("avatar-input")?.click()}>
-                  <IconCamera size={14} color="white" />
-                </div>
-              </Box>
-
-              <Box style={{ flex: 1 }}>
-                <Text fw={700} size="sm" c="#1e1b4b">
-                  {name || "Nama belum diisi"}
-                </Text>
-                <Text size="xs" c="dimmed" mt={2}>
-                  {email || "Email belum diisi"}
-                </Text>
-                <Text size="xs" c="dimmed" mt={8}>
-                  JPG / PNG · Maks 2MB
-                </Text>
-              </Box>
-
-              <FileInput id="avatar-input" accept="image/png,image/jpeg" value={file} onChange={setFile} clearable style={{ display: "none" }} />
-
-              {file && (
-                <Box
+                </Box>
+                <Button
+                  p={0}
+                  onClick={() => document.getElementById("avatar-input")?.click()}
                   style={{
-                    background: "#f0fdf4",
-                    border: "1px solid #bbf7d0",
-                    borderRadius: 10,
-                    padding: "8px 14px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
+                    position: "absolute",
+                    bottom: 5,
+                    right: 5,
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    background: "#6366f1",
+                    border: "2px solid white",
+                    zIndex: 2,
                   }}
                 >
-                  <ThemeIcon color="teal" variant="light" size="sm" radius="xl">
-                    <IconCheck size={12} />
-                  </ThemeIcon>
-                  <Text size="xs" c="teal.7" fw={600}>
-                    {file.name}
-                  </Text>
-                </Box>
-              )}
+                  <IconCamera size={16} color="white" />
+                </Button>
+              </Box>
+
+              <Box>
+                <Text fw={700} size="lg">
+                  {name || "Display Name"}
+                </Text>
+                <Text size="sm" c="dimmed">
+                  {email || "email@example.com"}
+                </Text>
+                <Text size="xs" c="indigo.6" fw={600} mt={8}>
+                  JPG, PNG (Max 2MB)
+                </Text>
+              </Box>
+
+              <FileInput id="avatar-input" accept="image/*" value={file} onChange={setFile} style={{ display: "none" }} />
             </Group>
-          </div>
+          </Paper>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <div className="section-card">
-              <Text fw={700} size="sm" c="#1e1b4b" mb={16}>
-                Informasi Dasar
+          <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg">
+            <Paper className="section-card">
+              <Text fw={700} size="sm" mb={20} c="#1e1b4b">
+                Basic Information
               </Text>
               <Stack gap="md">
                 <TextInput
+                  label="Full Name"
                   className="profile-field"
-                  label="Nama Lengkap"
-                  placeholder="John Doe"
-                  withAsterisk
+                  placeholder="Your Name"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  leftSection={<IconUser size={15} color="#6366f1" />}
-                  styles={{ label: { fontWeight: 600, marginBottom: 6, color: "#374151", fontSize: 13 } }}
+                  onChange={(e) => setName(e.currentTarget.value)}
+                />
+                <TextInput
+                  label="Email Address"
+                  className="profile-field"
+                  placeholder="hello@world.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.currentTarget.value)}
+                />
+              </Stack>
+            </Paper>
+
+            <Paper className="section-card">
+              <Text fw={700} size="sm" mb={20} c="#1e1b4b">
+                Social Media Presence
+              </Text>
+              <Stack gap="sm">
+                <TextInput
+                  className="profile-field"
+                  placeholder="facebook.com/username"
+                  leftSection={<IconBrandFacebook size={18} color="#1877F2" />}
+                  value={facebookUrl}
+                  onChange={(e) => setFacebookUrl(e.currentTarget.value)}
                 />
                 <TextInput
                   className="profile-field"
-                  label="Alamat Email"
-                  placeholder="john@example.com"
-                  withAsterisk
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  leftSection={<IconMail size={15} color="#6366f1" />}
-                  styles={{ label: { fontWeight: 600, marginBottom: 6, color: "#374151", fontSize: 13 } }}
+                  placeholder="instagram.com/username"
+                  leftSection={<IconBrandInstagram size={18} color="#E4405F" />}
+                  value={instagramUrl}
+                  onChange={(e) => setInstagramUrl(e.currentTarget.value)}
+                />
+                <TextInput
+                  className="profile-field"
+                  placeholder="twitter.com/username"
+                  leftSection={<IconBrandTwitter size={18} color="#1DA1F2" />}
+                  value={twitterUrl}
+                  onChange={(e) => setTwitterUrl(e.currentTarget.value)}
                 />
               </Stack>
-            </div>
-
-            <div className="section-card">
-              <Text fw={700} size="sm" c="#1e1b4b" mb={16}>
-                Sosial Media
-              </Text>
-              <Stack gap="md">
-                {[
-                  {
-                    label: "Facebook",
-                    val: facebookUrl,
-                    set: setFacebookUrl,
-                    bg: "#eff6ff",
-                    placeholder: "facebook.com/username",
-                  },
-                  {
-                    label: "Instagram",
-                    val: instagramUrl,
-                    set: setInstagramUrl,
-                    bg: "#fff1f2",
-                    placeholder: "instagram.com/username",
-                  },
-                  {
-                    label: "Twitter / X",
-                    val: twitterUrl,
-                    set: setTwitterUrl,
-                    bg: "#eff6ff",
-                    placeholder: "twitter.com/username",
-                  },
-                ].map((s) => (
-                  <TextInput
-                    key={s.label}
-                    className="profile-field"
-                    label={s.label}
-                    placeholder={s.placeholder}
-                    value={s.val}
-                    onChange={(e) => s.set(e.target.value)}
-                    styles={{
-                      label: { fontWeight: 600, marginBottom: 6, color: "#374151", fontSize: 13 },
-                      section: { width: 40, paddingLeft: 8 },
-                    }}
-                  />
-                ))}
-              </Stack>
-            </div>
-          </div>
+            </Paper>
+          </SimpleGrid>
 
           <Box>
-            <Button
-              className="save-btn"
-              onClick={handleUpdate}
-              loading={loading}
-              disabled={status !== "authenticated"}
-              leftSection={<IconDeviceFloppy size={16} />}
-              loaderProps={{ type: "dots" }}
-            >
-              Simpan Perubahan
+            <Button className="save-btn" onClick={handleUpdate} loading={loading} leftSection={<IconDeviceFloppy size={20} />}>
+              Save Changes
             </Button>
           </Box>
         </Stack>

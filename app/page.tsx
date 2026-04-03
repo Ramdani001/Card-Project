@@ -15,11 +15,10 @@ import { useState } from "react";
 export default function TcgCornerClone() {
   const [cartItems, _setCartItems] = useState<CartItemDto[]>([]);
   const [_isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [search, setSearch] = useState("");
 
   return (
     <Box style={{ backgroundColor: "#f7f8fb", color: "#1f2a44", minHeight: "100vh" }}>
-      <HeaderSection search={search} setSearch={setSearch} cartItems={cartItems} setIsDrawerOpen={setIsDrawerOpen} />
+      <HeaderSection cartItems={cartItems} setIsDrawerOpen={setIsDrawerOpen} />
       <Box component="main">
         <HeroSection />
         <SwiperCard />

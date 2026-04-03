@@ -258,8 +258,6 @@ export default function MainCatalog() {
   return (
     <Box style={{ backgroundColor: "#f7f8fb", minHeight: "100vh", color: "#1f2a44", fontFamily: "Inter, Arial, sans-serif" }}>
       <HeaderSection
-        search={search}
-        setSearch={setSearch}
         cartItems={cartItems}
         setIsDrawerOpen={setIsDrawerOpen}
         cartItemCount={cartItems.length}
@@ -281,55 +279,55 @@ export default function MainCatalog() {
 
             <Grid.Col span={{ base: 12, md: 9 }}>
               <Group justify="space-between" mb="lg" align="flex-end">
-              <TextInput
-                placeholder="Search..."
-                leftSection={<IconSearch size={16} stroke={1.5} />}
-                value={search}
-                onChange={(e) => setSearch(e.currentTarget.value)}
-                size="xs"
-                w={250}
-              />
-
-              <Select
-                placeholder="Sort by"
-                data={SORT_OPTIONS.map((opt) => opt.label)}
-                value={SORT_OPTIONS.find((e) => e.value === sortValue)?.label || "Newest"}
-                onChange={(val) => {
-                  const selected = SORT_OPTIONS.find((x) => x.label === val);
-                  if (selected) setSortValue(selected.value);
-                }}
-                size="xs"
-                w={200}
-                allowDeselect={false}
-              />
-            </Group>
-
-            {loadingProducts ? (
-              <Center h={300}>
-                <Loader />
-              </Center>
-            ) : products.length > 0 ? (
-              <>
-                <ListCardSection
-                  products={products}
-                  handleAddToCart={handleAddToCart}
-                  loadingAction={loadingAction}
-                  setSearch={setSearch}
-                  loadingProducts={loadingProducts}
+                <TextInput
+                  placeholder="Search..."
+                  leftSection={<IconSearch size={16} stroke={1.5} />}
+                  value={search}
+                  onChange={(e) => setSearch(e.currentTarget.value)}
+                  size="xs"
+                  w={250}
                 />
 
-                <Center mt="xl">
-                  <Pagination total={totalPages} value={activePage} onChange={setActivePage} color="blue" withEdges siblings={1} />
+                <Select
+                  placeholder="Sort by"
+                  data={SORT_OPTIONS.map((opt) => opt.label)}
+                  value={SORT_OPTIONS.find((e) => e.value === sortValue)?.label || "Newest"}
+                  onChange={(val) => {
+                    const selected = SORT_OPTIONS.find((x) => x.label === val);
+                    if (selected) setSortValue(selected.value);
+                  }}
+                  size="xs"
+                  w={200}
+                  allowDeselect={false}
+                />
+              </Group>
+
+              {loadingProducts ? (
+                <Center h={300}>
+                  <Loader />
                 </Center>
-              </>
-            ) : (
-              <Center h={300}>
-                <Text c="dimmed">No products found.</Text>
-              </Center>
-            )}
-          </Grid.Col>
-        </Grid>
-      </Paper>
+              ) : products.length > 0 ? (
+                <>
+                  <ListCardSection
+                    products={products}
+                    handleAddToCart={handleAddToCart}
+                    loadingAction={loadingAction}
+                    setSearch={setSearch}
+                    loadingProducts={loadingProducts}
+                  />
+
+                  <Center mt="xl">
+                    <Pagination total={totalPages} value={activePage} onChange={setActivePage} color="blue" withEdges siblings={1} />
+                  </Center>
+                </>
+              ) : (
+                <Center h={300}>
+                  <Text c="dimmed">No products found.</Text>
+                </Center>
+              )}
+            </Grid.Col>
+          </Grid>
+        </Paper>
       </Container>
 
       <CartSection

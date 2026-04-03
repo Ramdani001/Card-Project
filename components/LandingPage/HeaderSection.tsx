@@ -1,24 +1,20 @@
 "use client";
 
 import { CartItemDto } from "@/types/dtos/CartItemDto";
-import { ActionIcon, Avatar, Box, Burger, Button, Container, Group, Indicator, Menu, Text, Title } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { ActionIcon, Avatar, Box, Button, Container, Group, Indicator, Menu, Text, Title } from "@mantine/core";
 import { IconChevronDown, IconLayoutDashboard, IconLogin, IconLogout, IconShoppingCart, IconUser } from "@tabler/icons-react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
 
 interface HeaderSectionProps {
-  search: string;
-  setSearch: Dispatch<SetStateAction<string>>;
   cartItems: CartItemDto[];
-  setIsDrawerOpen: Dispatch<SetStateAction<boolean>>;
+  setIsDrawerOpen?: Dispatch<SetStateAction<boolean>>;
   cartItemCount?: number;
   onOpenCart?: () => void;
 }
 
 export const HeaderSection = ({ cartItems, setIsDrawerOpen, cartItemCount, onOpenCart }: HeaderSectionProps) => {
-  const [opened, { toggle }] = useDisclosure(false);
   const { data: session, status } = useSession();
   const router = useRouter();
 
@@ -26,7 +22,7 @@ export const HeaderSection = ({ cartItems, setIsDrawerOpen, cartItemCount, onOpe
 
   const handleOpenCart = () => {
     if (onOpenCart) onOpenCart();
-    else setIsDrawerOpen(true);
+    else setIsDrawerOpen?.(true);
   };
 
   return (
@@ -40,7 +36,6 @@ export const HeaderSection = ({ cartItems, setIsDrawerOpen, cartItemCount, onOpe
         <Container size="xl">
           <Group justify="space-between">
             <Group>
-              <Burger opened={opened} onClick={toggle} hiddenFrom="md" size="sm" />
               <Title
                 order={3}
                 style={{ fontFamily: "Impact, sans-serif", letterSpacing: 1, color: "#212529", cursor: "pointer" }}
@@ -89,14 +84,14 @@ export const HeaderSection = ({ cartItems, setIsDrawerOpen, cartItemCount, onOpe
 
             <Group gap="lg">
               {status === "authenticated" ? (
-                <Menu shadow="md" width={220} trigger="hover" openDelay={100} closeDelay={400} position="bottom-end">
+                <Menu shadow="md" width={200} position="bottom-end" transitionProps={{ transition: "pop-top-right" }}>
                   <Menu.Target>
                     <Group gap={8} style={{ cursor: "pointer", lineHeight: 1 }}>
                       <Avatar color="blue" radius="xl" size="sm" src={session?.user.avatar}>
                         {(session?.user?.name?.[0] || "U").toUpperCase()}
                       </Avatar>
 
-                      <Box visibleFrom="xs">
+                      <Box style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                         <Text size="xs" c="dimmed" lh={1.2}>
                           Hello,
                         </Text>
@@ -141,11 +136,13 @@ export const HeaderSection = ({ cartItems, setIsDrawerOpen, cartItemCount, onOpe
                 </Button>
               )}
 
-              <Indicator label={totalItems} size={16} color="red" offset={4} disabled={totalItems === 0}>
-                <ActionIcon variant="transparent" color="dark" size="xl" onClick={handleOpenCart}>
-                  <IconShoppingCart size={26} stroke={1.5} />
-                </ActionIcon>
-              </Indicator>
+              {onOpenCart != null && (
+                <Indicator label={totalItems} size={16} color="red" offset={4} disabled={totalItems === 0}>
+                  <ActionIcon variant="transparent" color="dark" size="xl" onClick={handleOpenCart}>
+                    <IconShoppingCart size={26} stroke={1.5} />
+                  </ActionIcon>
+                </Indicator>
+              )}
             </Group>
           </Group>
         </Container>
