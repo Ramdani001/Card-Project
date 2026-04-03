@@ -2,11 +2,9 @@ module.exports = {
   apps: [
     {
       name: "card-app",
-      script: "./node_modules/next/dist/bin/next",
+      script: "npm",
       args: "start",
       cwd: "./",
-      exec_mode: "cluster",
-      instances: "max",
       autorestart: true,
       watch: false,
       max_memory_restart: "1G",
