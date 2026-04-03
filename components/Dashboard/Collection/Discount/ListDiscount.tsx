@@ -171,7 +171,7 @@ const ListDiscount = () => {
   return (
     <Paper shadow="xs" p="md" radius="md">
       <Flex justify="space-between" align="center" mb="lg">
-        <Title order={3}>Discount List</Title>
+        <Title order={3}>Discounts</Title>
         <Group>
           <ActionIcon variant="default" size="lg" onClick={fetchDiscounts} loading={loading}>
             <IconRefresh size={18} />

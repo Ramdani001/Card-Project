@@ -216,7 +216,7 @@ const ListVoucher = () => {
   return (
     <Paper shadow="xs" p="md" radius="md">
       <Flex justify="space-between" align="center" mb="lg">
-        <Title order={3}>Voucher List</Title>
+        <Title order={3}>Vouchers</Title>
         <Group>
           <ActionIcon variant="default" size="lg" onClick={fetchVouchers} loading={loading}>
             <IconRefresh size={18} />

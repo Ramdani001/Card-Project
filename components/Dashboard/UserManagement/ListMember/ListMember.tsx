@@ -224,7 +224,7 @@ const ListMember = () => {
   return (
     <Paper shadow="xs" p="md" radius="md">
       <Flex justify="space-between" align="center" mb="lg">
-        <Title order={3}>List Member</Title>
+        <Title order={3}>Members</Title>
         <Group>
           <ActionIcon variant="default" size="lg" onClick={fetchUsers} loading={loading}>
             <IconRefresh size={18} />

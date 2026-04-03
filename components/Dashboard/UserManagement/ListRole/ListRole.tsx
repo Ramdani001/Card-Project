@@ -235,7 +235,7 @@ const ListRole = () => {
   return (
     <Paper shadow="xs" p="md" radius="md">
       <Flex justify="space-between" align="center" mb="lg">
-        <Title order={3}>Roles Management</Title>
+        <Title order={3}>Roles</Title>
         <Group>
           <ActionIcon variant="default" size="lg" onClick={fetchRoles} loading={loading}>
             <IconRefresh size={18} />

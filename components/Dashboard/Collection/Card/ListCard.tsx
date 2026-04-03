@@ -297,7 +297,7 @@ const ListCard = () => {
   return (
     <Paper shadow="xs" p="md" radius="md">
       <Flex justify="space-between" align="center" mb="lg">
-        <Title order={3}>Product Cards</Title>
+        <Title order={3}>Cards</Title>
 
         <Group gap="xs">
           <Button.Group>
@@ -330,7 +330,7 @@ const ListCard = () => {
             <IconRefresh size={18} />
           </ActionIcon>
           <Button leftSection={<IconPlus size={18} />} onClick={handleOpenAdd}>
-            Add Product
+            Add Card
           </Button>
         </Group>
       </Flex>

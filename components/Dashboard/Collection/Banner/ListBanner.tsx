@@ -208,7 +208,7 @@ const ListBanner = () => {
   return (
     <Paper shadow="xs" p="md" radius="md">
       <Flex justify="space-between" align="center" mb="lg">
-        <Title order={3}>Banner Management</Title>
+        <Title order={3}>Banners</Title>
 
         <Group>
           <ActionIcon variant="default" size="lg" onClick={fetchBanners} loading={loading}>

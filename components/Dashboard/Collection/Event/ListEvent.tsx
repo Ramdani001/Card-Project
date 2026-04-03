@@ -217,7 +217,7 @@ const ListEvent = () => {
   return (
     <Paper shadow="xs" p="md" radius="md">
       <Flex justify="space-between" align="center" mb="lg">
-        <Title order={3}>List Event</Title>
+        <Title order={3}>Events</Title>
 
         <Group>
           <ActionIcon variant="default" size="lg" onClick={fetchEvents} loading={loading}>

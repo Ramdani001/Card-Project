@@ -169,9 +169,9 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
   };
 
   return (
-    <Modal opened={opened} onClose={onClose} title={cardToEdit ? "Edit Product" : "Create New Product"} centered size="lg">
+    <Modal opened={opened} onClose={onClose} title={cardToEdit ? "Edit Card" : "Create New Card"} centered size="lg">
       <Flex direction="column" gap="sm">
-        <TextInput label="Product Name" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} withAsterisk />
+        <TextInput label="Card Name" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} withAsterisk />
 
         <TextInput label="SKU (Stock Keeping Unit)" placeholder="SKU" value={sku} onChange={(e) => setSku(e.target.value)} />
 

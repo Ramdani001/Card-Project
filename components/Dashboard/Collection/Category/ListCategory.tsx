@@ -188,7 +188,7 @@ const ListCategory = () => {
   return (
     <Paper shadow="xs" p="md" radius="md" withBorder>
       <Flex justify="space-between" align="center" mb="lg">
-        <Title order={3}>Categories Management</Title>
+        <Title order={3}>Categories</Title>
 
         <Group>
           <ActionIcon variant="default" size="lg" onClick={fetchCategories} loading={loading}>

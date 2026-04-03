@@ -128,7 +128,7 @@ export const RoleFormModal = ({ opened, onClose, role, onSuccess }: RoleFormModa
     <Modal
       opened={opened}
       onClose={onClose}
-      title={isEditing ? "Edit Role" : "Tambah Role"}
+      title={isEditing ? "Edit Role" : "Create Role"}
       size="xl"
       centered
       scrollAreaComponent={ScrollArea.Autosize}

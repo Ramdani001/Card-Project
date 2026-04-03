@@ -187,7 +187,7 @@ const ListArticle = () => {
   return (
     <Paper shadow="xs" p="md" radius="md">
       <Flex justify="space-between" align="center" mb="lg">
-        <Title order={3}>List Article</Title>
+        <Title order={3}>Articles</Title>
 
         <Group>
           <ActionIcon variant="default" size="lg" onClick={fetchArticles} loading={loading}>
