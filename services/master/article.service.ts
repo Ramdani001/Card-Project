@@ -14,9 +14,8 @@ interface UpdateArticleParams {
   title?: string;
   content?: string;
   files?: File[];
+  removedImageIds: string[];
 }
-
-
 
 export const getArticles = async (options: Prisma.ArticleFindManyArgs) => {
   const finalOptions: Prisma.ArticleFindManyArgs = {
@@ -47,42 +46,45 @@ export const createArticle = async (params: CreateArticleParams) => {
   const slug = generateSlug(title);
 
   const existingSlug = await prisma.article.findUnique({ where: { slug } });
-  if (existingSlug) throw new Error("Article title already exists (Slug conflict)");
+  if (existingSlug) throw new Error("Judul artikel sudah digunakan (Slug conflict)");
+
   const uploadedFiles: any[] = [];
 
   try {
     if (files && files.length > 0) {
-      for (const file of files) {
-        const saved = await saveFile(file);
-        uploadedFiles.push(saved);
-      }
+      const uploadPromises = files.map((file) => saveFile(file, "articles"));
+      const results = await Promise.all(uploadPromises);
+      uploadedFiles.push(...results);
     }
 
-    return await prisma.$transaction(async (tx) => {
-      return await tx.article.create({
-        data: {
-          title,
-          slug,
-          content,
-          images: {
-            create: uploadedFiles.map((f) => ({
-              ...f,
-            })),
-          },
+    return await prisma.article.create({
+      data: {
+        title,
+        slug,
+        content,
+        images: {
+          create: uploadedFiles.map((f) => ({
+            url: f.url,
+            path: f.path,
+            originalName: f.originalName,
+            fileName: f.fileName,
+            mimeType: f.mimeType,
+            size: f.size,
+          })),
         },
-        include: { images: true },
-      });
+      },
+      include: { images: true },
     });
   } catch (error) {
-    for (const f of uploadedFiles) {
-      if (f.path) await deleteFile(f.path).catch(console.error);
+    if (uploadedFiles.length > 0) {
+      await Promise.all(uploadedFiles.map((f) => deleteFile(f.path).catch(console.error)));
     }
     throw error;
   }
 };
 
 export const updateArticle = async (params: UpdateArticleParams) => {
-  const { id, title, content, files } = params;
+  const { id, title, content, files, removedImageIds } = params;
 
   const article = await prisma.article.findUnique({
     where: { id },
@@ -95,14 +97,11 @@ export const updateArticle = async (params: UpdateArticleParams) => {
 
   if (files && files.length > 0) {
     try {
-      for (const file of files) {
-        const saved = await saveFile(file);
-        newUploadedFiles.push(saved);
-      }
+      const uploadPromises = files.map((file) => saveFile(file, "articles"));
+      const results = await Promise.all(uploadPromises);
+      newUploadedFiles.push(...results);
     } catch (uploadError) {
-      for (const f of newUploadedFiles) {
-        if (f.path) await deleteFile(f.path).catch(console.error);
-      }
+      await Promise.all(newUploadedFiles.map((f) => deleteFile(f.path).catch(console.error)));
       throw uploadError;
     }
   }
@@ -116,20 +115,30 @@ export const updateArticle = async (params: UpdateArticleParams) => {
     }
 
     const updatedArticle = await prisma.$transaction(async (tx) => {
-      if (newUploadedFiles.length > 0) {
-        await tx.articleImage.deleteMany({ where: { articleId: id } });
-
-        for (const fileData of newUploadedFiles) {
-          await tx.articleImage.create({
-            data: {
-              articleId: id,
-              ...fileData,
-            },
-          });
-        }
+      if (removedImageIds && removedImageIds.length > 0) {
+        await tx.articleImage.deleteMany({
+          where: {
+            id: { in: removedImageIds },
+            articleId: id,
+          },
+        });
       }
 
-      const updated = await tx.article.update({
+      if (newUploadedFiles.length > 0) {
+        await tx.articleImage.createMany({
+          data: newUploadedFiles.map((f) => ({
+            articleId: id,
+            url: f.url,
+            path: f.path,
+            originalName: f.originalName,
+            fileName: f.fileName,
+            mimeType: f.mimeType,
+            size: f.size,
+          })),
+        });
+      }
+
+      return await tx.article.update({
         where: { id },
         data: {
           ...(title && { title, slug }),
@@ -137,34 +146,42 @@ export const updateArticle = async (params: UpdateArticleParams) => {
         },
         include: { images: true },
       });
-
-      return updated;
     });
 
-    if (newUploadedFiles.length > 0 && article.images.length > 0) {
-      for (const oldImg of article.images) {
-        if (oldImg.path) await deleteFile(oldImg.path).catch(console.error);
-      }
+    if (removedImageIds && removedImageIds.length > 0) {
+      const filesToDelete = article.images.filter((img) => removedImageIds.includes(img.id));
+      await Promise.all(filesToDelete.map((img) => deleteFile(img.path).catch(console.error)));
     }
 
     return updatedArticle;
   } catch (error) {
-    for (const f of newUploadedFiles) {
-      if (f.path) await deleteFile(f.path).catch(console.error);
+    if (newUploadedFiles.length > 0) {
+      await Promise.all(newUploadedFiles.map((f) => deleteFile(f.path).catch(console.error)));
     }
     throw error;
   }
 };
 
 export const deleteArticle = async (id: string) => {
-  const article = await prisma.article.findUnique({ where: { id }, include: { images: true } });
+  const article = await prisma.article.findUnique({
+    where: { id },
+    include: { images: true },
+  });
+
   if (!article) throw new Error("Article not found");
 
-  await prisma.article.delete({ where: { id } });
+  try {
+    await prisma.article.delete({
+      where: { id },
+    });
 
-  for (const img of article.images) {
-    await deleteFile(img.path);
+    if (article.images.length > 0) {
+      await Promise.allSettled(article.images.map((img) => deleteFile(img.path)));
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Failed to delete article:", error);
+    throw new Error("Failed to delete article and its resources");
   }
-
-  return true;
 };

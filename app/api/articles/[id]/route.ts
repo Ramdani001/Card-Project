@@ -31,12 +31,14 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
     const title = formData.get("title") as string | undefined;
     const content = formData.get("content") as string | undefined;
     const files = formData.getAll("images") as File[];
+    const removedImageIds = JSON.parse((formData.get("removedImageIds") as string) || "[]") as string[];
 
     const updatedArticle = await updateArticle({
       id,
       title,
       content,
       files: files.length > 0 ? files : undefined,
+      removedImageIds,
     });
 
     return sendResponse({

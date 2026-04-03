@@ -71,11 +71,13 @@ export const createUser = async (data: CreateUserParams) => {
 
   const hashedPassword = await hashPassword(password);
   let avatarUrl: string | null = null;
+  let avatarPath: string | null = null;
 
   try {
     if (file && file.size > 0) {
-      const uploadResult = await saveFile(file);
+      const uploadResult = await saveFile(file, "avatars");
       avatarUrl = uploadResult.url;
+      avatarPath = uploadResult.path;
     }
 
     return await prisma.user.create({
@@ -93,9 +95,10 @@ export const createUser = async (data: CreateUserParams) => {
       select: userSelectScope,
     });
   } catch (error) {
-    if (avatarUrl) {
-      await deleteFile(avatarUrl.replace(/[\\/]uploads[\\/]/g, "")).catch(console.error);
+    if (avatarPath) {
+      await deleteFile(avatarPath).catch(console.error);
     }
+
     throw error;
   }
 };
@@ -119,11 +122,13 @@ export const updateUser = async ({ id, name, email, phone, password, roleId, fil
   }
 
   let newAvatarUrl: string | null = null;
+  let newAvatarPath: string | null = null;
 
   try {
     if (file && file.size > 0) {
-      const uploadResult = await saveFile(file);
+      const uploadResult = await saveFile(file, "avatars");
       newAvatarUrl = uploadResult.url;
+      newAvatarPath = uploadResult.path;
 
       updateData.avatar = newAvatarUrl;
     }
@@ -134,15 +139,17 @@ export const updateUser = async ({ id, name, email, phone, password, roleId, fil
       select: userSelectScope,
     });
 
-    if (newAvatarUrl && existingUser.avatar) {
-      await deleteFile(existingUser.avatar.replace(/[\\/]uploads[\\/]/g, "")).catch(console.error);
+    if (newAvatarPath && existingUser.avatar) {
+      const oldPath = existingUser.avatar.replace(/^\/uploads\//, "");
+      await deleteFile(oldPath).catch(console.error);
     }
 
     return updatedUser;
   } catch (error) {
-    if (newAvatarUrl) {
-      await deleteFile(newAvatarUrl.replace(/[\\/]uploads[\\/]/g, "")).catch(console.error);
+    if (newAvatarPath) {
+      await deleteFile(newAvatarPath).catch(console.error);
     }
+
     throw error;
   }
 };
@@ -156,7 +163,8 @@ export const deleteUser = async (id: string) => {
   });
 
   if (existingUser.avatar) {
-    await deleteFile(existingUser.avatar.replace(/[\\/]uploads[\\/]/g, "")).catch(console.error);
+    const oldPath = existingUser.avatar.replace(/^\/uploads\//, "");
+    await deleteFile(oldPath).catch(console.error);
   }
 
   return deletedUser;

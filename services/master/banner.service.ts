@@ -48,7 +48,7 @@ export const createBanner = async (params: CreateBannerParams) => {
   let uploadedFilePath: string | null = null;
 
   try {
-    const fileData = await saveFile(file);
+    const fileData = await saveFile(file, "banners");
     uploadedFilePath = fileData.path;
 
     const banner = await prisma.bannerImage.create({
@@ -84,7 +84,7 @@ export const updateBanner = async (params: UpdateBannerParams) => {
   let newFileData: any = null;
 
   if (file && file.size > 0) {
-    newFileData = await saveFile(file);
+    newFileData = await saveFile(file, "banners");
   }
 
   try {

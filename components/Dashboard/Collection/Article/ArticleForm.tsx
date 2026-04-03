@@ -1,9 +1,24 @@
 "use client";
 
 import { ArticleDto } from "@/types/dtos/ArticleDto";
-import { AspectRatio, Box, Button, Divider, FileInput, Flex, Image, Modal, Paper, SimpleGrid, Stack, Text, TextInput } from "@mantine/core";
+import {
+  ActionIcon,
+  AspectRatio,
+  Box,
+  Button,
+  Divider,
+  FileInput,
+  Flex,
+  Image,
+  Modal,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconUpload, IconX } from "@tabler/icons-react";
+import { IconCheck, IconTrash, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
 import { Link, RichTextEditor } from "@mantine/tiptap";
@@ -25,6 +40,7 @@ export const ArticleForm = ({ opened, onClose, articleToEdit, onSuccess }: Artic
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<{ id: string; url: string }[]>([]);
+  const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
 
   const editor = useEditor({
     extensions: [StarterKit, Underline, Link, TextAlign.configure({ types: ["heading", "paragraph"] })],
@@ -33,35 +49,40 @@ export const ArticleForm = ({ opened, onClose, articleToEdit, onSuccess }: Artic
   });
 
   useEffect(() => {
-    if (articleToEdit) {
-      setTitle(articleToEdit.title);
-      editor?.commands.setContent(articleToEdit.content || "");
-      setExistingImages(articleToEdit.images || []);
+    if (opened) {
+      if (articleToEdit) {
+        setTitle(articleToEdit.title);
+        editor?.commands.setContent(articleToEdit.content || "");
+        setExistingImages(articleToEdit.images || []);
+      } else {
+        setTitle("");
+        editor?.commands.setContent("");
+        setExistingImages([]);
+      }
+
       setFiles([]);
       setPreviews([]);
-    } else {
-      setTitle("");
-      editor?.commands.setContent("");
-      setFiles([]);
-      setPreviews([]);
-      setExistingImages([]);
+      setRemovedImageIds([]);
     }
   }, [articleToEdit, opened, editor]);
 
-  const handleFileChange = (newFiles: File[]) => {
+  const handleRemoveNewFile = (index: number) => {
+    const newFiles = files.filter((_, i) => i !== index);
+    const newPreviews = previews.filter((_, i) => i !== index);
     setFiles(newFiles);
-    const newPreviews = newFiles.map((file) => URL.createObjectURL(file));
     setPreviews(newPreviews);
+  };
+
+  const handleRemoveExistingImage = (id: string) => {
+    setExistingImages((prev) => prev.filter((img) => img.id !== id));
+    setRemovedImageIds((prev) => [...prev, id]);
   };
 
   const handleSubmit = async () => {
     const content = editor?.getHTML();
-
     if (!title) return notifications.show({ message: "Title is required", color: "red" });
-    if (!content || content === "<p></p>") return notifications.show({ message: "Content is required", color: "red" });
 
-    const totalImages = existingImages.length + files.length;
-    if (totalImages === 0) {
+    if (existingImages.length === 0 && files.length === 0) {
       return notifications.show({ message: "At least one image is required", color: "red" });
     }
 
@@ -69,7 +90,9 @@ export const ArticleForm = ({ opened, onClose, articleToEdit, onSuccess }: Artic
     try {
       const formData = new FormData();
       formData.append("title", title);
-      formData.append("content", content);
+      formData.append("content", content || "");
+
+      formData.append("removedImageIds", JSON.stringify(removedImageIds));
 
       files.forEach((file) => {
         formData.append("images", file);
@@ -77,25 +100,22 @@ export const ArticleForm = ({ opened, onClose, articleToEdit, onSuccess }: Artic
 
       const isEditMode = !!articleToEdit;
       const url = isEditMode ? `/api/articles/${articleToEdit.id}` : "/api/articles";
-      const method = isEditMode ? "PATCH" : "POST";
 
       const res = await fetch(url, {
-        method: method,
+        method: isEditMode ? "PATCH" : "POST",
         body: formData,
       });
 
       const json = await res.json();
-
       if (json.success) {
         notifications.show({ title: "Success", message: json.message, color: "teal", icon: <IconCheck size={16} /> });
         onClose();
         onSuccess();
       } else {
-        notifications.show({ title: "Error", message: json.message, color: "red", icon: <IconX size={16} /> });
+        throw new Error(json.message);
       }
-    } catch (error) {
-      console.error(error);
-      notifications.show({ title: "Error", message: "Network error", color: "red" });
+    } catch (error: any) {
+      notifications.show({ title: "Error", message: error.message || "Network error", color: "red" });
     } finally {
       setLoading(false);
     }
@@ -176,33 +196,46 @@ export const ArticleForm = ({ opened, onClose, articleToEdit, onSuccess }: Artic
 
         <Stack gap="xs">
           <FileInput
-            label="Article Images"
-            description="Select multiple images"
-            placeholder="Upload images"
-            accept="image/*"
+            label="Add More Images"
             multiple
-            leftSection={<IconUpload size={16} />}
-            value={files}
-            onChange={handleFileChange}
+            accept="image/*"
+            onChange={(newFiles) => {
+              setFiles([...files, ...newFiles]);
+              const newUrls = newFiles.map((f) => URL.createObjectURL(f));
+              setPreviews([...previews, ...newUrls]);
+            }}
           />
 
           {(existingImages.length > 0 || previews.length > 0) && (
             <Paper withBorder p="md" radius="md">
               <SimpleGrid cols={{ base: 2, sm: 4, md: 6 }} spacing="sm">
-                {files.length === 0 &&
-                  existingImages.map((img) => (
-                    <Box key={img.id} pos="relative">
-                      <AspectRatio ratio={1 / 1}>
-                        <Image alt={"Images"} src={img.url} radius="md" fit="cover" />
-                      </AspectRatio>
-                    </Box>
-                  ))}
+                {existingImages.map((img) => (
+                  <Box key={img.id} pos="relative">
+                    <AspectRatio ratio={1 / 1}>
+                      <Image src={img.url} radius="md" fit="cover" alt="" />
+                    </AspectRatio>
+                    <ActionIcon
+                      color="red"
+                      variant="filled"
+                      pos="absolute"
+                      top={5}
+                      right={5}
+                      radius="xl"
+                      onClick={() => handleRemoveExistingImage(img.id)}
+                    >
+                      <IconTrash size={14} />
+                    </ActionIcon>
+                  </Box>
+                ))}
 
                 {previews.map((url, index) => (
                   <Box key={index} pos="relative">
                     <AspectRatio ratio={1 / 1}>
-                      <Image alt={"Images"} src={url} radius="md" fit="cover" />
+                      <Image src={url} radius="md" fit="cover" opacity={0.7} alt="" />
                     </AspectRatio>
+                    <ActionIcon color="gray" variant="filled" pos="absolute" top={5} right={5} radius="xl" onClick={() => handleRemoveNewFile(index)}>
+                      <IconX size={14} />
+                    </ActionIcon>
                   </Box>
                 ))}
               </SimpleGrid>

@@ -1,6 +1,6 @@
-import { NextRequest } from "next/server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import { deleteEvent, getEventById, updateEvent } from "@/services/master/event.service";
+import { NextRequest } from "next/server";
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -33,6 +33,7 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
     const startDateStr = formData.get("startDate") as string | undefined;
     const endDateStr = formData.get("endDate") as string | undefined;
     const files = formData.getAll("images") as File[];
+    const removedImageIds = formData.get("removedImageIds") as string | undefined;
 
     let startDate: Date | undefined;
     let endDate: Date | undefined;
@@ -47,6 +48,7 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
       startDate,
       endDate,
       files: files.length > 0 ? files : undefined,
+      removedImageIds: removedImageIds ? JSON.parse(removedImageIds) : undefined,
     });
 
     return sendResponse({

@@ -5,8 +5,6 @@ import { generateSlug } from "@/utils";
 import ExcelJS from "exceljs";
 import { createNotificationByCode } from "../transaction/notification.service";
 import { CONSTANT } from "@/constants";
-import fs from "fs/promises";
-import path from "path";
 
 interface CreateCardParams {
   name: string;
@@ -198,7 +196,7 @@ export const createCard = async (params: CreateCardParams) => {
   let uploadedFileUrl: string | null = null;
 
   try {
-    const fileData = await saveFile(file);
+    const fileData = await saveFile(file, "cards");
     uploadedFileUrl = fileData.path;
 
     const slug = generateSlug(name);
@@ -246,7 +244,7 @@ export const createCard = async (params: CreateCardParams) => {
     return newCard;
   } catch (error) {
     if (uploadedFileUrl) {
-      await deleteFile(uploadedFileUrl).catch((err) => console.error("Gagal cleanup file Supabase setelah error DB:", err));
+      await deleteFile(uploadedFileUrl).catch(console.error);
     }
     throw error;
   }
@@ -266,7 +264,7 @@ export const updateCard = async (params: UpdateCardParams) => {
   let newUploadedPath: string | null = null;
 
   if (file && file.size > 0) {
-    fileData = await saveFile(file);
+    fileData = await saveFile(file, "cards");
     newUploadedPath = fileData.path;
   }
 
@@ -437,7 +435,7 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
           if (imageMap[i]) {
             const { buffer, extension } = imageMap[i];
             const fileMock = new File([buffer as BlobPart], `import_${slug}.${extension}`, { type: `image/${extension}` });
-            newImageData = await saveFile(fileMock);
+            newImageData = await saveFile(fileMock, "cards");
             tempUploadedFiles.push(newImageData.path);
           }
 
@@ -532,7 +530,6 @@ export const exportCardsToExcel = async () => {
 
   for (let i = 0; i < cards.length; i++) {
     const card = cards[i];
-    const currentRow = i + 2;
 
     const row = worksheet.addRow({
       name: card.name,

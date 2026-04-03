@@ -1,6 +1,6 @@
+import { deleteFile, saveFile } from "@/helpers/file.helper";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
-import { saveFile, deleteFile } from "@/helpers/file.helper";
 import { generateSlug } from "@/utils";
 
 interface CreateEventParams {
@@ -18,6 +18,7 @@ interface UpdateEventParams {
   startDate?: Date;
   endDate?: Date;
   files?: File[];
+  removedImageIds: string[];
 }
 
 export const getEvents = async (options: Prisma.EventFindManyArgs) => {
@@ -55,7 +56,7 @@ export const createEvent = async (params: CreateEventParams) => {
   try {
     if (files && files.length > 0) {
       for (const file of files) {
-        const saved = await saveFile(file);
+        const saved = await saveFile(file, "events");
         uploadedFiles.push(saved);
       }
     }
@@ -84,9 +85,8 @@ export const createEvent = async (params: CreateEventParams) => {
     throw error;
   }
 };
-
 export const updateEvent = async (params: UpdateEventParams) => {
-  const { id, title, content, startDate, endDate, files } = params;
+  const { id, title, content, startDate, endDate, files, removedImageIds } = params;
 
   const event = await prisma.event.findUnique({
     where: { id },
@@ -99,14 +99,11 @@ export const updateEvent = async (params: UpdateEventParams) => {
 
   if (files && files.length > 0) {
     try {
-      for (const file of files) {
-        const saved = await saveFile(file);
-        newUploadedFiles.push(saved);
-      }
+      const uploadPromises = files.map((file) => saveFile(file, "events"));
+      const results = await Promise.all(uploadPromises);
+      newUploadedFiles.push(...results);
     } catch (uploadError) {
-      for (const f of newUploadedFiles) {
-        if (f.path) await deleteFile(f.path).catch(console.error);
-      }
+      await Promise.all(newUploadedFiles.map((f) => deleteFile(f.path).catch(console.error)));
       throw uploadError;
     }
   }
@@ -120,43 +117,50 @@ export const updateEvent = async (params: UpdateEventParams) => {
     }
 
     const updatedEvent = await prisma.$transaction(async (tx) => {
-      if (newUploadedFiles.length > 0) {
-        await tx.eventImage.deleteMany({ where: { eventId: id } });
-
-        for (const fileData of newUploadedFiles) {
-          await tx.eventImage.create({
-            data: {
-              eventId: id,
-              ...fileData,
-            },
-          });
-        }
+      if (removedImageIds && removedImageIds.length > 0) {
+        await tx.eventImage.deleteMany({
+          where: {
+            id: { in: removedImageIds },
+            eventId: id,
+          },
+        });
       }
 
-      const updated = await tx.event.update({
+      if (newUploadedFiles.length > 0) {
+        await tx.eventImage.createMany({
+          data: newUploadedFiles.map((f) => ({
+            eventId: id,
+            url: f.url,
+            path: f.path,
+            originalName: f.originalName,
+            fileName: f.fileName,
+            mimeType: f.mimeType,
+            size: f.size,
+          })),
+        });
+      }
+
+      return await tx.event.update({
         where: { id },
         data: {
           ...(title && { title, slug }),
           ...(content && { content }),
-          ...(startDate && { startDate }),
-          ...(endDate && { endDate }),
+          ...(startDate && { startDate: new Date(startDate) }),
+          ...(endDate && { endDate: new Date(endDate) }),
         },
         include: { images: true },
       });
-
-      return updated;
     });
 
-    if (newUploadedFiles.length > 0 && event.images.length > 0) {
-      for (const oldImg of event.images) {
-        if (oldImg.path) await deleteFile(oldImg.path).catch(console.error);
-      }
+    if (removedImageIds && removedImageIds.length > 0) {
+      const imagesToDelete = event.images.filter((img) => removedImageIds.includes(img.id));
+      await Promise.all(imagesToDelete.map((img) => deleteFile(img.path).catch(console.error)));
     }
 
     return updatedEvent;
   } catch (error) {
-    for (const f of newUploadedFiles) {
-      if (f.path) await deleteFile(f.path).catch(console.error);
+    if (newUploadedFiles.length > 0) {
+      await Promise.all(newUploadedFiles.map((f) => deleteFile(f.path).catch(console.error)));
     }
     throw error;
   }

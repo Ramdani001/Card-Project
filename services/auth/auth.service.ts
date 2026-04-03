@@ -46,11 +46,13 @@ export const register = async ({ email, password, name, phone, file, facebookUrl
   }
 
   let avatarUrl: string | null = null;
+  let avatarPath: string | null = null;
 
   try {
     if (file && file.size > 0) {
-      const uploadResult = await saveFile(file);
+      const uploadResult = await saveFile(file, "avatars");
       avatarUrl = uploadResult.url;
+      avatarPath = uploadResult.path;
     }
 
     const newUser = await prisma.user.create({
@@ -79,8 +81,8 @@ export const register = async ({ email, password, name, phone, file, facebookUrl
 
     return newUser;
   } catch (error) {
-    if (avatarUrl) {
-      await deleteFile(avatarUrl).catch(console.error);
+    if (avatarPath) {
+      await deleteFile(avatarPath).catch(console.error);
     }
     throw error;
   }
@@ -99,11 +101,13 @@ export const updateProfile = async ({ userId, email, name, phone, file, facebook
   }
 
   let newAvatarUrl: string | null = null;
+  let newAvatarPath: string | null = null;
 
   try {
     if (file && file.size > 0) {
-      const uploadResult = await saveFile(file);
+      const uploadResult = await saveFile(file, "avatars");
       newAvatarUrl = uploadResult.url;
+      newAvatarPath = uploadResult.path;
     }
 
     const updatedUser = await prisma.user.update({
@@ -129,14 +133,15 @@ export const updateProfile = async ({ userId, email, name, phone, file, facebook
       },
     });
 
-    if (newAvatarUrl && user.avatar) {
-      await deleteFile(user.avatar.replace(/[\\/]uploads[\\/]/g, "")).catch(console.error);
+    if (newAvatarPath && user.avatar) {
+      const oldPath = user.avatar.replace(/^\/uploads\//, "");
+      await deleteFile(oldPath).catch(console.error);
     }
 
     return updatedUser;
   } catch (error) {
-    if (newAvatarUrl) {
-      await deleteFile(newAvatarUrl.replace(/[\\/]uploads[\\/]/g, "")).catch(console.error);
+    if (newAvatarPath) {
+      await deleteFile(newAvatarPath).catch(console.error);
     }
     throw error;
   }
