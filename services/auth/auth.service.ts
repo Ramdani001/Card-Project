@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { hashPassword } from "@/helpers/auth.helper";
 import { saveFile, deleteFile } from "@/helpers/file.helper";
+import { logError } from "@/lib/logger";
 
 interface RegisterParams {
   email: string;
@@ -84,6 +85,8 @@ export const register = async ({ email, password, name, phone, file, facebookUrl
     if (avatarPath) {
       await deleteFile(avatarPath).catch(console.error);
     }
+
+    logError("AuthService.createUser", error);
     throw error;
   }
 };
@@ -143,6 +146,8 @@ export const updateProfile = async ({ userId, email, name, phone, file, facebook
     if (newAvatarPath) {
       await deleteFile(newAvatarPath).catch(console.error);
     }
+
+    logError("AuthService.updateProfile", error);
     throw error;
   }
 };

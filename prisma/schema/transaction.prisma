@@ -86,6 +86,17 @@ model CartItem {
   @@unique([cartId, cardId])
 }
 
+model ErrorLog {
+  id      String  @id @default(cuid())
+  level   String  @default("ERROR")
+  service String
+  message String  @db.Text
+  stack   String? @db.Text
+  context Json?
+
+  createdAt DateTime @default(now())
+}
+
 enum TransactionStatus {
   PENDING
   PAID

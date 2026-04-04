@@ -5,6 +5,7 @@ import { generateSlug } from "@/utils";
 import ExcelJS from "exceljs";
 import { createNotificationByCode } from "../transaction/notification.service";
 import { CONSTANT } from "@/constants";
+import { logError } from "@/lib/logger";
 
 interface CreateCardParams {
   name: string;
@@ -246,6 +247,8 @@ export const createCard = async (params: CreateCardParams) => {
     if (uploadedFileUrl) {
       await deleteFile(uploadedFileUrl).catch(console.error);
     }
+
+    logError("CardService.createCard", error);
     throw error;
   }
 };
@@ -356,6 +359,8 @@ export const updateCard = async (params: UpdateCardParams) => {
     if (newUploadedPath) {
       await deleteFile(newUploadedPath).catch(console.error);
     }
+
+    logError("CardService.updateCard", error);
     throw error;
   }
 };
@@ -498,6 +503,8 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
     );
   } catch (error) {
     for (const path of tempUploadedFiles) await deleteFile(path).catch(console.error);
+
+    logError("CardService.importCardsFromExcel", error);
     throw error;
   }
 };

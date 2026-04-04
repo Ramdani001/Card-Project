@@ -3,6 +3,7 @@ import { createPaymentToken } from "./payment.service";
 import { DiscountType, NotificationType, Prisma, TransactionStatus } from "@/prisma/generated/prisma/client";
 import { sendTransactionReceipt } from "../system/email.service";
 import { createNotificationByCode } from "./notification.service";
+import { logError } from "@/lib/logger";
 
 interface CreateTransactionParams {
   userId: string;
@@ -217,7 +218,7 @@ export const checkout = async (params: CreateTransactionParams) => {
       include: { items: true },
     });
   } catch (error) {
-    console.error("Payment Gateway Error:", error);
+    logError("TransactionService.checkout", error);
     return transactionData.transaction;
   }
 };
@@ -241,10 +242,6 @@ export const updateTransactionStatus = async (
     });
 
     if (!oldTransaction) throw new Error("Transaction not found");
-
-    if (status === TransactionStatus.SHIPPED && oldTransaction.status !== TransactionStatus.PAID) {
-      throw new Error("Cannot ship an unpaid or cancelled transaction");
-    }
 
     const updateData: Prisma.TransactionUpdateInput = {
       status,
@@ -315,10 +312,7 @@ export const updateTransactionStatus = async (
     return updatedTransaction;
   });
 
-  // if (status === TransactionStatus.PAID && result) {
-  sendTransactionReceipt(result).catch((err) => {
-    console.error("Failed to send email receipt.", err);
-  });
+  sendTransactionReceipt(result);
 
   await createNotificationByCode({
     notificationCode: "TRANSACTION_NOTIF",
@@ -331,7 +325,6 @@ export const updateTransactionStatus = async (
       status,
     },
   });
-  // }
 
   return result;
 };

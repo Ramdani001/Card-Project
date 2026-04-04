@@ -1,4 +1,5 @@
 import { deleteFile, saveFile } from "@/helpers/file.helper";
+import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
 import { generateSlug } from "@/utils";
@@ -82,6 +83,8 @@ export const createEvent = async (params: CreateEventParams) => {
     for (const f of uploadedFiles) {
       if (f.path) await deleteFile(f.path).catch(console.error);
     }
+
+    logError("EventService.createEvent", error);
     throw error;
   }
 };
@@ -104,6 +107,8 @@ export const updateEvent = async (params: UpdateEventParams) => {
       newUploadedFiles.push(...results);
     } catch (uploadError) {
       await Promise.all(newUploadedFiles.map((f) => deleteFile(f.path).catch(console.error)));
+
+      logError("EventService.updateEvent", uploadError);
       throw uploadError;
     }
   }
@@ -162,6 +167,8 @@ export const updateEvent = async (params: UpdateEventParams) => {
     if (newUploadedFiles.length > 0) {
       await Promise.all(newUploadedFiles.map((f) => deleteFile(f.path).catch(console.error)));
     }
+
+    logError("EventService.updateEvent", error);
     throw error;
   }
 };

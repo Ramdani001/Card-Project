@@ -1,5 +1,6 @@
 import { CONSTANT } from "@/constants";
 import { deleteFile, saveFile } from "@/helpers/file.helper";
+import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
 import { generateSlug } from "@/utils";
@@ -114,6 +115,8 @@ export const createCategory = async (params: CreateCategoryParams) => {
     });
   } catch (error) {
     if (fileData) await deleteFile(fileData.path).catch(console.error);
+
+    logError("CategoryService.createCategory", error);
     throw error;
   }
 };
@@ -160,6 +163,8 @@ export const updateCategory = async (params: UpdateCategoryParams) => {
     return updated;
   } catch (error) {
     if (fileData) await deleteFile(fileData.path).catch(console.error);
+
+    logError("CategoryService.updateCategory", error);
     throw error;
   }
 };

@@ -1,3 +1,4 @@
+import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
 import { formatRupiah } from "@/utils";
@@ -143,11 +144,11 @@ export const sendTransactionReceipt = async (transaction: TransactionWithDetails
         },
       });
 
-      console.error(`[SMTP ERROR] ${transaction.invoice}:`, sendError);
+      logError("sendTransactionReceipt", sendError);
       return { success: false, message: "Failed to send email." };
     }
   } catch (error) {
-    console.error("Database Error in sendTransactionReceipt:", error);
+    logError("sendTransactionReceipt", error);
     return { success: false, message: "Internal server error." };
   }
 };

@@ -1,4 +1,5 @@
 import { deleteFile, saveFile } from "@/helpers/file.helper";
+import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
 import { generateSlug } from "@/utils";
@@ -79,6 +80,8 @@ export const createArticle = async (params: CreateArticleParams) => {
     if (uploadedFiles.length > 0) {
       await Promise.all(uploadedFiles.map((f) => deleteFile(f.path).catch(console.error)));
     }
+
+    logError("ArticleService.createArticle", error);
     throw error;
   }
 };
@@ -102,6 +105,8 @@ export const updateArticle = async (params: UpdateArticleParams) => {
       newUploadedFiles.push(...results);
     } catch (uploadError) {
       await Promise.all(newUploadedFiles.map((f) => deleteFile(f.path).catch(console.error)));
+
+      logError("ArticleService.updateArticle", uploadError);
       throw uploadError;
     }
   }
@@ -158,6 +163,8 @@ export const updateArticle = async (params: UpdateArticleParams) => {
     if (newUploadedFiles.length > 0) {
       await Promise.all(newUploadedFiles.map((f) => deleteFile(f.path).catch(console.error)));
     }
+
+    logError("ArticleService.updateArticle", error);
     throw error;
   }
 };
@@ -181,7 +188,7 @@ export const deleteArticle = async (id: string) => {
 
     return true;
   } catch (error) {
-    console.error("Failed to delete article:", error);
+    logError("ArticleService.deleteArticle", error);
     throw new Error("Failed to delete article and its resources");
   }
 };

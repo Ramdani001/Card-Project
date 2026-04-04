@@ -1,8 +1,9 @@
-import midtransClient from "midtrans-client";
-import { createHash } from "crypto";
+import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
-import { createNotificationByCode } from "./notification.service";
 import { NotificationType } from "@/prisma/generated/prisma/enums";
+import { createHash } from "crypto";
+import midtransClient from "midtrans-client";
+import { createNotificationByCode } from "./notification.service";
 
 export interface MidtransItem {
   id: string;
@@ -63,7 +64,7 @@ export const createPaymentToken = async (params: PaymentTokenParams) => {
     const token = await snap.createTransaction(parameter);
     return token;
   } catch (error) {
-    console.error("Midtrans Error:", error);
+    logError("PaymentService.createPaymentToken", error);
     throw new Error("Failed to create payment token");
   }
 };
@@ -89,7 +90,7 @@ export const savePaymentLog = async (payload: any) => {
       },
     });
   } catch (error) {
-    console.error("Failed to save payment log:", error);
+    logError("PaymentService.savePaymentLog", error);
   }
 };
 
@@ -134,6 +135,6 @@ export const sendPaymentNotification = async (orderId: string, status: "PAID" | 
       },
     });
   } catch (error) {
-    console.error("Failed to send payment notification:", error);
+    logError("PaymentService.sendPaymentNotification", error);
   }
 };

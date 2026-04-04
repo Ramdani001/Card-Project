@@ -2,6 +2,7 @@ import prisma from "@/lib/prisma";
 import { hashPassword } from "@/helpers/auth.helper";
 import { Prisma } from "@/prisma/generated/prisma/client";
 import { deleteFile, saveFile } from "@/helpers/file.helper";
+import { logError } from "@/lib/logger";
 
 interface CreateUserParams {
   name: string;
@@ -99,6 +100,7 @@ export const createUser = async (data: CreateUserParams) => {
       await deleteFile(avatarPath).catch(console.error);
     }
 
+    logError("UserService.createUser", error);
     throw error;
   }
 };
@@ -150,6 +152,7 @@ export const updateUser = async ({ id, name, email, phone, password, roleId, fil
       await deleteFile(newAvatarPath).catch(console.error);
     }
 
+    logError("UserService.updateUser", error);
     throw error;
   }
 };

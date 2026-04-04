@@ -1,4 +1,5 @@
 import { deleteFile, saveFile } from "@/helpers/file.helper";
+import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
 
@@ -65,6 +66,8 @@ export const createBanner = async (params: CreateBannerParams) => {
     if (uploadedFilePath) {
       await deleteFile(uploadedFilePath).catch(console.error);
     }
+
+    logError("BannerService.createBanner", error);
     throw error;
   }
 };
@@ -107,6 +110,8 @@ export const updateBanner = async (params: UpdateBannerParams) => {
     if (newFileData?.path) {
       await deleteFile(newFileData.path).catch(console.error);
     }
+
+    logError("BannerService.updateBanner", error);
     throw error;
   }
 };
