@@ -70,11 +70,11 @@ model ImageCard {
   isPrimary    Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  fileName     String
-  mimeType     String
-  originalName String
-  path         String
-  size         Int
+  fileName     String?
+  mimeType     String?
+  originalName String?
+  path         String?
+  size         Int?
   card         Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
 }
 

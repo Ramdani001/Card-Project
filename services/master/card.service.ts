@@ -402,18 +402,7 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
   const worksheet = workbook.getWorksheet(1);
   if (!worksheet) throw new Error("Worksheet tidak ditemukan");
 
-  const imageMap: Record<number, { buffer: Buffer; extension: string }> = {};
-  worksheet.getImages().forEach((imgRef) => {
-    const img = workbook.getImage(Number(imgRef.imageId));
-    const rowNumber = Math.floor(imgRef.range.tl.row) + 1;
-    imageMap[rowNumber] = {
-      buffer: Buffer.from(img.buffer as ArrayBuffer),
-      extension: img.extension,
-    };
-  });
-
   const allCategories = await prisma.category.findMany();
-  const tempUploadedFiles: string[] = [];
 
   try {
     return await prisma.$transaction(
@@ -429,6 +418,7 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
           const sku = row.getCell(4).value?.toString();
           const categoryName = row.getCell(5).value?.toString();
           const description = row.getCell(6).value?.toString();
+          const imageCell = row.getCell(7);
 
           if (!name && !priceRaw) continue;
           if (!name || priceRaw === null) throw new Error(`Baris ${i}: Nama & Harga wajib.`);
@@ -437,11 +427,23 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
           const category = allCategories.find((c) => c.name.toLowerCase() === categoryName?.toLowerCase());
 
           let newImageData: any = null;
-          if (imageMap[i]) {
-            const { buffer, extension } = imageMap[i];
-            const fileMock = new File([buffer as BlobPart], `import_${slug}.${extension}`, { type: `image/${extension}` });
-            newImageData = await saveFile(fileMock, "cards");
-            tempUploadedFiles.push(newImageData.path);
+          let imageUrl = "";
+
+          if (imageCell.value && typeof imageCell.value === "object") {
+            imageUrl = (imageCell.value as any).text || (imageCell.value as any).hyperlink || "";
+          } else {
+            imageUrl = imageCell.value?.toString() || "";
+          }
+          
+          if (imageUrl) {
+            newImageData = {
+              url: imageUrl,
+              path: null,
+              originalName: null,
+              fileName: null,
+              mimeType: null,
+              size: null,
+            };
           }
 
           const existingCard = await tx.card.findFirst({
@@ -502,8 +504,6 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
       { timeout: 60000 }
     );
   } catch (error) {
-    for (const path of tempUploadedFiles) await deleteFile(path).catch(console.error);
-
     logError("CardService.importCardsFromExcel", error);
     throw error;
   }
@@ -528,7 +528,6 @@ export const exportCardsToExcel = async () => {
     { header: "SKU", key: "sku", width: 20 },
     { header: "Category", key: "categories", width: 20 },
     { header: "Description", key: "description", width: 30 },
-    // { header: "Image", key: "image", width: 25 },
   ];
 
   const headerRow = worksheet.getRow(1);
@@ -547,7 +546,6 @@ export const exportCardsToExcel = async () => {
       description: card.description,
     });
 
-    row.height = 75;
     row.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
 
     // const primaryImg = card.images.find((img) => img.isPrimary) || card.images[0];
@@ -595,7 +593,7 @@ export const generateCardTemplate = async () => {
     { header: "SKU", key: "sku", width: 20 },
     { header: "Category", key: "category", width: 20 },
     { header: "Description", key: "description", width: 30 },
-    { header: "Image", key: "image", width: 25 },
+    { header: "Image URL", key: "image", width: 25 },
   ];
 
   const headerRow = worksheet.getRow(1);
