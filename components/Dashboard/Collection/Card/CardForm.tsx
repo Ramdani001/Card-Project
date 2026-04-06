@@ -110,7 +110,7 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
     const isEditMode = !!cardToEdit;
 
     if (!isEditMode && !file) {
-      return notifications.show({ message: "Image is required for new product", color: "red" });
+      return notifications.show({ message: "Image is required for new card", color: "red" });
     }
 
     setLoading(true);
@@ -169,13 +169,13 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
   };
 
   return (
-    <Modal opened={opened} onClose={onClose} title={cardToEdit ? "Edit Card" : "Create New Card"} centered size="lg">
+    <Modal opened={opened} onClose={onClose} title={cardToEdit ? "Edit Card" : "Create New Card"} centered size={"lg"}>
       <Flex direction="column" gap="sm">
         <TextInput label="Card Name" placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} withAsterisk />
 
         <TextInput label="SKU (Stock Keeping Unit)" placeholder="SKU" value={sku} onChange={(e) => setSku(e.target.value)} />
 
-        <Flex gap="md">
+        <Flex gap="md" direction={{ base: "column", sm: "row" }}>
           <NumberInput
             label="Price (IDR)"
             placeholder="0"
@@ -197,7 +197,7 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
           />
         </Flex>
 
-        <Flex gap="md">
+        <Flex gap="md" direction={{ base: "column", sm: "row" }}>
           <NumberInput
             label="Min. Purchase Qty"
             placeholder="Optional"
@@ -216,7 +216,7 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
           />
         </Flex>
 
-        <Flex gap="md">
+        <Flex gap="md" direction={{ base: "column", sm: "row" }}>
           <MultiSelect
             label="Categories"
             placeholder="Select Categories"
@@ -242,14 +242,14 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
 
         <Textarea
           label="Description"
-          placeholder="Product details..."
+          placeholder="Card details..."
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           minRows={3}
         />
 
         <FileInput
-          label="Product Image"
+          label="Card Image"
           description="Max 5MB (JPG, PNG, WEBP)"
           placeholder="Click to upload"
           accept="image/png,image/jpeg,image/webp"
@@ -262,11 +262,11 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
         />
 
         {(previewImage || existingImage) && (
-          <Paper p="xs" withBorder w="fit-content">
+          <Paper p="xs" withBorder w={{ base: "100%", sm: "fit-content" }}>
             <Text size="xs" c="dimmed" mb={5}>
               {previewImage ? "New Image Preview" : "Current Image"}
             </Text>
-            <Image src={previewImage || existingImage} w={200} h={120} fit="contain" radius="md" alt="Preview" />
+            <Image src={previewImage || existingImage} w={{ base: "100%", sm: 200 }} h={120} fit="contain" radius="md" alt="Preview" />
           </Paper>
         )}
       </Flex>
@@ -276,7 +276,7 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
           Cancel
         </Button>
         <Button onClick={handleSubmit} loading={loading}>
-          {cardToEdit ? "Update Product" : "Create Product"}
+          {cardToEdit ? "Update Card" : "Create Card"}
         </Button>
       </Flex>
     </Modal>

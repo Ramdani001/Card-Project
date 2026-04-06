@@ -3,8 +3,8 @@
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
 import { CardDto } from "@/types/dtos/CardDto";
 import { PaginationMetaDataDto } from "@/types/dtos/PaginationMetaDataDto";
-import { ActionIcon, Avatar, Badge, Button, FileButton, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { ActionIcon, Avatar, Badge, Button, FileButton, Flex, Group, Menu, Paper, Text, Title, Tooltip } from "@mantine/core";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import {
@@ -23,6 +23,7 @@ import { useEffect, useState } from "react";
 import { CardForm } from "./CardForm";
 
 const ListCard = () => {
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const [importing, setImporting] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [importFile, setImportFile] = useState<File | null>(null);
@@ -296,43 +297,97 @@ const ListCard = () => {
 
   return (
     <Paper shadow="xs" p="md" radius="md">
-      <Flex justify="space-between" align="center" mb="lg">
+      <Flex
+        direction={{ base: "column", sm: "row" }}
+        align={{ base: "stretch", sm: "center" }}
+        justify={{ sm: "space-between" }}
+        gap={{ base: "md", sm: 0 }}
+        mb="lg"
+      >
         <Title order={3}>Cards</Title>
 
-        <Group gap="xs">
-          <Button.Group>
-            <Tooltip label="Download Excel Template">
-              <Button variant="default" onClick={handleDownloadTemplate} leftSection={<IconFileSpreadsheet size={16} color="orange" />}>
-                Template
+        <Flex gap="xs" wrap="wrap" justify={{ base: "flex-end", sm: "flex-start" }}>
+          {isMobile ? (
+            <>
+              <Menu>
+                <Menu.Target>
+                  <Button variant="default" leftSection={<IconFileSpreadsheet size={16} />}>
+                    Excel
+                  </Button>
+                </Menu.Target>
+                <Menu.Dropdown>
+                  <Menu.Item>
+                    <Button variant="subtle" fullWidth leftSection={<IconFileSpreadsheet size={16} />} onClick={handleDownloadTemplate}>
+                      Template
+                    </Button>
+                  </Menu.Item>
+                  <Menu.Item>
+                    <FileButton
+                      key={importFile ? "active" : "reset"}
+                      onChange={(file) => {
+                        setImportFile(file);
+                        handleImportExcel(file);
+                      }}
+                      accept=".xlsx"
+                    >
+                      {(props) => (
+                        <Button {...props} variant="subtle" fullWidth leftSection={<IconUpload size={16} />}>
+                          Import
+                        </Button>
+                      )}
+                    </FileButton>
+                  </Menu.Item>
+                  <Menu.Item>
+                    <Button variant="subtle" fullWidth leftSection={<IconDownload size={16} />} onClick={handleExportExcel}>
+                      Export
+                    </Button>
+                  </Menu.Item>
+                </Menu.Dropdown>
+              </Menu>
+              <ActionIcon variant="default" size="lg" onClick={fetchCards} loading={loading}>
+                <IconRefresh size={18} />
+              </ActionIcon>
+              <Button leftSection={<IconPlus size={18} />} onClick={handleOpenAdd}>
+                Add Card
               </Button>
-            </Tooltip>
-
-            <FileButton
-              key={importFile ? "active" : "reset"}
-              onChange={(file) => {
-                setImportFile(file);
-                handleImportExcel(file);
-              }}
-              accept=".xlsx"
-            >
-              {(props) => (
-                <Button {...props} variant="default" loading={importing} leftSection={<IconUpload size={16} color="green" />}>
-                  Import
+            </>
+          ) : (
+            <>
+              <Tooltip label="Download Excel Template">
+                <Button variant="default" onClick={handleDownloadTemplate} leftSection={<IconFileSpreadsheet size={16} color="orange" />}>
+                  Template
                 </Button>
-              )}
-            </FileButton>
+              </Tooltip>
 
-            <Button variant="default" onClick={handleExportExcel} loading={exporting} leftSection={<IconDownload size={16} color="blue" />}>
-              Export
-            </Button>
-          </Button.Group>
-          <ActionIcon variant="default" size="lg" onClick={fetchCards} loading={loading}>
-            <IconRefresh size={18} />
-          </ActionIcon>
-          <Button leftSection={<IconPlus size={18} />} onClick={handleOpenAdd}>
-            Add Card
-          </Button>
-        </Group>
+              <FileButton
+                key={importFile ? "active" : "reset"}
+                onChange={(file) => {
+                  setImportFile(file);
+                  handleImportExcel(file);
+                }}
+                accept=".xlsx"
+              >
+                {(props) => (
+                  <Button {...props} variant="default" loading={importing} leftSection={<IconUpload size={16} color="green" />}>
+                    Import
+                  </Button>
+                )}
+              </FileButton>
+
+              <Button variant="default" onClick={handleExportExcel} loading={exporting} leftSection={<IconDownload size={16} color="blue" />}>
+                Export
+              </Button>
+
+              <ActionIcon variant="default" size="lg" onClick={fetchCards} loading={loading}>
+                <IconRefresh size={18} />
+              </ActionIcon>
+
+              <Button leftSection={<IconPlus size={18} />} onClick={handleOpenAdd}>
+                Add Card
+              </Button>
+            </>
+          )}
+        </Flex>
       </Flex>
 
       <TableComponent

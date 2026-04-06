@@ -163,9 +163,9 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
   };
 
   return (
-    <Modal opened={opened} onClose={onClose} title={voucherToEdit ? "Edit Voucher" : "Create New Voucher"} centered size="lg">
+    <Modal opened={opened} onClose={onClose} title={voucherToEdit ? "Edit Voucher" : "Create New Voucher"} centered size={"lg"}>
       <Flex direction="column" gap="md">
-        <Flex gap="md">
+        <Flex gap="md" direction={{ base: "column", sm: "row" }}>
           <TextInput
             label="Voucher Code"
             placeholder="e.g. SALE2026"
@@ -193,8 +193,8 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
           minRows={2}
         />
 
-        <Flex gap="md" align="flex-end">
-          <div style={{ flex: 1 }}>
+        <Flex gap="md" direction={{ base: "column", sm: "row" }} align={{ base: "stretch", sm: "flex-end" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <Text size="sm" fw={500} mb={3}>
               Discount Type
             </Text>
@@ -231,7 +231,7 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
           clearable
         />
 
-        <Flex gap="md">
+        <Flex gap="md" direction={{ base: "column", sm: "row" }}>
           <MultiSelect
             label="Specific Cards"
             placeholder="Select cards"
@@ -250,14 +250,14 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
           />
         </Flex>
 
-        <Flex gap="md">
+        <Flex gap="md" direction={{ base: "column", sm: "row" }}>
           <NumberInput label="Min. Purchase" value={minPurchase} onChange={setMinPurchase} min={0} style={{ flex: 1 }} leftSection="Rp" />
           {type === "PERCENTAGE" && (
             <NumberInput label="Max. Discount" value={maxDiscount} onChange={setMaxDiscount} min={0} style={{ flex: 1 }} leftSection="Rp" />
           )}
         </Flex>
 
-        <Flex gap="md">
+        <Flex gap="md" direction={{ base: "column", sm: "row" }}>
           <NumberInput label="Stock / Quota" placeholder="Unlimited" value={stock} onChange={setStock} min={0} style={{ flex: 1 }} />
           <DateTimePicker label="Start Date" value={startDate} onChange={setStartDate} withAsterisk style={{ flex: 1 }} />
         </Flex>
