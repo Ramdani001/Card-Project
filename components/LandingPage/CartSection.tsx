@@ -145,7 +145,6 @@ interface CartSectionProps {
   handleCheckout: (voucherCode: string) => Promise<void>;
 
   setPaymentMethod: Dispatch<SetStateAction<string | null>>;
-  paymentMethod: string | null;
   totalAmount: number;
   address: string;
   setAddress: Dispatch<SetStateAction<string>>;
@@ -161,7 +160,6 @@ export const CartSection = ({
   handleUpdateQuantity,
   processingId,
   handleCheckout,
-  paymentMethod,
   totalAmount,
   address,
   setAddress,
@@ -256,7 +254,7 @@ export const CartSection = ({
               size="md"
               onClick={() => handleCheckout(voucherCode)}
               loading={isCheckoutLoading}
-              disabled={!address || !paymentMethod}
+              disabled={!address}
             >
               CHECKOUT NOW
             </Button>

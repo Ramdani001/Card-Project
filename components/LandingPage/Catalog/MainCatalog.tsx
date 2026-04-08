@@ -343,7 +343,6 @@ export default function MainCatalog() {
         totalAmount={totalAmount}
         address={address}
         setAddress={setAddress}
-        paymentMethod={paymentMethod}
         setPaymentMethod={setPaymentMethod}
       />
 
