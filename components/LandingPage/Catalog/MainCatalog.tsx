@@ -46,7 +46,7 @@ export default function MainCatalog() {
   const [processingId, setProcessingId] = useState<string | null>(null);
 
   const [address, setAddress] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<string | null>("createdAt");
+  const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [categoriesList, setCategoriesList] = useState<{ id: string; name: string }[]>([]);
 

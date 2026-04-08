@@ -229,7 +229,7 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
               <Text span c="dimmed">
                 Payment:
               </Text>{" "}
-              {transaction.paymentMethod || "Midtrans"}
+              {transaction.paymentMethod || "-"}
             </Text>
           </Grid.Col>
         </Grid>

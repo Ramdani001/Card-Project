@@ -1,54 +1,96 @@
 "use client";
 
-import { Container, Image } from "@mantine/core";
-import { log } from "console";
+import { Center, Container, Image, Skeleton, Stack, Text, Title } from "@mantine/core";
 import { useEffect, useState } from "react";
+
+interface Article {
+  title: string;
+  content: string;
+  images?: { url: string }[];
+}
 
 interface Props {
   articleId: string;
 }
 
 export const SinglePageArct = ({ articleId }: Props) => {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<Article | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchArticle = async () => {
+      setLoading(true);
       try {
-        const res = await fetch(`../api/articles/${articleId}` );
-        
-        if (!res.ok) throw new Error("Failed to fetch");
+        const res = await fetch(`/api/articles/${articleId}`);
+
+        if (!res.ok) throw new Error("Gagal mengambil data artikel");
+
         const result = await res.json();
         setData(result.data);
-      } catch (error) {
-        console.error(error);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Terjadi kesalahan");
+      } finally {
+        setLoading(false);
       }
-
     };
 
-    fetchArticle();
+    if (articleId) fetchArticle();
   }, [articleId]);
-  if (!data) return <p>Loading...</p>;
+
+  const processContent = (html: string) => {
+    if (!html) return "";
+    return html.replace(/containerstyle="([^"]+)"/g, 'style="$1"');
+  };
+
+  if (loading) {
+    return (
+      <Container size="md" py="xl">
+        <Stack>
+          <Skeleton height={50} width="70%" radius="xl" />
+          <Skeleton height={300} radius="md" />
+          <Skeleton height={20} mt={10} />
+          <Skeleton height={20} />
+          <Skeleton height={20} width="50%" />
+        </Stack>
+      </Container>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <Center h={200}>
+        <Text color="red">Error: {error || "Artikel tidak ditemukan"}</Text>
+      </Center>
+    );
+  }
+
   return (
     <>
-    <Container>
-        {Array.isArray(data) ? (
-            data.map((item, index) => (
-            <div key={item.id ?? index}>
-                <h1>{item.title} s</h1>
-                <div dangerouslySetInnerHTML={{ __html: item.content }} />
-            </div>
-            ))
-        ) : (
-            <>
-            <h1>{data.title}</h1>
-            <Image
-                src={`${data.images?.[0]?.url}`}
-                alt={data.title}
-            />
-            <div dangerouslySetInnerHTML={{ __html: data.content }} />
-            </>
-        )}
-        </Container>
+      <style>{`
+        .article-content img {
+          max-width: 100%;
+          height: auto;
+        }
+        .article-content .node-imageResize,
+        .article-content [containerstyle] {
+          display: inline-block;
+        }
+        .article-content p {
+          display: block;
+          margin-bottom: 1rem;
+        }
+      `}</style>
+
+      <Container size="md" py="xl">
+        <Title order={1} mb="lg">
+          {data.title}
+        </Title>
+
+        {data.images?.[0]?.url && <Image src={data.images[0].url} alt={data.title} radius="md" mb="xl" />}
+
+        <div className="article-content" dangerouslySetInnerHTML={{ __html: processContent(data.content) }} />
+      </Container>
     </>
   );
 };

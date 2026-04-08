@@ -1,5 +1,5 @@
 import { ArticleDto } from "@/types/dtos/ArticleDto";
-import { Box, Card, Center, Container, Group, Image, Text, Typography } from "@mantine/core";
+import { Box, Card, Center, Container, Group, Image, Skeleton, Text, Typography } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -29,6 +29,22 @@ export const ArticleMain = () => {
     fetchPreOrder();
   }, []);
 
+  if (loadingEvents) {
+    return (
+      <Group wrap="nowrap" gap="lg">
+        {Array(3)
+          .fill(0)
+          .map((_, i) => (
+            <Card key={i} w={{ base: 250, md: 350 }} radius="md" p="md">
+              <Skeleton height={200} radius="md" mb="sm" />
+              <Skeleton height={20} width="70%" mb="sm" />
+              <Skeleton height={15} />
+            </Card>
+          ))}
+      </Group>
+    );
+  }
+
   return (
     <>
       <Container>
@@ -39,25 +55,24 @@ export const ArticleMain = () => {
           </Box>
         </Center>
       </Container>
-      <Box w={"99vw"} bg={"#f5f6fa"} p={20} m={4}
-      >
+      <Box w={"99vw"} bg={"#f5f6fa"} p={20} m={4}>
         <Group wrap="nowrap" gap="xl">
           {article.map((item) => (
-            <Card key={item.id} w={{ base: 150, md: 300, lg: 450 }} h={{ base: 200, md: 300, lg: 500 }} className="cardHover"
-             onClick={() => {
-              route.push(`/articless/${item.id}`)
-            }}
+            <Card
+              key={item.id}
+              w={{ base: 150, md: 300, lg: 450 }}
+              h={{ base: 200, md: 300, lg: 500 }}
+              className="cardHover"
+              onClick={() => {
+                route.push(`/articless/${item.id}`);
+              }}
             >
-              {/* Contoh isi card */}
               <Box style={{ width: "100%", height: "70%", borderRadius: 8, overflow: "hidden", flexShrink: 0 }}>
                 <Image src={item.images[0].url} alt={item.title} w="100%" h="100%" fit="cover" />
               </Box>
               <Text fw="bold">{item.title}</Text>
-              {/* <Text size="sm">{item.content}</Text> */}
               <Typography>
-                <Text lineClamp={2}
-                  dangerouslySetInnerHTML={{ __html: item.content }}
-                />
+                <Text lineClamp={2} dangerouslySetInnerHTML={{ __html: item.content }} />
               </Typography>
             </Card>
           ))}

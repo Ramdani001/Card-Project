@@ -20,8 +20,10 @@ import {
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconTrash, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
+import ResizeImage from "tiptap-extension-resize-image";
 
-import { Link, RichTextEditor } from "@mantine/tiptap";
+import Tiptap from "@/components/layout/Tiptap";
+import { Link } from "@mantine/tiptap";
 import TextAlign from "@tiptap/extension-text-align";
 import Underline from "@tiptap/extension-underline";
 import { useEditor } from "@tiptap/react";
@@ -43,28 +45,39 @@ export const ArticleForm = ({ opened, onClose, articleToEdit, onSuccess }: Artic
   const [removedImageIds, setRemovedImageIds] = useState<string[]>([]);
 
   const editor = useEditor({
-    extensions: [StarterKit, Underline, Link, TextAlign.configure({ types: ["heading", "paragraph"] })],
+    extensions: [
+      StarterKit,
+      Underline,
+      Link,
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      ResizeImage.configure({
+        allowBase64: true,
+      } as any),
+    ],
     content: "",
     immediatelyRender: false,
   });
 
   useEffect(() => {
-    if (opened) {
-      if (articleToEdit) {
-        setTitle(articleToEdit.title);
-        editor?.commands.setContent(articleToEdit.content || "");
-        setExistingImages(articleToEdit.images || []);
-      } else {
-        setTitle("");
-        editor?.commands.setContent("");
-        setExistingImages([]);
-      }
+    if (!editor || editor.isDestroyed) return;
 
+    if (opened) {
+      editor.commands.setContent("");
+
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          editor.commands.setContent(articleToEdit?.content || "");
+        });
+      });
+
+      setTitle(articleToEdit?.title || "");
+      setExistingImages(articleToEdit?.images || []);
+      setRemovedImageIds([]);
       setFiles([]);
       setPreviews([]);
-      setRemovedImageIds([]);
     }
-  }, [articleToEdit, opened, editor]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [opened]);
 
   const handleRemoveNewFile = (index: number) => {
     const newFiles = files.filter((_, i) => i !== index);
@@ -149,54 +162,15 @@ export const ArticleForm = ({ opened, onClose, articleToEdit, onSuccess }: Artic
             Content
           </Text>
 
-          <RichTextEditor editor={editor}>
-            <RichTextEditor.Toolbar sticky stickyOffset={0}>
-              <RichTextEditor.ControlsGroup>
-                <RichTextEditor.Bold />
-                <RichTextEditor.Italic />
-                <RichTextEditor.Underline />
-                <RichTextEditor.Strikethrough />
-                <RichTextEditor.ClearFormatting />
-                <RichTextEditor.Highlight />
-                <RichTextEditor.Code />
-              </RichTextEditor.ControlsGroup>
-
-              <RichTextEditor.ControlsGroup>
-                <RichTextEditor.H1 />
-                <RichTextEditor.H2 />
-                <RichTextEditor.H3 />
-                <RichTextEditor.H4 />
-              </RichTextEditor.ControlsGroup>
-
-              <RichTextEditor.ControlsGroup>
-                <RichTextEditor.Blockquote />
-                <RichTextEditor.Hr />
-                <RichTextEditor.BulletList />
-                <RichTextEditor.OrderedList />
-              </RichTextEditor.ControlsGroup>
-
-              <RichTextEditor.ControlsGroup>
-                <RichTextEditor.Link />
-                <RichTextEditor.Unlink />
-              </RichTextEditor.ControlsGroup>
-
-              <RichTextEditor.ControlsGroup>
-                <RichTextEditor.AlignLeft />
-                <RichTextEditor.AlignCenter />
-                <RichTextEditor.AlignJustify />
-                <RichTextEditor.AlignRight />
-              </RichTextEditor.ControlsGroup>
-            </RichTextEditor.Toolbar>
-
-            <RichTextEditor.Content mih={300} />
-          </RichTextEditor>
+          <Tiptap editor={editor} />
         </Stack>
 
         <Divider label="Media Gallery" labelPosition="center" />
 
         <Stack gap="xs">
           <FileInput
-            label="Add More Images"
+            label="Add Images"
+            placeholder="Upload images"
             multiple
             accept="image/*"
             onChange={(newFiles) => {
