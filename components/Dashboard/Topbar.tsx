@@ -1,6 +1,7 @@
 "use client";
 
 import { NotificationDto } from "@/types/dtos/NotificationDto";
+import { formatDate } from "@/utils";
 import { Avatar, Box, Container, Flex, Group, Indicator, Loader, Menu, ScrollArea, Text, UnstyledButton, rem } from "@mantine/core";
 import { IconBell, IconChevronDown, IconLogout, IconRefresh, IconUser } from "@tabler/icons-react";
 import { signOut, useSession } from "next-auth/react";
@@ -88,32 +89,47 @@ const Topbar = () => {
                   </Text>
                 ) : (
                   <ScrollArea h={250}>
-                    {notifications.map((notif) => (
-                      <Menu.Item key={notif.id} onClick={() => markAsRead(notif.id, notif.url)}>
-                        <Flex align="flex-start" gap="xs">
-                          {!notif.isRead && (
-                            <Box
-                              mt={6}
-                              style={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: "50%",
-                                backgroundColor: "#228be6",
-                                flexShrink: 0,
-                              }}
-                            />
-                          )}
-                          <Box style={{ flex: 1 }}>
-                            <Text size="sm" fw={notif.isRead ? 400 : 600}>
-                              {notif.title}
-                            </Text>
-                            <Text size="xs" c="dimmed" mt={2}>
-                              {notif.message}
-                            </Text>
-                          </Box>
-                        </Flex>
+                    {notifications.length === 0 ? (
+                      <Menu.Item disabled>
+                        <Text size="sm" c="dimmed" ta="center" py="sm">
+                          No notifications
+                        </Text>
                       </Menu.Item>
-                    ))}
+                    ) : (
+                      notifications.map((notif) => (
+                        <Menu.Item key={notif.id} onClick={() => markAsRead(notif.id, notif.url)}>
+                          <Flex align="flex-start" gap="md">
+                            <Box mt={7} style={{ flexShrink: 0 }}>
+                              <Box
+                                style={{
+                                  width: 8,
+                                  height: 8,
+                                  borderRadius: "50%",
+                                  backgroundColor: !notif.isRead ? "#228be6" : "transparent",
+                                  border: !notif.isRead ? "none" : "1px solid #dee2e6",
+                                }}
+                              />
+                            </Box>
+
+                            <Box style={{ flex: 1 }}>
+                              <Flex justify="space-between" align="center" mb={2}>
+                                <Text size="sm" fw={notif.isRead ? 500 : 700} c={notif.isRead ? "dimmed" : "dark"}>
+                                  {notif.title}
+                                </Text>
+
+                                <Text size="xs" c="dimmed" style={{ whiteSpace: "nowrap", marginLeft: 8 }}>
+                                  {formatDate(notif.createdAt)}
+                                </Text>
+                              </Flex>
+
+                              <Text size="xs" c={notif.isRead ? "dimmed" : "gray.7"} lineClamp={2}>
+                                {notif.message}
+                              </Text>
+                            </Box>
+                          </Flex>
+                        </Menu.Item>
+                      ))
+                    )}
                   </ScrollArea>
                 )}
               </Menu.Dropdown>

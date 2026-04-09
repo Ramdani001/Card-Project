@@ -242,10 +242,12 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
 
         <Textarea
           label="Description"
-          placeholder="Card details..."
+          placeholder="Description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          minRows={3}
+          autosize
+          minRows={5}
+          maxRows={15}
         />
 
         <FileInput

@@ -7,13 +7,16 @@ export const formatRupiah = (number: number) => {
 };
 
 export const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString("id-ID", {
+  const date = new Date(dateString);
+
+  return new Intl.DateTimeFormat("en-GB", {
     day: "numeric",
-    month: "long",
+    month: "short",
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  });
+    hour12: false,
+  }).format(date);
 };
 
 export const generateSlug = (title: string) => {
