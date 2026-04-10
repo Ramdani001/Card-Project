@@ -34,9 +34,13 @@ export function useCart() {
     }
   };
 
-  const handleAddToCart = async (product: CardDto) => {
+  const handleAddToCart = async (product: CardDto, quantity: number) => {
     if (status !== "authenticated") {
       notifications.show({ title: "Login Required", message: "Please log in to start shopping.", color: "red" });
+    }
+
+    if (product.stock < quantity) {
+      notifications.show({ title: "Insufficient Stock", message: "Sorry, only ${product.stock} items are available.", color: "red" });
     }
 
     setLoadingAction(product.id);
@@ -44,7 +48,7 @@ export function useCart() {
       const res = await fetch("/api/cart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cardId: product.id, quantity: 1 }),
+        body: JSON.stringify({ cardId: product.id, quantity }),
       });
 
       if (res.ok) {
