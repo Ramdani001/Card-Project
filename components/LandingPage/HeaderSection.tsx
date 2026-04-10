@@ -2,7 +2,7 @@
 
 import { CartItemDto } from "@/types/dtos/CartItemDto";
 import { ActionIcon, Avatar, Box, Button, Container, Group, Indicator, Menu, Text, Title } from "@mantine/core";
-import { IconChevronDown, IconLayoutDashboard, IconLogin, IconLogout, IconShoppingCart, IconUser } from "@tabler/icons-react";
+import { IconChevronDown, IconLayoutDashboard, IconLogin, IconLogout, IconReceipt2, IconShoppingCart, IconUser } from "@tabler/icons-react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction } from "react";
@@ -111,6 +111,9 @@ export const HeaderSection = ({ cartItems, setIsDrawerOpen, cartItemCount, onOpe
                     <Menu.Label>My Account</Menu.Label>
                     <Menu.Item leftSection={<IconUser size={14} />} onClick={() => router.push("/profile")}>
                       Profile
+                    </Menu.Item>
+                    <Menu.Item leftSection={<IconReceipt2 size={14} />} onClick={() => router.push("/my-transaction")}>
+                      My Transaction
                     </Menu.Item>
 
                     {(session?.user as any)?.canAccessDashboard && (

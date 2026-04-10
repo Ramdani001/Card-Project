@@ -1,38 +1,26 @@
 "use client";
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
+import { CONSTANT } from "@/constants";
 import { PaginationMetaDataDto } from "@/types/dtos/PaginationMetaDataDto";
+import { TransactionDto } from "@/types/dtos/TransactionDto";
 import { ActionIcon, Button, Flex, Group, Paper, Select, Text, TextInput, Title, Tooltip } from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconEye, IconHistory, IconRefresh, IconSearch } from "@tabler/icons-react";
+import dayjs from "dayjs";
 import { useEffect, useState } from "react";
+import { StatusBadge } from "../../layout/StatusBadge";
 import { TransactionDetailModal } from "./TransactionDetailModal";
 import { TransactionHistoryModal } from "./TransactionHistoryModal";
-import { StatusBadge } from "../../layout/StatusBadge";
-import { CONSTANT } from "@/constants";
-import { DatePickerInput } from "@mantine/dates";
-import dayjs from "dayjs";
-
-interface Transaction {
-  id: string;
-  invoice: string;
-  user: { name: string; email: string } | null;
-  customerName: string | null;
-  customerEmail: string | null;
-  totalPrice: number;
-  status: string;
-  snapRedirect: string;
-  createdAt: string;
-  items: any[];
-}
 
 interface ListTransactionProps {
   isNonDashboard: boolean;
 }
 
 const ListTransaction = ({ isNonDashboard = false }: ListTransactionProps) => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [transactions, setTransactions] = useState<TransactionDto[]>([]);
   const [metadata, setMetadata] = useState<PaginationMetaDataDto>({ total: 0, page: 1, limit: 10, totalPages: 0 });
   const [loading, setLoading] = useState(false);
   const [dateRange, setDateRange] = useState<[Date | null | string, Date | null | string]>([null, null]);
@@ -41,7 +29,7 @@ const ListTransaction = ({ isNonDashboard = false }: ListTransactionProps) => {
   const [searchInvoice, setSearchInvoice] = useState("");
 
   const [detailOpened, { open: openDetail, close: closeDetail }] = useDisclosure(false);
-  const [selectedTrx, setSelectedTrx] = useState<Transaction | null>(null);
+  const [selectedTrx, setSelectedTrx] = useState<TransactionDto | null>(null);
 
   const [historyOpened, { open: openHistory, close: closeHistory }] = useDisclosure(false);
   const [historyTrx, setHistoryTrx] = useState<{ id: string; invoice: string } | null>(null);
@@ -95,17 +83,17 @@ const ListTransaction = ({ isNonDashboard = false }: ListTransactionProps) => {
     fetchTransactions();
   };
 
-  const handleOpenDetail = (item: Transaction) => {
+  const handleOpenDetail = (item: TransactionDto) => {
     setSelectedTrx(item);
     openDetail();
   };
 
-  const handleOpenHistory = (item: Transaction) => {
+  const handleOpenHistory = (item: TransactionDto) => {
     setHistoryTrx({ id: item.id, invoice: item.invoice });
     openHistory();
   };
 
-  const columns: ColumnDef<Transaction>[] = [
+  const columns: ColumnDef<TransactionDto>[] = [
     {
       key: "no",
       label: "No",

@@ -3,6 +3,7 @@ import { IconGitCommit, IconUser, IconRobot, IconCreditCard } from "@tabler/icon
 import { useEffect, useState } from "react";
 import { notifications } from "@mantine/notifications";
 import { LogItemDto } from "@/types/dtos/LogItemDto";
+import { formatDate } from "@/utils";
 
 interface HistoryModalProps {
   opened: boolean;
@@ -107,12 +108,7 @@ export const TransactionHistoryModal = ({ opened, onClose, transactionId, invoic
                       {log.status}
                     </Text>
                     <Text c="dimmed" size="xs">
-                      {new Date(log.createdAt).toLocaleString("id-ID", {
-                        day: "numeric",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      {formatDate(log.createdAt)}
                     </Text>
                   </Group>
                 }
