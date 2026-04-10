@@ -1,9 +1,9 @@
+import prisma from "@/lib/prisma";
+import { PermissionValueDto } from "@/types/dtos/PermissionValueDto";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import bcrypt from "bcrypt";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import prisma from "@/lib/prisma";
-import bcrypt from "bcrypt";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import { PermissionValueDto } from "@/types/dtos/PermissionValueDto";
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
@@ -64,7 +64,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
@@ -73,16 +73,26 @@ export const authOptions: NextAuthOptions = {
         token.permissions = (user as any).permissions;
         token.canAccessDashboard = (user as any).canAccessDashboard;
       }
+
+      if (trigger === "update" && session) {
+        if (session.name) token.name = session.name;
+        if (session.email) token.email = session.email;
+        if (session.avatar) token.avatar = session.avatar;
+      }
+
       return token;
     },
+
     async session({ session, token }) {
       if (session.user) {
-        (session.user as any).role = token.role;
         (session.user as any).id = token.id;
+        (session.user as any).role = token.role;
         (session.user as any).roleId = token.roleId;
         (session.user as any).avatar = token.avatar;
         (session.user as any).permissions = token.permissions;
         (session.user as any).canAccessDashboard = token.canAccessDashboard;
+
+        session.user.name = token.name;
       }
 
       return session;

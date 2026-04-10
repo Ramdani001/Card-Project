@@ -1,5 +1,5 @@
 import { CardDto } from "@/types/dtos/CardDto";
-import { Badge, Box, Button, Card, Group, Image, LoadingOverlay, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
+import { Badge, Box, Button, Card, Group, Image, Paper, SimpleGrid, Stack, Text } from "@mantine/core";
 import { IconSearch, IconShoppingCart } from "@tabler/icons-react";
 import { Dispatch, SetStateAction } from "react";
 
@@ -17,8 +17,6 @@ export const ListCardSection = ({ loadingProducts, products, setSearch, handleAd
 
   return (
     <Box style={{ minHeight: 400, position: "relative" }}>
-      <LoadingOverlay visible={loadingProducts} zIndex={1000} overlayProps={{ radius: "sm", blur: 2 }} />
-
       {products.length === 0 && !loadingProducts ? (
         <Paper p="xl" ta="center" withBorder bg="white" radius="xs">
           <IconSearch size={40} color="gray" style={{ marginBottom: 10 }} />
@@ -42,7 +40,7 @@ export const ListCardSection = ({ loadingProducts, products, setSearch, handleAd
             <Card
               key={item.id}
               padding="0"
-              radius="md"
+              radius="xs"
               withBorder
               bg="white"
               style={{

@@ -1,4 +1,5 @@
-import { Checkbox, Divider, Group, Paper, Stack, Text, Title } from "@mantine/core";
+import { Checkbox, Divider, Group, Paper, Stack, Text } from "@mantine/core";
+import { IconFilter } from "@tabler/icons-react";
 import { Dispatch, SetStateAction } from "react";
 
 export interface FilterCategory {
@@ -26,11 +27,14 @@ export const FilterSection = ({
   };
 
   return (
-    <Paper p="md" radius="xs" bg="white" withBorder style={{ borderColor: "#dee2e6" }}>
+    <Paper p="md" radius="xs" withBorder shadow="sm">
       <Group justify="space-between" mb="md">
-        <Title order={6} tt="uppercase" style={{ letterSpacing: 0.5 }}>
-          Filter Products
-        </Title>
+        <Group gap="xs">
+          <IconFilter size={20} color="blue" />
+          <Text fw={700} size="sm">
+            Filters
+          </Text>
+        </Group>
         {selectedCategoryIds.length > 0 && (
           <Text size="xs" c="red" style={{ cursor: "pointer" }} onClick={() => setSelectedCategoryIds([])}>
             Clear All

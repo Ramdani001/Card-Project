@@ -1,171 +1,108 @@
 import { CartItemDto } from "@/types/dtos/CartItemDto";
-import {
-  ActionIcon,
-  Box,
-  Button,
-  Center,
-  Divider,
-  Drawer,
-  Group,
-  Image,
-  NumberInput,
-  Paper,
-  ScrollArea,
-  Stack,
-  Text,
-  TextInput,
-} from "@mantine/core";
-import { IconShoppingCart, IconTrash } from "@tabler/icons-react";
-import { Dispatch, SetStateAction, memo, useState } from "react";
-
-const getCardName = (item: CartItemDto) => item.card?.name || "Unknown Item";
-const getCardStock = (item: CartItemDto) => Number(item.card?.stock || 0);
-const getCardType = (item: CartItemDto) => item.card?.categories?.[0]?.category?.name || "General";
-const getCardImage = (item: CartItemDto) => item.card?.images?.[0]?.url || "https://placehold.co/60?text=No+Img";
-const getCardPrice = (item: CartItemDto) => Number(item.card?.price || 0);
-
-const CartItemRow = memo(
-  ({
-    item,
-    processingId,
-    onRemove,
-    onUpdate,
-  }: {
-    item: CartItemDto;
-    processingId: string | null;
-    onRemove: (id: string) => void;
-    onUpdate: (id: string, qty: number) => void;
-  }) => {
-    const stock = getCardStock(item);
-    const price = getCardPrice(item);
-    const isProcessing = processingId === item.id;
-
-    return (
-      <Paper
-        radius="md"
-        p="sm"
-        mb="sm"
-        bg="white"
-        withBorder
-        style={{
-          borderColor: "#e9ecef",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
-          overflow: "hidden",
-        }}
-      >
-        <Group align="center" wrap="nowrap" gap="md">
-          <Box
-            style={{
-              width: 70,
-              height: 70,
-              borderRadius: 8,
-              overflow: "hidden",
-              backgroundColor: "#f8f9fa",
-              border: "1px solid #dee2e6",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexShrink: 0,
-            }}
-          >
-            <Image src={getCardImage(item)} w="100%" h="100%" fit="contain" alt={getCardName(item)} />
-          </Box>
-
-          <Box style={{ flex: 1, minWidth: 0 }}>
-            <Group justify="space-between" align="start" mb={4}>
-              <Box style={{ maxWidth: "85%" }}>
-                <Text size="sm" fw={700} lineClamp={1} title={getCardName(item)} c="dark.4">
-                  {getCardName(item)}
-                </Text>
-                <Text size="xs" c="dimmed" fw={600}>
-                  {getCardType(item)} • Stock: {stock}
-                </Text>
-              </Box>
-
-              <ActionIcon variant="subtle" color="red" size="xs" onClick={() => onRemove(item.id)} loading={isProcessing}>
-                <IconTrash size={14} />
-              </ActionIcon>
-            </Group>
-
-            <Group justify="space-between" align="end" mt="xs">
-              <Stack gap={0}>
-                <Text size="xs" c="dimmed">
-                  Subtotal:
-                </Text>
-                <Text fw={800} size="md" c="blue.7">
-                  Rp {(price * item.quantity).toLocaleString("id-ID")}
-                </Text>
-              </Stack>
-
-              <Group gap={0} bg="gray.1" style={{ borderRadius: 6, border: "1px solid #dee2e6" }}>
-                <NumberInput
-                  value={item.quantity}
-                  onChange={(val) => {
-                    if (val && Number(val) > 0) {
-                      onUpdate(item.id, Number(val));
-                    }
-                  }}
-                  min={1}
-                  max={stock}
-                  allowNegative={false}
-                  hideControls
-                  size="xs"
-                  w={40}
-                  variant="unstyled"
-                  styles={{
-                    input: {
-                      textAlign: "center",
-                      padding: 0,
-                      height: 28,
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "#212529",
-                    },
-                  }}
-                />
-              </Group>
-            </Group>
-          </Box>
-        </Group>
-      </Paper>
-    );
-  }
-);
-CartItemRow.displayName = "CartItemRow";
+import { formatRupiah, getCardPrice } from "@/utils";
+import { Box, Button, Center, Divider, Drawer, Group, ScrollArea, Stack, Text, TextInput } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { IconShoppingCart, IconX } from "@tabler/icons-react";
+import { useRouter } from "next/navigation";
+import { Dispatch, SetStateAction, useState } from "react";
+import { CartItemRow } from "../Cart/CartItemRow";
 
 interface CartSectionProps {
   isDrawerOpen: boolean;
   loadingCart: boolean;
   cartItems: CartItemDto[];
   setIsDrawerOpen: Dispatch<SetStateAction<boolean>>;
-
-  handleRemoveItem: (id: string) => Promise<void>;
-  handleUpdateQuantity: (id: string, newQty: number) => Promise<void>;
-  processingId: string | null;
-  handleCheckout: (voucherCode: string) => Promise<void>;
-
-  setPaymentMethod: Dispatch<SetStateAction<string | null>>;
-  totalAmount: number;
-  address: string;
-  setAddress: Dispatch<SetStateAction<string>>;
-  isCheckoutLoading: boolean;
+  setCartItems: Dispatch<SetStateAction<CartItemDto[]>>;
 }
 
-export const CartSection = ({
-  isDrawerOpen,
-  loadingCart,
-  cartItems,
-  setIsDrawerOpen,
-  handleRemoveItem,
-  handleUpdateQuantity,
-  processingId,
-  handleCheckout,
-  totalAmount,
-  address,
-  setAddress,
-  isCheckoutLoading,
-}: CartSectionProps) => {
+export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerOpen, setCartItems }: CartSectionProps) => {
+  const router = useRouter();
+
   const [voucherCode, setVoucherCode] = useState("");
+  const [address, setAddress] = useState("");
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+  const totalAmount = cartItems.reduce((acc, item) => acc + getCardPrice(item) * item.quantity, 0);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+
+  const handleCheckout = async (voucherCodeFromCart?: string) => {
+    if (!address) {
+      notifications.show({ message: "Shipping address is required.", color: "red" });
+      return;
+    }
+
+    setIsCheckoutLoading(true);
+    try {
+      const res = await fetch("/api/transactions/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          address,
+          paymentMethod: null,
+          voucherCode: voucherCodeFromCart,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (res.ok) {
+        notifications.show({ title: "Order Placed!", message: "Please complete your payment.", color: "blue" });
+        setIsDrawerOpen(false);
+
+        router.push("/my-transaction");
+      } else {
+        throw new Error(json.message || "Checkout failed");
+      }
+    } catch (err: any) {
+      notifications.show({ title: "Checkout Failed", message: err.message, color: "red" });
+    } finally {
+      setIsCheckoutLoading(false);
+    }
+  };
+
+  const handleUpdateQuantity = async (id: string, newQty: number) => {
+    if (newQty < 1) return;
+
+    setProcessingId(id);
+    try {
+      const res = await fetch(`/api/cart/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quantity: newQty }),
+      });
+
+      const json = await res.json();
+
+      if (json.success) {
+        setCartItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: newQty } : item)));
+      } else {
+        notifications.show({ title: "Error", message: json.message, color: "red", icon: <IconX size={16} /> });
+        setCartItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: 1 } : item)));
+      }
+    } catch (error) {
+      console.error(error);
+      notifications.show({ title: "Error", message: "Network error", color: "red" });
+      setCartItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: 1 } : item)));
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleRemoveItem = async (id: string) => {
+    setProcessingId(id);
+
+    try {
+      const res = await fetch(`/api/cart/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setCartItems((prev) => prev.filter((item) => item.id !== id));
+        notifications.show({ message: "Item removed from cart", color: "gray" });
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   return (
     <Drawer
       opened={isDrawerOpen}
@@ -219,7 +156,7 @@ export const CartSection = ({
                 Subtotal
               </Text>
               <Text fw={700} size="lg">
-                Rp {totalAmount.toLocaleString("id-ID")}
+                {formatRupiah(totalAmount)}
               </Text>
             </Group>
 

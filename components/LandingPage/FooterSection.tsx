@@ -1,6 +1,5 @@
 import { Anchor, Box, Button, Container, Divider, Grid, Group, Stack, Text, TextInput, Title } from "@mantine/core";
 
-
 export const FooterSection = () => {
   return (
     <Box bg="#212529" c="gray.5" py={50} mt={50} style={{ borderTop: "4px solid #0056b3" }}>

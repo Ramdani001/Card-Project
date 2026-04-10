@@ -2,27 +2,35 @@
 
 import { CartItemDto } from "@/types/dtos/CartItemDto";
 import { ActionIcon, Avatar, Box, Button, Container, Group, Indicator, Menu, Text, Title } from "@mantine/core";
-import { IconChevronDown, IconLayoutDashboard, IconLogin, IconLogout, IconReceipt2, IconShoppingCart, IconUser } from "@tabler/icons-react";
+import {
+  IconChevronDown,
+  IconLayoutDashboard,
+  IconLayoutGrid,
+  IconLogin,
+  IconLogout,
+  IconReceipt2,
+  IconShoppingCart,
+  IconUser,
+} from "@tabler/icons-react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Dispatch, SetStateAction } from "react";
+import { Dispatch, SetStateAction, useState } from "react";
+import { CartSection } from "./CartSection";
 
 interface HeaderSectionProps {
-  cartItems: CartItemDto[];
-  setIsDrawerOpen?: Dispatch<SetStateAction<boolean>>;
-  cartItemCount?: number;
-  onOpenCart?: () => void;
+  cartItems?: CartItemDto[];
+  loadingCart?: boolean;
+  setCartItems?: Dispatch<SetStateAction<CartItemDto[]>>;
 }
 
-export const HeaderSection = ({ cartItems, setIsDrawerOpen, cartItemCount, onOpenCart }: HeaderSectionProps) => {
+export const HeaderSection = ({ cartItems, loadingCart, setCartItems }: HeaderSectionProps) => {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const totalItems = cartItemCount !== undefined ? cartItemCount : cartItems.length;
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const handleOpenCart = () => {
-    if (onOpenCart) onOpenCart();
-    else setIsDrawerOpen?.(true);
+    setIsDrawerOpen(true);
   };
 
   return (
@@ -33,7 +41,7 @@ export const HeaderSection = ({ cartItems, setIsDrawerOpen, cartItemCount, onOpe
         bg="white"
         style={{ borderBottom: "1px solid #e9ecef", position: "sticky", top: 0, zIndex: 100, boxShadow: "0 2px 15px rgba(0,0,0,0.05)" }}
       >
-        <Container size="xl">
+        <Container size="xl" fluid px={"xl"}>
           <Group justify="space-between">
             <Group>
               <Title
@@ -83,6 +91,14 @@ export const HeaderSection = ({ cartItems, setIsDrawerOpen, cartItemCount, onOpe
             </Box>
 
             <Group gap="lg">
+              {cartItems != null && loadingCart != null && setCartItems != null && (
+                <Indicator label={cartItems?.length} size={16} color="red" offset={4} disabled={cartItems?.length === 0}>
+                  <ActionIcon variant="transparent" color="dark" size="xl" onClick={handleOpenCart}>
+                    <IconShoppingCart size={26} stroke={1.5} />
+                  </ActionIcon>
+                </Indicator>
+              )}
+
               {status === "authenticated" ? (
                 <Menu shadow="md" width={200} position="bottom-end" transitionProps={{ transition: "pop-top-right" }}>
                   <Menu.Target>
@@ -115,6 +131,9 @@ export const HeaderSection = ({ cartItems, setIsDrawerOpen, cartItemCount, onOpe
                     <Menu.Item leftSection={<IconReceipt2 size={14} />} onClick={() => router.push("/my-transaction")}>
                       My Transaction
                     </Menu.Item>
+                    <Menu.Item leftSection={<IconLayoutGrid size={14} />} onClick={() => router.push("/Catalog")}>
+                      Catalog
+                    </Menu.Item>
 
                     {(session?.user as any)?.canAccessDashboard && (
                       <>
@@ -138,18 +157,20 @@ export const HeaderSection = ({ cartItems, setIsDrawerOpen, cartItemCount, onOpe
                   Login
                 </Button>
               )}
-
-              {onOpenCart != null && (
-                <Indicator label={totalItems} size={16} color="red" offset={4} disabled={totalItems === 0}>
-                  <ActionIcon variant="transparent" color="dark" size="xl" onClick={handleOpenCart}>
-                    <IconShoppingCart size={26} stroke={1.5} />
-                  </ActionIcon>
-                </Indicator>
-              )}
             </Group>
           </Group>
         </Container>
       </Box>
+
+      {cartItems != null && loadingCart != null && setCartItems != null && (
+        <CartSection
+          cartItems={cartItems}
+          isDrawerOpen={isDrawerOpen}
+          setIsDrawerOpen={setIsDrawerOpen}
+          loadingCart={loadingCart}
+          setCartItems={setCartItems}
+        />
+      )}
     </>
   );
 };

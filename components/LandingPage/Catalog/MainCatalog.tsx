@@ -1,19 +1,16 @@
 "use client";
 
-import { CartSection } from "@/components/LandingPage/CartSection";
+import { useCart } from "@/components/hooks/useCart";
 import { FilterSection } from "@/components/LandingPage/FilterSection";
 import { FooterSection } from "@/components/LandingPage/FooterSection";
 import { HeaderSection } from "@/components/LandingPage/HeaderSection";
 import { ListCardSection } from "@/components/LandingPage/ListCardSection";
 import { CardDto } from "@/types/dtos/CardDto";
-import { CartItemDto } from "@/types/dtos/CartItemDto";
-import { Box, Center, Container, Grid, Group, Loader, Pagination, Paper, Select, Text, TextInput } from "@mantine/core";
-import { useDebouncedValue } from "@mantine/hooks";
+import { Box, Center, Container, Grid, Group, Loader, Paper, ScrollArea, Select, Stack, Text, TextInput } from "@mantine/core";
+import { useDebouncedValue, useIntersection } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconSearch, IconX } from "@tabler/icons-react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { IconFilterOff, IconSearch } from "@tabler/icons-react";
+import { useEffect, useRef, useState } from "react";
 
 const SORT_OPTIONS = [
   { value: "createdAt|desc", label: "Newest" },
@@ -23,83 +20,66 @@ const SORT_OPTIONS = [
 ];
 
 export default function MainCatalog() {
-  const router = useRouter();
-  const { status } = useSession();
-
   const [products, setProducts] = useState<CardDto[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [hasMore, setHasMore] = useState(false);
 
   const [search, setSearch] = useState("");
   const [debouncedSearch] = useDebouncedValue(search, 500);
-
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
   const [selectedFilterStock, setSelectedFilterStock] = useState<string>("on");
   const [sortValue, setSortValue] = useState<string | null>("createdAt|desc");
-
   const [activePage, setActivePage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
-  const [cartItems, setCartItemsDto] = useState<CartItemDto[]>([]);
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [loadingCart, setLoadingCart] = useState(false);
-  const [loadingAction, setLoadingAction] = useState<string | null>(null);
-  const [processingId, setProcessingId] = useState<string | null>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
 
-  const [address, setAddress] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
-  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+  const { ref, entry } = useIntersection({
+    root: viewportRef.current,
+    threshold: 0.1,
+  });
+
   const [categoriesList, setCategoriesList] = useState<{ id: string; name: string }[]>([]);
-
-  const getCardPrice = (item: CardDto) => Number(item?.price || 0);
+  const { cartItems, handleAddToCart, loadingAction, loadingCart, setCartItems } = useCart();
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         const res = await fetch("/api/categories");
         const json = await res.json();
-        if (json.success) {
-          setCategoriesList(json.data);
-        }
+        if (json.success) setCategoriesList(json.data);
       } catch (error) {
         console.error("Failed to fetch categories:", error);
       }
     };
-
     fetchCategories();
   }, []);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (page: number) => {
     setLoadingProducts(true);
     try {
       const params = new URLSearchParams();
-      params.append("page", activePage.toString());
+      params.append("page", page.toString());
       params.append("limit", "8");
-
       if (debouncedSearch) params.append("name", debouncedSearch);
       if (sortValue) {
         const [field, direction] = sortValue.split("|");
         params.append("sortBy", field);
         params.append("sortOrder", direction);
       }
-      if (selectedCategoryIds.length > 0) {
-        params.append("categories", selectedCategoryIds.join(","));
-      }
-      if (selectedFilterStock) {
-        params.append("stock", selectedFilterStock);
-      }
+      if (selectedCategoryIds.length > 0) params.append("categories", selectedCategoryIds.join(","));
+      if (selectedFilterStock) params.append("stock", selectedFilterStock);
 
       const res = await fetch(`/api/cards?${params.toString()}`);
       const json = await res.json();
 
       if (json.success) {
-        setProducts(json.data);
-        setTotalPages(json.metadata.totalPages);
+        setProducts((prev) => (page === 1 ? json.data : [...prev, ...json.data]));
+        setHasMore(page < json.metadata.totalPages);
       } else {
-        setProducts([]);
-        setTotalPages(1);
+        if (page === 1) setProducts([]);
+        setHasMore(false);
       }
-    } catch (error) {
-      console.error("Error fetching cards:", error);
+    } catch {
       notifications.show({ title: "Error", message: "Failed to load products.", color: "red" });
     } finally {
       setLoadingProducts(false);
@@ -107,244 +87,111 @@ export default function MainCatalog() {
   };
 
   useEffect(() => {
+    if (entry?.isIntersecting && hasMore && !loadingProducts) {
+      const nextPage = activePage + 1;
+      setActivePage(nextPage);
+      fetchProducts(nextPage);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entry?.isIntersecting]);
+
+  // Reset filter
+  useEffect(() => {
     setActivePage(1);
-  }, [debouncedSearch, selectedCategoryIds, sortValue]);
-
-  useEffect(() => {
-    fetchProducts();
+    fetchProducts(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePage, debouncedSearch, selectedCategoryIds, sortValue, selectedFilterStock]);
-
-  useEffect(() => {
-    if (status === "authenticated") fetchCart();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [status]);
-
-  const fetchCart = async () => {
-    if (status !== "authenticated") return;
-    setLoadingCart(true);
-    try {
-      const res = await fetch("/api/cart");
-      const json = await res.json();
-      if (res.ok) {
-        if (Array.isArray(json.data)) setCartItemsDto(json.data);
-        else if (json.data?.items) setCartItemsDto(json.data.items);
-        else setCartItemsDto([]);
-      }
-    } catch (error) {
-      console.error("Cart error", error);
-    } finally {
-      setLoadingCart(false);
-    }
-  };
-
-  const handleAddToCart = async (product: CardDto) => {
-    if (status !== "authenticated") {
-      notifications.show({ title: "Login Required", message: "Please log in to start shopping.", color: "red" });
-      return router.push("/login");
-    }
-
-    setLoadingAction(product.id);
-    try {
-      const res = await fetch("/api/cart", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cardId: product.id, quantity: 1 }),
-      });
-
-      if (res.ok) {
-        notifications.show({
-          title: "Added to Cart",
-          message: "Item successfully added to your cart.",
-          color: "teal",
-          icon: <IconCheck size={16} />,
-        });
-        fetchCart();
-      } else {
-        const json = await res.json();
-        throw new Error(json.message || "Failed to add item to cart");
-      }
-    } catch (error: any) {
-      notifications.show({ title: "Error", message: error.message, color: "red" });
-    } finally {
-      setLoadingAction(null);
-    }
-  };
-
-  const handleRemoveItem = async (id: string) => {
-    setProcessingId(id);
-    try {
-      const res = await fetch(`/api/cart/${id}`, { method: "DELETE" });
-      if (res.ok) {
-        setCartItemsDto((prev) => prev.filter((item) => item.id !== id));
-        notifications.show({ message: "Item removed from cart", color: "gray" });
-      }
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  const handleUpdateQuantity = async (id: string, newQty: number) => {
-    if (newQty < 1) return;
-    setProcessingId(id);
-    try {
-      const res = await fetch(`/api/cart/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ quantity: newQty }),
-      });
-
-      const json = await res.json();
-
-      if (json.success) {
-        setCartItemsDto((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: newQty } : item)));
-      } else {
-        notifications.show({ title: "Error", message: json.message, color: "red", icon: <IconX size={16} /> });
-        setCartItemsDto((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: 1 } : item)));
-      }
-    } catch (error) {
-      console.error(error);
-      notifications.show({ title: "Error", message: "Network error", color: "red" });
-      setCartItemsDto((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: 1 } : item)));
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  const handleCheckout = async (voucherCodeFromCart?: string) => {
-    if (!address) {
-      notifications.show({ message: "Shipping address is required.", color: "red" });
-      return;
-    }
-
-    setIsCheckoutLoading(true);
-    try {
-      const res = await fetch("/api/transactions/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          address,
-          paymentMethod,
-          voucherCode: voucherCodeFromCart,
-        }),
-      });
-
-      const json = await res.json();
-
-      if (res.ok) {
-        notifications.show({ title: "Order Placed!", message: "Please complete your payment.", color: "blue" });
-        setCartItemsDto([]);
-        setIsDrawerOpen(false);
-
-        if (json.data?.snapRedirect) {
-          window.location.href = json.data.snapRedirect;
-        } else {
-          router.push("/transactions");
-        }
-      } else {
-        throw new Error(json.message || "Checkout failed");
-      }
-    } catch (err: any) {
-      notifications.show({ title: "Checkout Failed", message: err.message, color: "red" });
-    } finally {
-      setIsCheckoutLoading(false);
-    }
-  };
-
-  const totalAmount = cartItems.reduce((acc, item) => acc + getCardPrice(item.card) * item.quantity, 0);
+  }, [debouncedSearch, selectedCategoryIds, sortValue, selectedFilterStock]);
 
   return (
-    <Box style={{ backgroundColor: "#f7f8fb", minHeight: "100vh", color: "#1f2a44", fontFamily: "Inter, Arial, sans-serif" }}>
-      <HeaderSection
-        cartItems={cartItems}
-        setIsDrawerOpen={setIsDrawerOpen}
-        cartItemCount={cartItems.length}
-        onOpenCart={() => setIsDrawerOpen(true)}
-      />
+    <Box bg="#f8f9fa" mih="100vh">
+      <HeaderSection cartItems={cartItems} loadingCart={loadingCart} setCartItems={setCartItems} />
 
-      <Container size="xl" py="xl">
-        <Paper p="lg" radius="md" withBorder shadow="sm" style={{ borderColor: "#e4e8ed" }}>
-          <Grid>
-            <Grid.Col span={{ base: 12, md: 3 }} visibleFrom="md">
-              <FilterSection
-                categories={categoriesList}
-                selectedCategoryIds={selectedCategoryIds}
-                setSelectedCategoryIds={setSelectedCategoryIds}
-                setSelectedFilterStock={setSelectedFilterStock}
-                selectedFilterStock={selectedFilterStock}
-              />
-            </Grid.Col>
+      <Container size="xl" py="xl" fluid>
+        <Grid>
+          <Grid.Col span={{ base: 12, md: 3 }}>
+            <FilterSection
+              categories={categoriesList}
+              selectedCategoryIds={selectedCategoryIds}
+              setSelectedCategoryIds={setSelectedCategoryIds}
+              setSelectedFilterStock={setSelectedFilterStock}
+              selectedFilterStock={selectedFilterStock}
+            />
+          </Grid.Col>
 
-            <Grid.Col span={{ base: 12, md: 9 }}>
-              <Group justify="space-between" mb="lg" align="flex-end">
+          <Grid.Col span={{ base: 12, md: 9 }}>
+            <Stack gap="lg">
+              <Group justify="space-between" wrap="wrap">
                 <TextInput
                   placeholder="Search..."
-                  leftSection={<IconSearch size={16} stroke={1.5} />}
+                  leftSection={<IconSearch size={18} stroke={1.5} color="#909296" />}
                   value={search}
                   onChange={(e) => setSearch(e.currentTarget.value)}
-                  size="xs"
-                  w={250}
+                  size="md"
+                  radius="xs"
+                  style={{ flex: 1 }}
+                  maw={{ base: "100%", sm: 450 }}
                 />
-
                 <Select
-                  placeholder="Sort by"
-                  data={SORT_OPTIONS.map((opt) => opt.label)}
-                  value={SORT_OPTIONS.find((e) => e.value === sortValue)?.label || "Newest"}
-                  onChange={(val) => {
-                    const selected = SORT_OPTIONS.find((x) => x.label === val);
-                    if (selected) setSortValue(selected.value);
-                  }}
-                  size="xs"
-                  w={200}
+                  data={SORT_OPTIONS}
+                  value={sortValue}
+                  onChange={setSortValue}
+                  size="md"
+                  radius="xs"
+                  w={{ base: "100%", sm: 200 }}
                   allowDeselect={false}
                 />
               </Group>
 
-              {loadingProducts ? (
-                <Center h={300}>
-                  <Loader />
-                </Center>
-              ) : products.length > 0 ? (
-                <>
-                  <ListCardSection
-                    products={products}
-                    handleAddToCart={handleAddToCart}
-                    loadingAction={loadingAction}
-                    setSearch={setSearch}
-                    loadingProducts={loadingProducts}
-                  />
+              <Paper p="md" radius="xs" withBorder shadow="sm">
+                <ScrollArea h={600} viewportRef={viewportRef}>
+                  <Box p="md">
+                    {products.length > 0 ? (
+                      <Stack gap="xl">
+                        <ListCardSection
+                          products={products}
+                          handleAddToCart={handleAddToCart}
+                          loadingAction={loadingAction}
+                          setSearch={setSearch}
+                          loadingProducts={loadingProducts}
+                        />
 
-                  <Center mt="xl">
-                    <Pagination total={totalPages} value={activePage} onChange={setActivePage} color="blue" withEdges siblings={1} />
-                  </Center>
-                </>
-              ) : (
-                <Center h={300}>
-                  <Text c="dimmed">No products found.</Text>
-                </Center>
-              )}
-            </Grid.Col>
-          </Grid>
-        </Paper>
+                        <div ref={ref} style={{ height: 20, marginTop: 20 }}>
+                          {hasMore && (
+                            <Center pb="xl">
+                              <Loader color="blue" type="dots" />
+                            </Center>
+                          )}
+                        </div>
+
+                        {!hasMore && (
+                          <Center py="md">
+                            <Text size="sm" c="dimmed">
+                              You`ve reached the end of the catalog.
+                            </Text>
+                          </Center>
+                        )}
+                      </Stack>
+                    ) : (
+                      <Center h={400}>
+                        {loadingProducts ? (
+                          <Loader color="blue" size="xl" type="dots" />
+                        ) : (
+                          <Stack align="center" gap="xs">
+                            <IconFilterOff size={48} color="#dee2e6" />
+                            <Text fw={600} c="dimmed">
+                              Product not found.
+                            </Text>
+                          </Stack>
+                        )}
+                      </Center>
+                    )}
+                  </Box>
+                </ScrollArea>
+              </Paper>
+            </Stack>
+          </Grid.Col>
+        </Grid>
       </Container>
-
-      <CartSection
-        cartItems={cartItems}
-        isDrawerOpen={isDrawerOpen}
-        setIsDrawerOpen={setIsDrawerOpen}
-        loadingCart={loadingCart}
-        handleRemoveItem={handleRemoveItem}
-        handleUpdateQuantity={handleUpdateQuantity}
-        processingId={processingId}
-        handleCheckout={handleCheckout}
-        isCheckoutLoading={isCheckoutLoading}
-        totalAmount={totalAmount}
-        address={address}
-        setAddress={setAddress}
-        setPaymentMethod={setPaymentMethod}
-      />
 
       <FooterSection />
     </Box>
