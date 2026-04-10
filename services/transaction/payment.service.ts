@@ -1,6 +1,6 @@
 import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
-import { NotificationType } from "@/prisma/generated/prisma/enums";
+import { NotificationType, TransactionStatus } from "@/prisma/generated/prisma/enums";
 import { createHash } from "crypto";
 import midtransClient from "midtrans-client";
 import { createNotificationByCode } from "./notification.service";
@@ -94,21 +94,25 @@ export const savePaymentLog = async (payload: any) => {
   }
 };
 
-export const mapMidtransStatus = (transactionStatus: string, fraudStatus?: string): "PAID" | "PENDING" | "FAILED" | "CANCELLED" => {
+export const mapMidtransStatus = (transactionStatus: string, fraudStatus?: string): TransactionStatus => {
   if (transactionStatus === "capture") {
     if (fraudStatus === "challenge") {
       return "PENDING";
     }
-    return "PAID";
+    return TransactionStatus.PAID;
   } else if (transactionStatus === "settlement") {
-    return "PAID";
-  } else if (transactionStatus === "cancel" || transactionStatus === "deny" || transactionStatus === "expire") {
-    return "FAILED";
+    return TransactionStatus.PAID;
+  } else if (transactionStatus === "deny" || transactionStatus === "expire") {
+    return TransactionStatus.FAILED;
+  } else if (transactionStatus === "cancel") {
+    return TransactionStatus.FAILED;
   } else if (transactionStatus === "pending") {
-    return "PENDING";
+    return TransactionStatus.PENDING;
+  } else if (transactionStatus === "refund" || transactionStatus === "partial_refund") {
+    return TransactionStatus.REFUNDED;
   }
 
-  return "FAILED";
+  return TransactionStatus.FAILED;
 };
 
 export const sendPaymentNotification = async (orderId: string, status: "PAID" | "PENDING" | "FAILED" | "CANCELLED") => {

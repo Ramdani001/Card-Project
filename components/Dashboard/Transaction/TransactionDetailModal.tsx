@@ -17,6 +17,7 @@ import {
   Stack,
   Table,
   Text,
+  Textarea,
   TextInput,
   ThemeIcon,
 } from "@mantine/core";
@@ -43,6 +44,8 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
   const [resi, setResi] = useState("");
   const [expedition, setExpedition] = useState("");
   const [shippingCost, setShippingCost] = useState<number | string>(0);
+  const [reason, setReason] = useState("");
+  const cancelationStatus = ["CANCELLED", "FAILED", "REFUNDED"];
 
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -65,6 +68,7 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
       setResi(transaction.resi || "");
       setExpedition(transaction.expedition || "");
       setShippingCost(transaction.shippingCost || 0);
+      setReason("");
 
       fetchNextStatusOptions(transaction.id);
     }
@@ -97,6 +101,8 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
       setResi(transaction.resi || "");
       setExpedition(transaction.expedition || "");
       setShippingCost(transaction.shippingCost || 0);
+    } else if (value && cancelationStatus.includes(value)) {
+      setReason(transaction.note || "");
     } else {
       setResi("");
       setExpedition("");
@@ -108,7 +114,7 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
     if (!status) return;
 
     if (status === "SHIPPED" && !resi) {
-      notifications.show({ message: "Harap isi Nomor Resi untuk status SHIPPED", color: "orange" });
+      notifications.show({ message: "Please fill in the Receipt Number for SHIPPED status", color: "orange" });
       return;
     }
 
@@ -122,6 +128,7 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
           resi,
           expedition,
           shippingCost: Number(shippingCost),
+          reason,
         }),
       });
 
@@ -340,6 +347,29 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
               <NumberInput label="Shipping Cost (Ongkir)" value={shippingCost} disabled={status !== "SHIPPED"} onChange={setShippingCost} min={0} />
             </Grid.Col>
           </Grid>
+        </Paper>
+      )}
+
+      {cancelationStatus.some((e) => e == status) && (
+        <Paper p="md" radius="md" withBorder mb="md">
+          <Stack gap="xs">
+            <Group gap="xs">
+              <Text fw={600} size="sm">
+                Cancellation / Refund Reason
+              </Text>
+            </Group>
+
+            <Textarea
+              placeholder="Provide a reason for this status change (e.g., Stock out, Customer requested, etc.)"
+              value={reason}
+              onChange={(e) => setReason(e.currentTarget.value)}
+              minRows={3}
+              autosize
+              description="This note will be recorded in the transaction history."
+              withAsterisk
+              disabled={transaction.status === "CANCELLED" || transaction.status === "FAILED" || transaction.status === "REFUNDED"}
+            />
+          </Stack>
         </Paper>
       )}
 

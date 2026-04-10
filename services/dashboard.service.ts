@@ -2,7 +2,7 @@ import { CONSTANT } from "@/constants";
 import prisma from "@/lib/prisma";
 import { TransactionStatus } from "@/prisma/generated/prisma/client";
 
-const successStatuses: TransactionStatus[] = ["PAID", "PROCESSED", "SHIPPED", "COMPLETED"];
+const successStatuses: TransactionStatus[] = ["COMPLETED"];
 
 export const getDashboardOverview = async () => {
   const now = new Date();

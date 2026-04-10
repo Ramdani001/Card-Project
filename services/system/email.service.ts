@@ -1,7 +1,7 @@
 import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
-import { formatRupiah } from "@/utils";
+import { formatDate, formatRupiah } from "@/utils";
 import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
@@ -53,13 +53,7 @@ const generateReceiptHtml = (transaction: TransactionWithDetails): string => {
       <table style="width: 100%; margin-bottom: 20px;">
         <tr>
           <td><strong>Invoice:</strong> ${transaction.invoice}</td>
-          <td style="text-align: right;"><strong>Date:</strong> ${new Date(transaction.createdAt).toLocaleString("id-ID", {
-            day: "2-digit",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}</td>
+          <td style="text-align: right;"><strong>Date:</strong> ${formatDate(transaction.createdAt.toDateString())}</td>
         </tr>
         <tr>
           <td><strong>Status:</strong> <span style="color: green; font-weight: bold;">${transaction.status}</span></td>

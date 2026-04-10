@@ -43,8 +43,8 @@ export const POST = async (req: NextRequest) => {
     if (transaction) {
       await createNotificationByCode({
         notificationCode: "TRANSACTION_NOTIF",
-        title: "Update Pembayaran",
-        message: `Transaksi ${transaction.invoice} berubah menjadi ${newStatus}`,
+        title: "Payment Updates",
+        message: `Transaction ${transaction.invoice} updated to ${newStatus}`,
         type: NotificationType.TRANSACTION,
         url: null,
         metadata: {

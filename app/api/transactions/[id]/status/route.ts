@@ -26,7 +26,7 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
       if (!resi || !expedition) {
         return sendResponse({
           success: false,
-          message: "Resi & Ekspedisi wajib diisi untuk pengiriman!",
+          message: "Receipt & Expedition must be filled in for delivery!",
           status: 400,
         });
       }

@@ -302,8 +302,8 @@ export const updateTransactionStatus = async (
 
     await createNotificationByCode({
       notificationCode: "TRANSACTION_NOTIF",
-      title: "Transaksi Baru",
-      message: `Transaksi ${updatedTransaction.invoice} telah dibuat`,
+      title: "New Transaction",
+      message: `Transaction ${updatedTransaction.invoice} created`,
       type: NotificationType.TRANSACTION,
       url: null,
       metadata: { transactionId: updatedTransaction.id },
@@ -316,8 +316,8 @@ export const updateTransactionStatus = async (
 
   await createNotificationByCode({
     notificationCode: "TRANSACTION_NOTIF",
-    title: "Update Status Transaksi",
-    message: `Transaksi ${result.invoice} berubah menjadi ${status}`,
+    title: "Transaction Status Updated",
+    message: `Transaction ${result.invoice} updated to ${status}`,
     type: NotificationType.TRANSACTION,
     url: null,
     metadata: {
