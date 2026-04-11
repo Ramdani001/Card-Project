@@ -45,7 +45,7 @@ export const ListCardSection = ({ loadingProducts, products, setSearch, handleAd
           </Stack>
         </Paper>
       ) : (
-        <SimpleGrid cols={{ base: 2, sm: 3, lg: 4 }} spacing="lg" verticalSpacing="xl">
+        <SimpleGrid cols={{ base: 1, sm: 3, lg: 4 }} spacing="lg" verticalSpacing="xl">
           {products.map((item) => (
             <Card
               key={item.id}
@@ -124,7 +124,7 @@ export const ListCardSection = ({ loadingProducts, products, setSearch, handleAd
                   <Group gap={4}>
                     <Box w={6} h={6} style={{ borderRadius: "50%" }} bg={item.stock > 5 ? "teal.5" : item.stock > 0 ? "orange.5" : "red.5"} />
                     <Text size="xs" c="dimmed">
-                      {item.stock > 0 ? `${item.stock} unit available` : "Out of Stock"}
+                      {item.stock > 0 ? `${item.stock} units left` : "Out of Stock"}
                     </Text>
                   </Group>
                 </Box>

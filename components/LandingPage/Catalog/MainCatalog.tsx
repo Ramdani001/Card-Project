@@ -6,11 +6,11 @@ import { FooterSection } from "@/components/LandingPage/FooterSection";
 import { HeaderSection } from "@/components/LandingPage/HeaderSection";
 import { ListCardSection } from "@/components/LandingPage/ListCardSection";
 import { CardDto } from "@/types/dtos/CardDto";
-import { Box, Center, Container, Grid, Group, Loader, Paper, ScrollArea, Select, Stack, Text, TextInput } from "@mantine/core";
-import { useDebouncedValue, useIntersection } from "@mantine/hooks";
+import { Box, Button, Center, Container, Grid, Group, Loader, Paper, rem, Select, Stack, Text, TextInput } from "@mantine/core";
+import { useDebouncedValue } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { IconFilterOff, IconSearch } from "@tabler/icons-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 const SORT_OPTIONS = [
   { value: "createdAt|desc", label: "Newest" },
@@ -22,6 +22,7 @@ const SORT_OPTIONS = [
 export default function MainCatalog() {
   const [products, setProducts] = useState<CardDto[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
 
   const [search, setSearch] = useState("");
@@ -31,16 +32,10 @@ export default function MainCatalog() {
   const [sortValue, setSortValue] = useState<string | null>("createdAt|desc");
   const [activePage, setActivePage] = useState(1);
 
-  const viewportRef = useRef<HTMLDivElement>(null);
-
-  const { ref, entry } = useIntersection({
-    root: viewportRef.current,
-    threshold: 0.1,
-  });
-
   const [categoriesList, setCategoriesList] = useState<{ id: string; name: string }[]>([]);
   const { cartItems, handleAddToCart, loadingAction, loadingCart, setCartItems } = useCart();
 
+  // Fetch Categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -54,8 +49,10 @@ export default function MainCatalog() {
     fetchCategories();
   }, []);
 
-  const fetchProducts = async (page: number) => {
-    setLoadingProducts(true);
+  const fetchProducts = async (page: number, isLoadMore = false) => {
+    if (isLoadMore) setLoadingMore(true);
+    else setLoadingProducts(true);
+
     try {
       const params = new URLSearchParams();
       params.append("page", page.toString());
@@ -83,24 +80,22 @@ export default function MainCatalog() {
       notifications.show({ title: "Error", message: "Failed to load products.", color: "red" });
     } finally {
       setLoadingProducts(false);
+      setLoadingMore(false);
     }
   };
 
-  useEffect(() => {
-    if (entry?.isIntersecting && hasMore && !loadingProducts) {
-      const nextPage = activePage + 1;
-      setActivePage(nextPage);
-      fetchProducts(nextPage);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entry?.isIntersecting]);
-
-  // Reset filter
+  // Reset filter dan fetch ulang dari page 1
   useEffect(() => {
     setActivePage(1);
-    fetchProducts(1);
+    fetchProducts(1, false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedSearch, selectedCategoryIds, sortValue, selectedFilterStock]);
+
+  const handleLoadMore = () => {
+    const nextPage = activePage + 1;
+    setActivePage(nextPage);
+    fetchProducts(nextPage, true);
+  };
 
   return (
     <Box bg="#f8f9fa" mih="100vh">
@@ -108,7 +103,7 @@ export default function MainCatalog() {
 
       <Container size="xl" py="xl" fluid>
         <Grid>
-          <Grid.Col span={{ base: 12, md: 3 }}>
+          <Grid.Col span={{ base: 12, md: 3, lg: 2 }}>
             <FilterSection
               categories={categoriesList}
               selectedCategoryIds={selectedCategoryIds}
@@ -118,16 +113,16 @@ export default function MainCatalog() {
             />
           </Grid.Col>
 
-          <Grid.Col span={{ base: 12, md: 9 }}>
+          <Grid.Col span={{ base: 12, md: 9, lg: 10 }}>
             <Stack gap="lg">
-              <Group justify="space-between" wrap="wrap">
+              <Group justify="space-between">
                 <TextInput
                   placeholder="Search..."
                   leftSection={<IconSearch size={18} stroke={1.5} color="#909296" />}
                   value={search}
                   onChange={(e) => setSearch(e.currentTarget.value)}
                   size="md"
-                  radius="xs"
+                  radius="md"
                   style={{ flex: 1 }}
                   maw={{ base: "100%", sm: 450 }}
                 />
@@ -136,58 +131,77 @@ export default function MainCatalog() {
                   value={sortValue}
                   onChange={setSortValue}
                   size="md"
-                  radius="xs"
-                  w={{ base: "100%", sm: 200 }}
+                  radius="md"
+                  w={{ base: "100%", sm: 220 }}
                   allowDeselect={false}
                 />
               </Group>
 
-              <Paper p="md" radius="xs" withBorder shadow="sm">
-                <ScrollArea h={600} viewportRef={viewportRef}>
-                  <Box p="md">
-                    {products.length > 0 ? (
-                      <Stack gap="xl">
-                        <ListCardSection
-                          products={products}
-                          handleAddToCart={handleAddToCart}
-                          loadingAction={loadingAction}
-                          setSearch={setSearch}
-                          loadingProducts={loadingProducts}
-                        />
+              <Box mih={500}>
+                {products.length > 0 ? (
+                  <Stack gap="xl">
+                    <ListCardSection
+                      products={products}
+                      handleAddToCart={handleAddToCart}
+                      loadingAction={loadingAction}
+                      setSearch={setSearch}
+                      loadingProducts={loadingProducts}
+                    />
 
-                        <div ref={ref} style={{ height: 20, marginTop: 20 }}>
-                          {hasMore && (
-                            <Center pb="xl">
-                              <Loader color="blue" type="dots" />
-                            </Center>
-                          )}
-                        </div>
-
-                        {!hasMore && (
-                          <Center py="md">
-                            <Text size="sm" c="dimmed">
-                              You`ve reached the end of the catalog.
-                            </Text>
-                          </Center>
-                        )}
-                      </Stack>
-                    ) : (
-                      <Center h={400}>
-                        {loadingProducts ? (
+                    <Center>
+                      {hasMore ? (
+                        <Button
+                          variant="outline"
+                          color="dark"
+                          size="md"
+                          radius="xs"
+                          onClick={handleLoadMore}
+                          loading={loadingMore}
+                          styles={{
+                            root: {
+                              borderWidth: rem(1.5),
+                              fontWeight: 600,
+                              transition: "transform 0.2s ease",
+                              "&:active": { transform: "scale(0.95)" },
+                            },
+                          }}
+                        >
+                          View More
+                        </Button>
+                      ) : (
+                        !loadingProducts && (
+                          <Text size="sm" c="dimmed" fs="italic">
+                            You`ve reached the end of the catalog.
+                          </Text>
+                        )
+                      )}
+                    </Center>
+                  </Stack>
+                ) : (
+                  <Paper withBorder radius="md" p={100}>
+                    <Center>
+                      {loadingProducts ? (
+                        <Stack align="center">
                           <Loader color="blue" size="xl" type="dots" />
-                        ) : (
-                          <Stack align="center" gap="xs">
-                            <IconFilterOff size={48} color="#dee2e6" />
-                            <Text fw={600} c="dimmed">
-                              Product not found.
-                            </Text>
-                          </Stack>
-                        )}
-                      </Center>
-                    )}
-                  </Box>
-                </ScrollArea>
-              </Paper>
+                          <Text size="sm" c="dimmed">
+                            Loading products...
+                          </Text>
+                        </Stack>
+                      ) : (
+                        <Stack align="center" gap="xs">
+                          <IconFilterOff size={48} color="#dee2e6" />
+                          <Text fw={600} c="gray.6">
+                            No products found
+                          </Text>
+                          <Text size="sm" c="dimmed">
+                            Try adjusting your search or filters
+                          </Text>
+                        </Stack>
+                      )}
+                    </Center>
+                  </Paper>
+                )}
+              </Box>
             </Stack>
           </Grid.Col>
         </Grid>

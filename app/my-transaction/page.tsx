@@ -6,11 +6,9 @@ import { HeaderSection } from "@/components/LandingPage/HeaderSection";
 import { StatusBadge } from "@/components/layout/StatusBadge";
 import { MyTransactionDetailModal } from "@/components/MyTransaction/MyTransactionDetailModal";
 import { MyTransactionHistoryModal } from "@/components/MyTransaction/MyTransactionHistoryModal";
-import { PaginationMetaDataDto } from "@/types/dtos/PaginationMetaDataDto";
 import { TransactionDto } from "@/types/dtos/TransactionDto";
 import {
   ActionIcon,
-  Badge,
   Box,
   Button,
   Center,
@@ -21,25 +19,24 @@ import {
   Group,
   Loader,
   Paper,
-  ScrollArea,
   Select,
   SimpleGrid,
   Stack,
   Text,
   TextInput,
   Title,
+  rem,
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
-import { useIntersection } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { IconCalendar, IconCreditCard, IconEye, IconFilter, IconHistory, IconPackage, IconSearch, IconSearchOff } from "@tabler/icons-react";
+import { IconCalendar, IconCreditCard, IconEye, IconFilter, IconHistory, IconPackage, IconPlus, IconSearchOff } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 const MyTransaction = () => {
   const [transactions, setTransactions] = useState<TransactionDto[]>([]);
-  const [_metadata, setMetadata] = useState<PaginationMetaDataDto>({ total: 0, page: 1, limit: 12, totalPages: 0 });
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
@@ -53,24 +50,10 @@ const MyTransaction = () => {
 
   const { cartItems, setCartItems, loadingCart } = useCart();
 
-  const viewportRef = useRef<HTMLDivElement>(null);
-  const { ref, entry } = useIntersection({
-    root: viewportRef.current,
-    threshold: 0.1,
-  });
-
-  const handleOpenDetail = (trx: TransactionDto) => {
-    setSelectedTrx(trx);
-    setDetailOpened(true);
-  };
-
-  const handleOpenHistory = (trx: TransactionDto) => {
-    setSelectedTrx(trx);
-    setHistoryOpened(true);
-  };
-
   const fetchTransactions = async (page: number, isInitial: boolean = false) => {
-    setLoading(true);
+    if (isInitial) setLoading(true);
+    else setLoadingMore(true);
+
     try {
       const params = new URLSearchParams({
         page: page.toString(),
@@ -84,19 +67,18 @@ const MyTransaction = () => {
       if (dateRange[0]) params.append("startDate", dayjs(dateRange[0]).startOf("day").toISOString());
       if (dateRange[1]) params.append("endDate", dayjs(dateRange[1]).endOf("day").toISOString());
 
-      const url = `/api/users/transactions?${params}`;
-      const res = await fetch(url);
+      const res = await fetch(`/api/users/transactions?${params}`);
       const json = await res.json();
 
       if (json.success) {
         setTransactions((prev) => (isInitial ? json.data : [...prev, ...json.data]));
-        setMetadata(json.metadata);
         setHasMore(page < json.metadata.totalPages);
       }
     } catch {
       notifications.show({ title: "Error", message: "Gagal memuat data", color: "red" });
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
@@ -110,20 +92,14 @@ const MyTransaction = () => {
     setFilterStatus(null);
     setDateRange([null, null]);
     setActivePage(1);
-    // Kita panggil manual karena state update bersifat async
-    setTransactions([]);
-    setHasMore(true);
     fetchTransactions(1, true);
   };
 
-  useEffect(() => {
-    if (entry?.isIntersecting && hasMore && !loading && transactions.length > 0) {
-      const nextPage = activePage + 1;
-      setActivePage(nextPage);
-      fetchTransactions(nextPage, false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entry?.isIntersecting]);
+  const handleLoadMore = () => {
+    const nextPage = activePage + 1;
+    setActivePage(nextPage);
+    fetchTransactions(nextPage, false);
+  };
 
   useEffect(() => {
     fetchTransactions(1, true);
@@ -131,71 +107,67 @@ const MyTransaction = () => {
   }, []);
 
   return (
-    <Box bg="#f8f9fa" mih="100vh">
+    <Box bg="#fcfcfd" mih="100vh">
       <HeaderSection cartItems={cartItems} loadingCart={loadingCart} setCartItems={setCartItems} />
 
-      <Container size="xl" py="xl" fluid>
+      <Container fluid py={rem(40)}>
         <Grid>
           <Grid.Col span={{ base: 12, md: 4, lg: 3 }}>
-            <Stack style={{ position: "sticky", top: 20 }}>
-              <Box>
-                <Title order={3} fw={800} c="#1e1b4b">
-                  Transactions
+            <Stack>
+              <Box mb="md">
+                <Title order={2} fw={900} c="dark.7" lts={-0.5}>
+                  My Orders
                 </Title>
-                <Text size="xs" c="dimmed">
-                  Manage and track your orders
+                <Text size="sm" c="dimmed">
+                  Track and manage your transaction history
                 </Text>
               </Box>
 
-              <Paper p="md" radius="xs" withBorder shadow="sm">
-                <Stack gap="md">
+              <Paper p="xl" radius="md" withBorder shadow="sm">
+                <Stack gap="lg">
                   <Group gap="xs">
-                    <IconFilter size={20} color="blue" />
+                    <IconFilter size={18} stroke={2} />
                     <Text fw={700} size="sm">
-                      Filters
+                      Filter Search
                     </Text>
                   </Group>
 
-                  <Divider variant="dashed" />
+                  <Divider />
 
                   <TextInput
                     label="Invoice Number"
-                    labelProps={{ style: { fontSize: "12px", marginBottom: "4px" } }}
-                    placeholder="INV/2026/..."
-                    leftSection={<IconSearch size={14} />}
+                    placeholder="e.g. INV/2026/..."
                     value={searchInvoice}
                     onChange={(e) => setSearchInvoice(e.target.value)}
-                    radius="xs"
+                    radius="md"
                   />
 
                   <Select
                     label="Transaction Status"
-                    labelProps={{ style: { fontSize: "12px", marginBottom: "4px" } }}
-                    placeholder="All Status"
+                    placeholder="Select status"
                     clearable
                     data={["PENDING", "PAID", "PROCESSED", "SHIPPED", "COMPLETED", "CANCELLED", "FAILED"]}
                     value={filterStatus}
                     onChange={setFilterStatus}
-                    radius="xs"
+                    radius="md"
                   />
 
                   <DatePickerInput
                     label="Date Range"
-                    labelProps={{ style: { fontSize: "12px", marginBottom: "4px" } }}
                     type="range"
                     placeholder="Pick dates"
                     value={dateRange as any}
                     onChange={setDateRange as any}
                     clearable
-                    radius="xs"
+                    radius="md"
                   />
 
                   <Stack gap="xs" mt="md">
-                    <Button fullWidth radius="md" onClick={handleApplyFilter} loading={loading && activePage === 1}>
+                    <Button fullWidth radius="md" color="dark" onClick={handleApplyFilter} loading={loading && activePage === 1}>
                       Apply Filter
                     </Button>
-                    <Button fullWidth variant="subtle" color="gray" radius="md" size="xs" onClick={handleResetFilter}>
-                      Reset Filter
+                    <Button fullWidth variant="subtle" color="gray" radius="md" size="sm" onClick={handleResetFilter}>
+                      Reset All
                     </Button>
                   </Stack>
                 </Stack>
@@ -204,148 +176,173 @@ const MyTransaction = () => {
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, md: 8, lg: 9 }}>
-            <Paper radius="xs" withBorder shadow="sm" bg="white">
-              <ScrollArea h={800} viewportRef={viewportRef}>
-                <Box p="lg">
-                  {loading && transactions.length === 0 ? (
-                    <Center h={400}>
-                      <Stack align="center">
-                        <Loader size={40} color="blue" />
-                        <Text fw={600} size="sm">
-                          Loading transactions...
-                        </Text>
-                      </Stack>
-                    </Center>
-                  ) : transactions.length === 0 ? (
-                    <Center h={400}>
-                      <Stack align="center" gap={0}>
-                        <IconSearchOff size={50} color="gray" />
-                        <Text fw={700} size="lg" mt="md">
-                          No transactions found
-                        </Text>
-                        <Text c="dimmed" size="sm">
-                          Try adjusting your filters
-                        </Text>
-                      </Stack>
-                    </Center>
-                  ) : (
-                    <Stack gap="lg">
-                      <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="md">
-                        {transactions.map((item) => (
-                          <Paper
-                            key={item.id}
-                            withBorder
-                            p="md"
-                            radius="xs"
-                            style={{
-                              transition: "transform 0.2s",
-                              backgroundColor: "#fff",
-                            }}
-                            className="hover-card"
-                          >
-                            <Group justify="space-between" mb="xs">
-                              <Box>
-                                <Text size="10px" c="dimmed" fw={700} style={{ letterSpacing: "0.5px" }}>
-                                  INVOICE
-                                </Text>
-                                <Text fw={700} size="sm" c="blue.7">
-                                  {item.invoice}
-                                </Text>
-                              </Box>
-                              <StatusBadge status={item.status} />
-                            </Group>
+            {loading && transactions.length === 0 ? (
+              <Center h={400}>
+                <Stack align="center" gap="xs">
+                  <Loader size="lg" color="dark" type="dots" />
+                  <Text fw={500} size="sm" c="dimmed">
+                    Fetching your records...
+                  </Text>
+                </Stack>
+              </Center>
+            ) : transactions.length === 0 ? (
+              <Paper radius="md" withBorder p={80} bg="white">
+                <Center h="100%">
+                  <Stack align="center" gap="xs">
+                    <IconSearchOff size={48} stroke={1.5} color="var(--mantine-color-gray-4)" />
+                    <Text fw={700} size="lg">
+                      No transactions found
+                    </Text>
+                    <Text c="dimmed" size="sm" ta="center">
+                      We couldn`t find any orders matching your current filters.
+                    </Text>
+                    <Button variant="light" color="gray" mt="md" onClick={handleResetFilter}>
+                      Clear all filters
+                    </Button>
+                  </Stack>
+                </Center>
+              </Paper>
+            ) : (
+              <Stack gap="xl">
+                <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="lg">
+                  {transactions.map((item) => (
+                    <Paper
+                      key={item.id}
+                      withBorder
+                      p="lg"
+                      radius="md"
+                      className="transaction-card"
+                      style={{
+                        transition: "all 0.2s ease",
+                        cursor: "default",
+                      }}
+                    >
+                      <Group justify="space-between" mb="md" align="flex-start">
+                        <Stack gap={2}>
+                          <Text size="xs" c="dimmed" fw={700} lts={0.5} tt="uppercase">
+                            Invoice Number
+                          </Text>
+                          <Text fw={800} size="md" c="blue.8">
+                            {item.invoice}
+                          </Text>
+                        </Stack>
+                        <StatusBadge status={item.status} />
+                      </Group>
 
-                            <Divider mb="sm" variant="dotted" />
+                      <Divider mb="md" variant="dashed" />
 
-                            <Stack gap={8}>
-                              <Flex justify="space-between" align="center">
-                                <Group gap={8}>
-                                  <IconPackage size={16} color="#228be6" />
-                                  <Text size="sm" fw={600} truncate maw={150}>
-                                    {item.items?.[0]?.productName || "Digital Product"}
-                                  </Text>
-                                </Group>
-                                {item.items.length > 1 && (
-                                  <Badge variant="light" color="gray" size="xs">
-                                    +{item.items.length - 1} more
-                                  </Badge>
-                                )}
-                              </Flex>
-
-                              <Group gap={8}>
-                                <IconCalendar size={14} color="gray" />
-                                <Text size="xs" c="dimmed">
-                                  {dayjs(item.createdAt).format("DD MMM YYYY • HH:mm")}
-                                </Text>
-                              </Group>
-
-                              <Group gap={8}>
-                                <IconCreditCard size={14} color="gray" />
-                                <Text size="xs" c="dimmed" fw={500}>
-                                  {item.paymentMethod || "-"}
-                                </Text>
-                              </Group>
-                            </Stack>
-
-                            <Box mt="sm" p="8px" bg="blue.0" style={{ borderRadius: "6px" }}>
-                              <Flex justify="space-between" align="center">
-                                <Text size="10px" c="blue.8" fw={800}>
-                                  TOTAL AMOUNT
-                                </Text>
-                                <Text fw={800} size="md" c="blue.9">
-                                  {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(
-                                    Number(item.totalPrice)
-                                  )}
-                                </Text>
-                              </Flex>
-                            </Box>
-
-                            <Group mt="md" gap="xs">
-                              <Button
-                                variant="light"
-                                flex={1}
-                                radius="md"
-                                size="xs"
-                                leftSection={<IconEye size={14} />}
-                                onClick={() => handleOpenDetail(item)}
-                              >
-                                Detail
-                              </Button>
-                              <ActionIcon variant="default" size="30px" radius="md" onClick={() => handleOpenHistory(item)}>
-                                <IconHistory size={16} />
-                              </ActionIcon>
-                              {item.status === "PENDING" && item.snapRedirect && (
-                                <Button color="orange" radius="md" size="xs" onClick={() => window.open(item.snapRedirect!, "_blank")}>
-                                  Pay
-                                </Button>
-                              )}
-                            </Group>
-                          </Paper>
-                        ))}
-                      </SimpleGrid>
-
-                      <div ref={ref} style={{ height: 20 }}>
-                        {hasMore ? (
-                          <Center py="md">
-                            <Loader color="blue" type="dots" size="sm" />
-                          </Center>
-                        ) : (
-                          <Center py="md">
-                            <Text size="xs" c="dimmed">
-                              You`ve reached the end of the list ({transactions.length} transactions)
+                      <Stack gap="sm" mb="lg">
+                        <Group gap="sm" wrap="nowrap">
+                          <ThemeIconIconWrapper icon={<IconPackage size={16} />} color="blue" />
+                          <Box style={{ flex: 1 }}>
+                            <Text size="sm" fw={700} truncate>
+                              {item.items?.[0]?.productName || "Product"}
                             </Text>
-                          </Center>
+                            {item.items.length > 1 && (
+                              <Text size="xs" c="dimmed">
+                                +{item.items.length - 1} other products
+                              </Text>
+                            )}
+                          </Box>
+                        </Group>
+
+                        <Group gap="sm">
+                          <ThemeIconIconWrapper icon={<IconCalendar size={16} />} color="gray" />
+                          <Text size="xs" c="gray.7" fw={500}>
+                            {dayjs(item.createdAt).format("DD MMM YYYY, HH:mm")}
+                          </Text>
+                        </Group>
+
+                        <Group gap="sm">
+                          <ThemeIconIconWrapper icon={<IconCreditCard size={16} />} color="gray" />
+                          <Text size="xs" c="gray.7" fw={500}>
+                            {item.paymentMethod || "Standard Payment"}
+                          </Text>
+                        </Group>
+                      </Stack>
+
+                      <Paper withBorder p="sm" radius="md" bg="gray.0" mb="md">
+                        <Flex justify="space-between" align="center">
+                          <Text size="xs" fw={800} c="dimmed">
+                            TOTAL PAID
+                          </Text>
+                          <Text fw={900} size="lg" c="dark">
+                            {new Intl.NumberFormat("id-ID", {
+                              style: "currency",
+                              currency: "IDR",
+                              maximumFractionDigits: 0,
+                            }).format(Number(item.totalPrice))}
+                          </Text>
+                        </Flex>
+                      </Paper>
+
+                      <Group gap="sm">
+                        <Button
+                          variant="outline"
+                          color="dark"
+                          flex={1}
+                          radius="md"
+                          size="sm"
+                          leftSection={<IconEye size={16} />}
+                          onClick={() => {
+                            setSelectedTrx(item);
+                            setDetailOpened(true);
+                          }}
+                        >
+                          View Detail
+                        </Button>
+                        <ActionIcon
+                          variant="light"
+                          color="gray"
+                          size={36}
+                          radius="md"
+                          onClick={() => {
+                            setSelectedTrx(item);
+                            setHistoryOpened(true);
+                          }}
+                        >
+                          <IconHistory size={18} />
+                        </ActionIcon>
+                        {item.status === "PENDING" && item.snapRedirect && (
+                          <Button color="orange" radius="md" size="sm" onClick={() => window.open(item.snapRedirect!, "_blank")}>
+                            Pay Now
+                          </Button>
                         )}
-                      </div>
+                      </Group>
+                    </Paper>
+                  ))}
+                </SimpleGrid>
+
+                <Center mt="xl" pb="xl">
+                  {hasMore ? (
+                    <Button
+                      variant="outline"
+                      color="dark"
+                      radius="xs"
+                      px={40}
+                      size="md"
+                      loading={loadingMore}
+                      onClick={handleLoadMore}
+                      leftSection={!loadingMore && <IconPlus size={16} />}
+                    >
+                      Load More
+                    </Button>
+                  ) : (
+                    <Stack gap={4} align="center">
+                      <Divider w={100} color="gray.3" />
+                      <Text size="xs" c="dimmed" fs="italic">
+                        All {transactions.length} transactions loaded
+                      </Text>
                     </Stack>
                   )}
-                </Box>
-              </ScrollArea>
-            </Paper>
+                </Center>
+              </Stack>
+            )}
           </Grid.Col>
         </Grid>
       </Container>
 
+      {/* Modals */}
       <MyTransactionDetailModal opened={detailOpened} onClose={() => setDetailOpened(false)} transaction={selectedTrx} />
       <MyTransactionHistoryModal
         opened={historyOpened}
@@ -359,5 +356,21 @@ const MyTransaction = () => {
     </Box>
   );
 };
+
+// Helper Component untuk icon yang lebih konsisten
+const ThemeIconIconWrapper = ({ icon, color }: { icon: React.ReactNode; color: string }) => (
+  <Center
+    style={{
+      width: rem(28),
+      height: rem(28),
+      borderRadius: rem(6),
+      backgroundColor: `var(--mantine-color-${color}-light)`,
+    }}
+  >
+    <Box c={`${color}.7`} style={{ display: "flex" }}>
+      {icon}
+    </Box>
+  </Center>
+);
 
 export default MyTransaction;

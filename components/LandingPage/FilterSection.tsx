@@ -30,9 +30,9 @@ export const FilterSection = ({
     <Paper p="md" radius="xs" withBorder shadow="sm">
       <Group justify="space-between" mb="md">
         <Group gap="xs">
-          <IconFilter size={20} color="blue" />
+          <IconFilter size={18} stroke={2} />
           <Text fw={700} size="sm">
-            Filters
+            Filter Search
           </Text>
         </Group>
         {selectedCategoryIds.length > 0 && (

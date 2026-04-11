@@ -12,13 +12,13 @@ import {
   Image,
   Modal,
   NumberInput,
+  Paper,
   rem,
-  SimpleGrid,
   Stack,
   Text,
   ThemeIcon,
 } from "@mantine/core";
-import { IconInfoCircle, IconMinus, IconPackage, IconPlus, IconShoppingCart } from "@tabler/icons-react";
+import { IconInfoCircle, IconMinus, IconPackage, IconPlus, IconShoppingCart, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 
 interface CardCatalogModalProps {
@@ -43,146 +43,180 @@ export const CardCatalogModal = ({ opened, onClose, product, handleAddToCart, lo
       onClose={onClose}
       centered
       fullScreen
-      radius={0}
       padding={0}
-      withCloseButton={true}
+      radius="md"
+      withCloseButton={false} // Custom close button untuk kontrol desain
       overlayProps={{
-        backgroundOpacity: 0.55,
-        blur: 3,
+        backgroundOpacity: 0.6,
+        blur: 4,
       }}
+      transitionProps={{ transition: "fade", duration: 200 }}
     >
-      <Grid>
-        <Grid.Col span={{ base: 12, md: 5 }} bg="#f8fafc">
-          <Box p="xl" style={{ height: "100%", display: "flex", alignItems: "center" }}>
-            <Stack align="center" gap="md" w="100%">
-              <AspectRatio ratio={3 / 4} w="100%" maw={500} mx="auto">
-                <Image
-                  src={product.images?.[0]?.url || "https://placehold.co/400x560?text=No+Image"}
-                  alt={product.name}
-                  fit="contain"
-                  radius="xs"
-                  fallbackSrc="https://placehold.co/400x560?text=No+Image"
-                />
-              </AspectRatio>
-            </Stack>
+      <Grid overflow="hidden" style={{ borderRadius: rem(12) }}>
+        {/* Kolom Gambar - Visual Dominan */}
+        <Grid.Col span={{ base: 12, md: 5.5 }} bg="gray.0">
+          <Box p="xl" style={{ position: "relative", height: "100%", display: "flex", alignItems: "center" }}>
+            <ActionIcon
+              onClick={onClose}
+              variant="subtle"
+              color="gray"
+              style={{ position: "absolute", top: 15, left: 15, zIndex: 10 }}
+              hiddenFrom="md"
+            >
+              <IconX size={20} />
+            </ActionIcon>
+
+            <AspectRatio ratio={1 / 1} w="100%" maw={450} mx="auto">
+              <Image
+                src={product.images?.[0]?.url || "https://placehold.co/600x600?text=No+Image"}
+                alt={product.name}
+                fit="contain"
+                fallbackSrc="https://placehold.co/600x600?text=No+Image"
+              />
+            </AspectRatio>
           </Box>
         </Grid.Col>
 
-        <Grid.Col span={{ base: 12, md: 7 }}>
-          <Stack p="xl" gap="lg" justify="space-between" h="100%">
+        {/* Kolom Informasi */}
+        <Grid.Col span={{ base: 12, md: 6.5 }}>
+          <Stack p={{ base: "lg", md: rem(40) }} gap="xl">
             <Box>
-              <Group justify="space-between" mb="xs">
-                <Group gap={5}>
+              <Group justify="space-between" align="flex-start" mb="xs" wrap="nowrap">
+                <Group gap={6}>
                   {product.categories.map((cat) => (
-                    <Badge key={cat.category.id} variant="light" color="blue" radius="sm">
+                    <Badge key={cat.category.id} variant="dot" color="blue" size="sm" tt="capitalize">
                       {cat.category.name}
                     </Badge>
                   ))}
                 </Group>
-                <Text size="xs" c="dimmed" ff="monospace" mr={40}>
-                  SKU: {product.sku || "-"}
-                </Text>
+                <ActionIcon onClick={onClose} variant="subtle" color="gray" visibleFrom="md">
+                  <IconX size={20} />
+                </ActionIcon>
               </Group>
 
-              <Text size={rem(28)} fw={800} lh={1.2} mb="md">
+              <Text size={rem(32)} fw={800} lh={1.2} mb="xs" c="dark.7">
                 {product.name}
               </Text>
 
-              <Group align="flex-end" gap="xs" mb="lg">
-                <Text size={rem(32)} fw={900} c="blue.9">
-                  {formatRupiah(product.price)}
-                </Text>
-                {discountValue > 0 && (
-                  <Stack gap={0} mb={5}>
-                    <Badge color="red" variant="filled" size="sm">
-                      {product.discount?.type === "PERCENTAGE" ? `${discountValue}% OFF` : "NOMINAL"}
-                    </Badge>
-                    <Text size="sm" c="dimmed" td="line-through">
-                      {formatRupiah(Number(product.price) + discountValue)}
+              <Text size="xs" c="dimmed" ff="monospace" mb="lg">
+                SKU: {product.sku || "N/A"}
+              </Text>
+
+              <Paper withBorder p="md" radius="md">
+                <Group align="center">
+                  <Stack gap={2}>
+                    <Text size={rem(28)} fw={900} c="blue.9" style={{ lineHeight: 1 }}>
+                      {formatRupiah(product.price)}
                     </Text>
+                    {discountValue > 0 && (
+                      <Group gap="xs">
+                        <Text size="sm" c="gray.5" td="line-through">
+                          {formatRupiah(Number(product.price) + discountValue)}
+                        </Text>
+                        <Badge color="red" variant="filled" size="xs">
+                          {product.discount?.type === "PERCENTAGE" ? `-${discountValue}%` : "Discount"}
+                        </Badge>
+                      </Group>
+                    )}
                   </Stack>
-                )}
-              </Group>
-
-              <Divider mb="lg" />
-
-              <Box mb="xl">
-                <Group gap={5} mb={8}>
-                  <IconInfoCircle size={18} color="var(--mantine-color-blue-filled)" />
-                  <Text fw={700} size="sm">
-                    Description
-                  </Text>
                 </Group>
-                <Text size="sm" c="gray.7" style={{ lineHeight: 1.6, whiteSpace: "pre-line" }}>
-                  {product.description || "There is no description for this product yet."}
+              </Paper>
+            </Box>
+
+            <Box>
+              <Group gap={8} mb={10}>
+                <ThemeIcon size={24} variant="light" color="blue" radius="xl">
+                  <IconInfoCircle size={14} />
+                </ThemeIcon>
+                <Text fw={700} size="sm" c="dark.6">
+                  Product Description
                 </Text>
+              </Group>
+              <Text size="sm" c="gray.7" style={{ lineHeight: 1.7 }}>
+                {product.description || "Detailed specifications for this premium product are not yet available."}
+              </Text>
+            </Box>
+
+            <Divider />
+
+            <Group grow align="flex-end">
+              <Box>
+                <Text size="xs" fw={700} c="dimmed" mb={8} tt="uppercase" lts={0.5}>
+                  Quantity
+                </Text>
+                <Group
+                  gap={0}
+                  style={{
+                    border: `${rem(1)} solid var(--mantine-color-gray-3)`,
+                    borderRadius: rem(8),
+                    width: "fit-content",
+                    overflow: "hidden",
+                  }}
+                >
+                  <ActionIcon
+                    size={42}
+                    variant="subtle"
+                    color="gray"
+                    radius={0}
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    disabled={isOutOfStock || quantity <= 1}
+                  >
+                    <IconMinus size={16} />
+                  </ActionIcon>
+
+                  <NumberInput
+                    value={quantity}
+                    onChange={(val) => setQuantity(Number(val))}
+                    min={1}
+                    max={product.stock}
+                    hideControls
+                    variant="unstyled"
+                    styles={{
+                      input: {
+                        textAlign: "center",
+                        width: rem(50),
+                        fontWeight: 700,
+                        fontSize: rem(16),
+                        height: rem(42),
+                      },
+                    }}
+                    disabled={isOutOfStock}
+                  />
+
+                  <ActionIcon
+                    size={42}
+                    variant="subtle"
+                    color="gray"
+                    radius={0}
+                    onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
+                    disabled={isOutOfStock || quantity >= product.stock}
+                  >
+                    <IconPlus size={16} />
+                  </ActionIcon>
+                </Group>
               </Box>
 
-              <SimpleGrid cols={2} spacing="md">
-                <Group gap="sm">
-                  <ThemeIcon variant="light" color="teal" radius="md">
-                    <IconPackage size={18} />
-                  </ThemeIcon>
-                  <Box>
-                    <Text size="xs" c="dimmed">
-                      Stock
-                    </Text>
-                    <Text size="sm" fw={600}>
-                      {isOutOfStock ? "Out of Stock" : `${product.stock} Available`}
-                    </Text>
-                  </Box>
-                </Group>
-                <Stack gap={5}>
-                  <Text size="xs" fw={700} c="dimmed">
-                    Total
+              <Stack gap={4}>
+                <Group gap={6} justify="flex-end">
+                  <IconPackage size={14} color={isOutOfStock ? "red" : "green"} />
+                  <Text size="xs" fw={600} c={isOutOfStock ? "red.7" : "gray.6"}>
+                    {isOutOfStock ? "Out of Stock" : `${product.stock} units left`}
                   </Text>
-                  <Group gap={5}>
-                    <ActionIcon
-                      size="lg"
-                      variant="white"
-                      onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      disabled={isOutOfStock || quantity <= 1}
-                    >
-                      <IconMinus size={16} />
-                    </ActionIcon>
-
-                    <NumberInput
-                      value={quantity}
-                      onChange={(val) => setQuantity(Number(val))}
-                      min={1}
-                      max={product.stock}
-                      hideControls
-                      variant="unstyled"
-                      styles={{ input: { textAlign: "center", width: rem(40), fontWeight: 700 } }}
-                      disabled={isOutOfStock}
-                    />
-
-                    <ActionIcon
-                      size="lg"
-                      variant="white"
-                      onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
-                      disabled={isOutOfStock || quantity >= product.stock}
-                    >
-                      <IconPlus size={16} />
-                    </ActionIcon>
-                  </Group>
-                </Stack>
-              </SimpleGrid>
-            </Box>
-
-            <Box bg="#f8fafc" style={{ borderRadius: "8px" }}>
-              <Button
-                leftSection={<IconShoppingCart size={20} />}
-                size="lg"
-                radius="xs"
-                color={product.stock === 0 ? "gray" : "dark"}
-                disabled={isOutOfStock}
-                loading={loadingAction != null}
-                onClick={() => handleAddToCart(product, quantity)}
-              >
-                {isOutOfStock ? "Out of Stock" : "Add to Cart"}
-              </Button>
-            </Box>
+                </Group>
+                <Button
+                  fullWidth
+                  leftSection={<IconShoppingCart size={20} />}
+                  size="lg"
+                  radius="md"
+                  color="dark"
+                  disabled={isOutOfStock}
+                  loading={loadingAction != null}
+                  onClick={() => handleAddToCart(product, quantity)}
+                >
+                  {isOutOfStock ? "Sold Out" : "Add to Cart"}
+                </Button>
+              </Stack>
+            </Group>
           </Stack>
         </Grid.Col>
       </Grid>

@@ -2,7 +2,7 @@ import { Anchor, Box, Button, Container, Divider, Grid, Group, Stack, Text, Text
 
 export const FooterSection = () => {
   return (
-    <Box bg="#212529" c="gray.5" py={50} mt={50} style={{ borderTop: "4px solid #0056b3" }}>
+    <Box bg="#212529" c="gray.5" py={50} style={{ borderTop: "4px solid #0056b3" }}>
       <Container size="xl">
         <Grid>
           <Grid.Col span={{ base: 12, md: 4 }}>

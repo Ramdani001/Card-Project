@@ -263,15 +263,7 @@ export const MainProfile = () => {
                 </Paper>
 
                 <Group justify="flex-end">
-                  <Button
-                    size="md"
-                    radius="md"
-                    px={40}
-                    color="indigo"
-                    leftSection={<IconDeviceFloppy size={20} />}
-                    loading={loading}
-                    onClick={handleUpdate}
-                  >
+                  <Button size="md" radius="md" color="dark" leftSection={<IconDeviceFloppy size={20} />} loading={loading} onClick={handleUpdate}>
                     Save Changes
                   </Button>
                 </Group>

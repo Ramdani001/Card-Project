@@ -1,8 +1,10 @@
+"use client";
+
 import { CartItemDto } from "@/types/dtos/CartItemDto";
 import { formatRupiah, getCardPrice } from "@/utils";
-import { Box, Button, Center, Divider, Drawer, Group, ScrollArea, Stack, Text, TextInput } from "@mantine/core";
+import { Box, Button, Center, Drawer, Group, Loader, ScrollArea, Stack, Text, TextInput, rem } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconShoppingCart, IconX } from "@tabler/icons-react";
+import { IconMapPin, IconShoppingCart, IconTicket } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction, useState } from "react";
 import { CartItemRow } from "../Cart/CartItemRow";
@@ -26,7 +28,7 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
 
   const handleCheckout = async (voucherCodeFromCart?: string) => {
     if (!address) {
-      notifications.show({ message: "Shipping address is required.", color: "red" });
+      notifications.show({ message: "Shipping address is required.", color: "red", position: "top-left" });
       return;
     }
 
@@ -45,15 +47,19 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
       const json = await res.json();
 
       if (res.ok) {
-        notifications.show({ title: "Order Placed!", message: "Please complete your payment.", color: "blue" });
+        notifications.show({
+          title: "Order Placed!",
+          message: "Redirecting to transactions...",
+          color: "dark",
+          position: "top-left",
+        });
         setIsDrawerOpen(false);
-
         router.push("/my-transaction");
       } else {
         throw new Error(json.message || "Checkout failed");
       }
     } catch (err: any) {
-      notifications.show({ title: "Checkout Failed", message: err.message, color: "red" });
+      notifications.show({ title: "Checkout Failed", message: err.message, color: "red", position: "top-left" });
     } finally {
       setIsCheckoutLoading(false);
     }
@@ -62,7 +68,13 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
   const handleUpdateQuantity = async (id: string, newQty: number) => {
     if (newQty < 1) return;
 
+    const previousItem = cartItems.find((item) => item.id === id);
+    const oldQty = previousItem?.quantity || 1;
+
+    setCartItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: newQty } : item)));
+
     setProcessingId(id);
+
     try {
       const res = await fetch(`/api/cart/${id}`, {
         method: "PATCH",
@@ -72,16 +84,25 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
 
       const json = await res.json();
 
-      if (json.success) {
-        setCartItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: newQty } : item)));
-      } else {
-        notifications.show({ title: "Error", message: json.message, color: "red", icon: <IconX size={16} /> });
-        setCartItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: 1 } : item)));
+      if (!json.success) {
+        setCartItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: oldQty } : item)));
+
+        notifications.show({
+          title: "Update Failed",
+          message: json.message || "Could not update quantity",
+          color: "red",
+          position: "top-left",
+        });
       }
-    } catch (error) {
-      console.error(error);
-      notifications.show({ title: "Error", message: "Network error", color: "red" });
-      setCartItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: 1 } : item)));
+    } catch {
+      setCartItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity: oldQty } : item)));
+
+      notifications.show({
+        title: "Error",
+        message: "Internal server error",
+        color: "red",
+        position: "top-left",
+      });
     } finally {
       setProcessingId(null);
     }
@@ -89,15 +110,12 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
 
   const handleRemoveItem = async (id: string) => {
     setProcessingId(id);
-
     try {
       const res = await fetch(`/api/cart/${id}`, { method: "DELETE" });
       if (res.ok) {
         setCartItems((prev) => prev.filter((item) => item.id !== id));
-        notifications.show({ message: "Item removed from cart", color: "gray" });
+        notifications.show({ message: "Item removed", color: "gray", position: "top-left" });
       }
-    } catch (error) {
-      console.error(error);
     } finally {
       setProcessingId(null);
     }
@@ -108,40 +126,52 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
       opened={isDrawerOpen}
       onClose={() => setIsDrawerOpen(false)}
       title={
-        <Group>
-          <IconShoppingCart size={20} />
-          <Text fw={700} size="lg" tt="uppercase" style={{ letterSpacing: 1 }}>
-            Your Cart ({cartItems.length})
+        <Group gap="sm">
+          <IconShoppingCart size={22} stroke={2} />
+          <Text fw={900} size="xl" lts={-0.5}>
+            MY CART
           </Text>
+          <Badge variant="filled" color="dark" radius="sm" size="md">
+            {cartItems.length}
+          </Badge>
         </Group>
       }
       position="right"
-      padding="md"
+      padding="xl"
       size="md"
-      overlayProps={{ backgroundOpacity: 0.5, blur: 4 }}
+      overlayProps={{ backgroundOpacity: 0.3, blur: 8 }}
+      styles={{
+        header: { borderBottom: "1px solid #f1f3f5", marginBottom: rem(20), paddingBottom: rem(15) },
+        content: { display: "flex", flexDirection: "column" },
+      }}
     >
-      <Stack h="calc(100vh - 100px)" justify="space-between">
-        <ScrollArea style={{ flex: 1, height: "100%" }} scrollbarSize={6}>
+      <Stack h="calc(100vh - 80px)" justify="space-between">
+        <ScrollArea style={{ flex: 1 }} scrollbarSize={4} offsetScrollbars>
           {loadingCart ? (
-            <Center mt="xl">
-              <Box>
-                <Text size="sm" c="dimmed">
-                  Loading cart...
+            <Center mt={100}>
+              <Stack align="center" gap="xs">
+                <Loader size="sm" color="dark" type="dots" />
+                <Text size="xs" c="dimmed">
+                  Syncing your cart...
                 </Text>
-              </Box>
+              </Stack>
             </Center>
           ) : cartItems.length === 0 ? (
-            <Stack align="center" mt={50} gap="xs">
-              <IconShoppingCart size={40} color="#ced4da" />
-              <Text ta="center" c="dimmed">
-                Your cart is currently empty.
-              </Text>
-              <Button variant="light" onClick={() => setIsDrawerOpen(false)} mt="md">
-                Continue Shopping
-              </Button>
-            </Stack>
+            <Center mt={100}>
+              <Stack align="center" gap="md">
+                <Box p="xl" bg="gray.0" style={{ borderRadius: "50%" }}>
+                  <IconShoppingCart size={50} stroke={1} color="var(--mantine-color-gray-4)" />
+                </Box>
+                <Text ta="center" fw={600} c="gray.6">
+                  Your cart is empty
+                </Text>
+                <Button variant="subtle" color="dark" onClick={() => setIsDrawerOpen(false)}>
+                  Go back
+                </Button>
+              </Stack>
+            </Center>
           ) : (
-            <Stack gap="sm">
+            <Stack gap="lg">
               {cartItems.map((item) => (
                 <CartItemRow key={item.id} item={item} processingId={processingId} onRemove={handleRemoveItem} onUpdate={handleUpdateQuantity} />
               ))}
@@ -150,54 +180,67 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
         </ScrollArea>
 
         {cartItems.length > 0 && (
-          <Box pt="md" style={{ borderTop: "1px solid #eee" }}>
-            <Group justify="space-between" mb="xs">
-              <Text size="sm" c="dimmed">
-                Subtotal
-              </Text>
-              <Text fw={700} size="lg">
-                {formatRupiah(totalAmount)}
-              </Text>
-            </Group>
+          <Box pt="xl">
+            <Stack gap="md">
+              <Box bg="gray.0" p="lg" style={{ borderRadius: rem(12) }}>
+                <Group justify="space-between" mb={5}>
+                  <Text size="xs" c="dimmed" fw={700} tt="uppercase">
+                    Order Subtotal
+                  </Text>
+                  <Text fw={900} size="xl" c="dark">
+                    {formatRupiah(totalAmount)}
+                  </Text>
+                </Group>
+                <Text size="10px" c="dimmed">
+                  Taxes and discounts calculated at checkout
+                </Text>
+              </Box>
 
-            <Divider mb="sm" variant="dashed" />
-
-            <Group align="flex-end" mb="sm">
               <TextInput
-                label="Voucher Code"
-                placeholder="EX: DISKON10"
+                placeholder="Voucher Code"
+                leftSection={<IconTicket size={16} stroke={1.5} />}
                 value={voucherCode}
                 onChange={(e) => setVoucherCode(e.currentTarget.value)}
-                style={{ flex: 1 }}
-                radius="xs"
+                radius="md"
+                size="md"
               />
-            </Group>
 
-            <TextInput
-              label="Shipping Address"
-              placeholder="Enter full address..."
-              radius="xs"
-              mb="sm"
-              value={address}
-              onChange={(e) => setAddress(e.currentTarget.value)}
-              required
-              data-autofocus
-            />
+              <TextInput
+                placeholder="Shipping Address"
+                leftSection={<IconMapPin size={16} stroke={1.5} />}
+                radius="md"
+                size="md"
+                value={address}
+                onChange={(e) => setAddress(e.currentTarget.value)}
+                required
+              />
 
-            <Button
-              fullWidth
-              color="blue"
-              radius="xs"
-              size="md"
-              onClick={() => handleCheckout(voucherCode)}
-              loading={isCheckoutLoading}
-              disabled={!address}
-            >
-              CHECKOUT NOW
-            </Button>
+              <Button
+                fullWidth
+                color="dark"
+                radius="md"
+                size="lg"
+                onClick={() => handleCheckout(voucherCode)}
+                loading={isCheckoutLoading}
+                disabled={!address}
+                style={{ height: rem(54) }}
+              >
+                CHECKOUT NOW
+              </Button>
+
+              <Text ta="center" size="xs" c="dimmed" px="xl">
+                By clicking checkout, you agree to our terms and conditions.
+              </Text>
+            </Stack>
           </Box>
         )}
       </Stack>
     </Drawer>
   );
 };
+
+const Badge = ({ children }: any) => (
+  <Box bg="dark" c="white" px={8} style={{ borderRadius: 4, fontSize: 10, fontWeight: 800 }}>
+    {children}
+  </Box>
+);
