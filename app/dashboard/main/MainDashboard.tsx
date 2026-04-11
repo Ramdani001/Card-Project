@@ -1,24 +1,17 @@
 "use client";
 
+import { COMPONENT_MAP } from "@/config/menuMapping";
+import { MenuDto } from "@/types/dtos/MenuDto";
 import { AppShell, Burger, Center, Drawer, Group, Loader, ScrollArea, Text } from "@mantine/core";
 import { useDisclosure, useLocalStorage } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import Sidebar from "../../../components/Dashboard/Sidebar";
 import Topbar from "../../../components/Dashboard/Topbar";
-import { COMPONENT_MAP } from "@/config/menuMapping";
-
-interface MenuData {
-  id: string;
-  label: string;
-  url: string | null;
-  icon: string | null;
-  subMenus: MenuData[];
-}
 
 const MainDashboard = () => {
   const [isMounted, setIsMounted] = useState(false);
 
-  const [menus, setMenus] = useState<MenuData[]>([]);
+  const [menus, setMenus] = useState<MenuDto[]>([]);
   const [loadingMenu, setLoadingMenu] = useState(true);
 
   const [activeUrl, setActiveUrl] = useLocalStorage({
@@ -51,7 +44,7 @@ const MainDashboard = () => {
   if (!isMounted || loadingMenu) {
     return (
       <Center h="100vh">
-        <Loader size="lg" />
+        <Loader color="blue" size="xl" type="dots" />
       </Center>
     );
   }
