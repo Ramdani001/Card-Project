@@ -1,4 +1,4 @@
-import { Avatar, Box, Button, Group, Menu, Text, UnstyledButton } from "@mantine/core";
+import { Avatar, Box, Button, Group, Menu, rem, Text, UnstyledButton } from "@mantine/core";
 import { IconLayoutDashboard, IconLogin, IconLogout, IconReceipt2, IconUser } from "@tabler/icons-react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -66,7 +66,22 @@ export const ProfileTopbar = () => {
       </Menu.Dropdown>
     </Menu>
   ) : (
-    <Button variant="filled" color="dark" radius="xl" leftSection={<IconLogin size={18} />} onClick={() => router.push("/login")}>
+    <Button
+      variant="outline"
+      color="dark"
+      size="sm"
+      radius="xs"
+      styles={{
+        root: {
+          borderWidth: rem(1.5),
+          fontWeight: 600,
+          transition: "transform 0.2s ease",
+          "&:active": { transform: "scale(0.95)" },
+        },
+      }}
+      leftSection={<IconLogin size={18} />}
+      onClick={() => router.push("/login")}
+    >
       Login
     </Button>
   );

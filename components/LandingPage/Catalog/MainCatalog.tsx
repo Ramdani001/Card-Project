@@ -151,6 +151,21 @@ export default function MainCatalog() {
     </Anchor>
   ));
 
+  useEffect(() => {
+    const category = searchParams.get("category");
+    const sort = searchParams.get("sort");
+
+    if (category) {
+      setSelectedCategoryIds(category.split(";"));
+    } else {
+      setSelectedCategoryIds([]);
+    }
+
+    if (sort) {
+      setSortValue(sort);
+    }
+  }, [searchParams]);
+
   return (
     <Box bg="#f8f9fa" mih="100vh">
       <HeaderSection cartItems={cartItems} loadingCart={loadingCart} setCartItems={setCartItems} />

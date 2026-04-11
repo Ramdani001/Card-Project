@@ -94,7 +94,7 @@ export const HeaderSection = ({ cartItems, loadingCart, setCartItems }: HeaderSe
         <Container fluid h={rem(70)} display="flex" style={{ alignItems: "center" }}>
           <Group justify="space-between" w="100%">
             <Title order={3} style={{ fontFamily: "Impact, sans-serif", letterSpacing: 1, cursor: "pointer" }} onClick={() => router.push("/")}>
-              TOKO{" "}
+              TOKO
               <Text span c="blue" inherit>
                 KARTU
               </Text>

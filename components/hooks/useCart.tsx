@@ -37,10 +37,12 @@ export function useCart() {
   const handleAddToCart = async (product: CardDto, quantity: number) => {
     if (status !== "authenticated") {
       notifications.show({ title: "Login Required", message: "Please log in to start shopping.", color: "red" });
+      return;
     }
 
     if (product.stock < quantity) {
       notifications.show({ title: "Insufficient Stock", message: "Sorry, only ${product.stock} items are available.", color: "red" });
+      return;
     }
 
     setLoadingAction(product.id);
