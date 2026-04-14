@@ -41,10 +41,9 @@ export const ArticleMain = () => {
     <Box my={50}>
       <Container fluid mb={20}>
         <Stack gap={0} align="center">
-          <Text c="blue.7" fw={700} size="sm" tt="uppercase" lts={1}>
-            New Article
-          </Text>
-          <Title order={2}>Latest Articles</Title>
+          <Title order={2} ta="center" mb="xl" c="blue.9">
+            Latest Articles
+          </Title>
         </Stack>
       </Container>
 

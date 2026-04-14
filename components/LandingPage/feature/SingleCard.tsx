@@ -1,16 +1,19 @@
 "use client";
 
 import { CardDto } from "@/types/dtos/CardDto";
-import { Box, Button, Center, Container, Group, rem, ScrollArea, Skeleton, Title } from "@mantine/core";
+import { Carousel } from "@mantine/carousel";
+import { Box, Button, Center, Container, rem, Skeleton, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CardSingle } from "../Card/CardSingle";
+import Autoplay from "embla-carousel-autoplay";
 
 export const SingleCard = () => {
   const router = useRouter();
   const [products, setProducts] = useState<CardDto[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const autoplay = useRef(Autoplay({ delay: 3000 }));
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -43,22 +46,37 @@ export const SingleCard = () => {
   );
 
   return (
-    <Container fluid my={50}>
-      <Title order={2} ta="center" mb={30} style={{ letterSpacing: "1px" }}>
+    <Container size={"xl"} my={50}>
+      <Title order={2} ta="center" mb="xl" c="blue.9">
         FEATURED SINGLE CARD
       </Title>
 
-      <ScrollArea scrollbars="x" w="100%" pb="md">
-        <Group wrap="nowrap" gap="xl" justify={"center"}>
-          {loadingProducts
-            ? Array.from({ length: 5 }).map((_, i) => <CardSkeleton key={i} />)
-            : products.map((item) => (
-                <Box key={item.id} miw={250} className="cardHover">
-                  <CardSingle data={item} />
-                </Box>
-              ))}
-        </Group>
-      </ScrollArea>
+      <Carousel
+        slideSize={250}
+        slideGap="md"
+        controlSize={40}
+        withControls={products.length > 0}
+        plugins={[autoplay.current]}
+        onMouseEnter={autoplay.current.stop}
+        onMouseLeave={() => autoplay.current.play()}
+        emblaOptions={{
+          loop: true,
+          dragFree: false,
+          align: "center",
+        }}
+      >
+        {loadingProducts
+          ? Array.from({ length: 5 }).map((_, i) => (
+              <Carousel.Slide key={i}>
+                <CardSkeleton />
+              </Carousel.Slide>
+            ))
+          : products.map((item) => (
+              <Carousel.Slide key={item.id}>
+                <CardSingle data={item} />
+              </Carousel.Slide>
+            ))}
+      </Carousel>
 
       <Center mt={40}>
         <Button
