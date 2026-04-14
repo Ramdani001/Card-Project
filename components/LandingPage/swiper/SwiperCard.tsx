@@ -1,19 +1,17 @@
 "use client";
-import { Box, Image, Skeleton } from "@mantine/core";
+import { Box, Container, Image, Skeleton } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useEffect, useState } from "react";
 import { Autoplay, EffectCreative } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 
-import "swiper/css";
-import "swiper/css/effect-creative";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
 import { BannerDto } from "@/types/dtos/BannerDto";
 import { useRouter } from "next/navigation";
+import "swiper/css";
+import "swiper/css/effect-creative";
 
 export const SwiperCard = () => {
-  const [Banners, setBanners] = useState<BannerDto[]>([]);
+  const [banners, setBanners] = useState<BannerDto[]>([]);
   const [loadingBanners, setLoadingBanners] = useState(true);
   const router = useRouter();
 
@@ -24,11 +22,8 @@ export const SwiperCard = () => {
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
           setBanners(json.data);
-        } else {
-          setBanners([]);
         }
-      } catch (error) {
-        console.error("Error fetch banners:", error);
+      } catch {
         notifications.show({
           title: "Error",
           message: "Gagal mengambil data banners.",
@@ -38,61 +33,64 @@ export const SwiperCard = () => {
         setLoadingBanners(false);
       }
     };
-
     fetchBanners();
   }, []);
 
   if (loadingBanners) {
-    return <Skeleton w="100%" radius={8} style={{ aspectRatio: "16 / 9" }} animate={true} />;
+    return (
+      <Container size="xl" my="md">
+        <Skeleton w="100%" radius="md" style={{ aspectRatio: "16 / 9" }} />
+      </Container>
+    );
   }
 
-  if (Banners.length === 0) {
-    return null;
-  }
+  if (banners.length === 0) return null;
+
+  const handleNavigation = (link?: string) => {
+    if (!link) return;
+    if (link.startsWith("http")) {
+      window.open(link, "_blank", "noopener,noreferrer");
+    } else {
+      router.push(link);
+    }
+  };
 
   return (
-    <Box w="100%">
-      <Swiper
-        grabCursor={true}
-        effect={"creative"}
-        autoplay={{
-          delay: 2500,
-          disableOnInteraction: false,
-        }}
-        creativeEffect={{
-          prev: {
-            shadow: true,
-            translate: [0, 0, -400],
-          },
-          next: {
-            translate: ["100%", 0, 0],
-          },
-        }}
-        modules={[Autoplay, EffectCreative]}
-        className="mySwiper"
-      >
-        {Banners.map((item, index) => (
-          <SwiperSlide key={item.id || index}>
-            <Box
-              w="100%"
-              style={{
-                aspectRatio: "16 / 9",
-                position: "relative",
-                overflow: "hidden",
-                borderRadius: 8,
-              }}
-              bg={"#ffff"}
-              onClick={() => {
-                if (item.link) {
-                  window.open(item.link, "_blank", "noopener,noreferrer");
-                }
-              }}
-            >
-              <Image src={item.url} fit="contain" w="100%" h="100%" style={{ position: "absolute", top: 0, left: 0 }} alt={`Banner ${index + 1}`}/>
-            </Box>
-          </SwiperSlide>
-        ))}
-      </Swiper>
-    </Box>
+    <Container fluid my="md">
+      <Box w="100%" style={{ borderRadius: 8, overflow: "hidden" }}>
+        <Swiper
+          grabCursor={true}
+          effect="creative"
+          loop={banners.length > 1}
+          autoplay={{
+            delay: 3000,
+            disableOnInteraction: false,
+          }}
+          creativeEffect={{
+            prev: { shadow: true, translate: [0, 0, -400] },
+            next: { translate: ["100%", 0, 0] },
+          }}
+          modules={[Autoplay, EffectCreative]}
+        >
+          {banners.map((item, index) => (
+            <SwiperSlide key={item.id || index}>
+              <Box
+                onClick={() => handleNavigation(item.link)}
+                style={{
+                  aspectRatio: "16 / 9",
+                  cursor: item.link ? "pointer" : "default",
+                  backgroundColor: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Image src={item.url} alt={`Banner ${index + 1}`} fit="contain" w="100%" h="100%" />
+              </Box>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </Box>
+    </Container>
   );
 };

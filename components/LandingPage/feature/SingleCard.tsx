@@ -1,7 +1,7 @@
 "use client";
 
 import { CardDto } from "@/types/dtos/CardDto";
-import { Box, Button, Center, Group, ScrollArea, Text, Skeleton } from "@mantine/core";
+import { Box, Button, Center, Container, Group, rem, ScrollArea, Skeleton, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -19,12 +19,13 @@ export const SingleCard = () => {
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
           setProducts(json.data);
-        } else {
-          setProducts([]);
         }
-      } catch (error) {
-        console.error("Error fetch cards:", error);
-        notifications.show({ title: "Error", message: "Gagal mengambil data produk.", color: "red" });
+      } catch {
+        notifications.show({
+          title: "Error",
+          message: "Gagal mengambil data produk.",
+          color: "red",
+        });
       } finally {
         setLoadingProducts(false);
       }
@@ -42,32 +43,43 @@ export const SingleCard = () => {
   );
 
   return (
-    <>
-      <Box mb={30} mt={50} px={30}>
-        <Center mb={20}>
-          <h1>FEATURED SINGLE CARD</h1>
-        </Center>
+    <Container fluid my={50}>
+      <Title order={2} ta="center" mb={30} style={{ letterSpacing: "1px" }}>
+        FEATURED SINGLE CARD
+      </Title>
 
-        <Center>
-          <ScrollArea scrollbars="x" w="100%">
-            <Group wrap="nowrap" gap="xl" pb="md" justify="center" style={{ minWidth: "max-content", margin: "0 auto" }}>
-              {loadingProducts
-                ? [...Array(5)].map((_, i) => <CardSkeleton key={i} />)
-                : products.map((item) => (
-                    <Box key={item.id} miw={250} className="cardHover">
-                      <CardSingle data={item} />
-                    </Box>
-                  ))}
-            </Group>
-          </ScrollArea>
-        </Center>
+      <ScrollArea scrollbars="x" w="100%" pb="md">
+        <Group wrap="nowrap" gap="xl" justify={"center"}>
+          {loadingProducts
+            ? Array.from({ length: 5 }).map((_, i) => <CardSkeleton key={i} />)
+            : products.map((item) => (
+                <Box key={item.id} miw={250} className="cardHover">
+                  <CardSingle data={item} />
+                </Box>
+              ))}
+        </Group>
+      </ScrollArea>
 
-        <Center>
-          <Button py={10} px={30} bg={"#0035d4"} mt={20} onClick={() => router.push("/Catalog")} disabled={loadingProducts}>
-            <Text size="xl">More</Text>
-          </Button>
-        </Center>
-      </Box>
-    </>
+      <Center mt={40}>
+        <Button
+          variant="outline"
+          color="dark"
+          size="sm"
+          radius="xs"
+          styles={{
+            root: {
+              borderWidth: rem(1.5),
+              fontWeight: 600,
+              transition: "transform 0.2s ease",
+              "&:active": { transform: "scale(0.95)" },
+            },
+          }}
+          onClick={() => router.push("/Catalog")}
+          disabled={loadingProducts}
+        >
+          View More
+        </Button>
+      </Center>
+    </Container>
   );
 };

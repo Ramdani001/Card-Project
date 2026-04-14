@@ -1,6 +1,7 @@
 "use client";
 
-import { Center, Container, Image, Skeleton, Stack, Text, Title } from "@mantine/core";
+import { Box, Button, Center, Container, Divider, Image, Skeleton, Stack, Text, Title } from "@mantine/core";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface Article {
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export const SinglePageArct = ({ articleId }: Props) => {
+  const router = useRouter();
   const [data, setData] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,9 +25,7 @@ export const SinglePageArct = ({ articleId }: Props) => {
       setLoading(true);
       try {
         const res = await fetch(`/api/articles/${articleId}`);
-
         if (!res.ok) throw new Error("Gagal mengambil data artikel");
-
         const result = await res.json();
         setData(result.data);
       } catch (err) {
@@ -40,18 +40,19 @@ export const SinglePageArct = ({ articleId }: Props) => {
 
   const processContent = (html: string) => {
     if (!html) return "";
+    // Mengganti containerstyle menjadi style untuk render yang benar
     return html.replace(/containerstyle="([^"]+)"/g, 'style="$1"');
   };
 
   if (loading) {
     return (
-      <Container size="md" py="xl">
-        <Stack>
-          <Skeleton height={50} width="70%" radius="xl" />
-          <Skeleton height={300} radius="md" />
-          <Skeleton height={20} mt={10} />
+      <Container size="sm" py={80}>
+        <Stack gap="md">
+          <Skeleton height={40} width="80%" radius="xl" />
+          <Skeleton height={400} radius="md" />
+          <Skeleton height={20} mt={20} />
           <Skeleton height={20} />
-          <Skeleton height={20} width="50%" />
+          <Skeleton height={20} width="60%" />
         </Stack>
       </Container>
     );
@@ -59,38 +60,61 @@ export const SinglePageArct = ({ articleId }: Props) => {
 
   if (error || !data) {
     return (
-      <Center h={200}>
-        <Text color="red">Error: {error || "Artikel tidak ditemukan"}</Text>
+      <Center h={400}>
+        <Stack align="center" gap="sm">
+          <Text c="red" fw={600}>
+            Error: {error || "Artikel tidak ditemukan"}
+          </Text>
+          <Button variant="light" onClick={() => router.back()}>
+            Kembali
+          </Button>
+        </Stack>
       </Center>
     );
   }
 
   return (
-    <>
+    <Box component="article" my={60}>
       <style>{`
+        .article-content {
+          line-height: 1.8;
+          font-size: 1.1rem;
+          color: var(--mantine-color-gray-8);
+        }
         .article-content img {
           max-width: 100%;
           height: auto;
+          border-radius: 8px;
+          margin: 1.5rem 0;
         }
-        .article-content .node-imageResize,
-        .article-content [containerstyle] {
-          display: inline-block;
+        .article-content h2, .article-content h3 {
+          margin-top: 2rem;
+          margin-bottom: 1rem;
+          color: var(--mantine-color-dark-filled);
         }
         .article-content p {
-          display: block;
-          margin-bottom: 1rem;
+          margin-bottom: 1.5rem;
+        }
+        .article-content a {
+          color: var(--mantine-color-blue-6);
+          text-decoration: none;
+        }
+        .article-content a:hover {
+          text-decoration: underline;
         }
       `}</style>
 
-      <Container size="md" py="xl">
-        <Title order={1} mb="lg">
+      <Container size="md">
+        <Title order={1} mb="xs" style={{ fontSize: "2.5rem", lineHeight: 1.2 }}>
           {data.title}
         </Title>
 
-        {data.images?.[0]?.url && <Image src={data.images[0].url} alt={data.title} radius="md" mb="xl" />}
+        <Divider my="xl" />
 
-        <div className="article-content" dangerouslySetInnerHTML={{ __html: processContent(data.content) }} />
+        {data.images?.[0]?.url && <Image src={data.images[0].url} alt={data.title} radius="md" mb={40} />}
+
+        <Box className="article-content" dangerouslySetInnerHTML={{ __html: processContent(data.content) }} />
       </Container>
-    </>
+    </Box>
   );
 };

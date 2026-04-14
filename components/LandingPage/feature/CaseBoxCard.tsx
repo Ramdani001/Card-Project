@@ -1,8 +1,10 @@
+"use client";
+
 import { CardDto } from "@/types/dtos/CardDto";
-import { Box, Center, Group, ScrollArea, Skeleton } from "@mantine/core";
+import { Box, Center, Container, Group, ScrollArea, Skeleton, Text, Title } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useEffect, useState } from "react";
-import { BoxCard } from "../Card/BoxCard";
+import { CardSingle } from "../Card/CardSingle";
 
 export const CaseBoxCard = () => {
   const [products, setProducts] = useState<CardDto[]>([]);
@@ -11,16 +13,14 @@ export const CaseBoxCard = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const category = encodeURIComponent("Case & Box");
-        const res = await fetch(`/api/cards?categories=${category}`);
+        const params = new URLSearchParams({ categories: "Case & Box" });
+        const res = await fetch(`/api/cards?${params.toString()}`);
         const json = await res.json();
+
         if (json.success && Array.isArray(json.data)) {
           setProducts(json.data);
-        } else {
-          setProducts([]);
         }
-      } catch (error) {
-        console.error("Error fetch cards:", error);
+      } catch {
         notifications.show({
           title: "Error",
           message: "Gagal mengambil data produk.",
@@ -43,32 +43,30 @@ export const CaseBoxCard = () => {
   );
 
   return (
-    <Box mb={30} mt={50} px={30}>
-      <Center mb={20}>
-        <h1 className="blue-title" data-text="CASE & BOX">
+    <Container fluid my={50}>
+      <Center mb={30}>
+        <Title order={2} className="blue-title" data-text="CASE & BOX" style={{ letterSpacing: "2px" }}>
           CASE & BOX
-        </h1>
+        </Title>
       </Center>
 
-      <ScrollArea scrollbars="x" w="100%" pb="md">
-        <Group wrap="nowrap" gap="xl" justify="center" miw="100%" style={{ display: "inline-flex" }}>
+      <ScrollArea scrollbars="x" w="100%" pb="md" type="hover">
+        <Group wrap="nowrap" gap="xl" justify={"center"}>
           {loadingProducts ? (
-            [...Array(4)].map((_, i) => <CardSkeleton key={i} />)
+            Array.from({ length: 4 }).map((_, i) => <CardSkeleton key={i} />)
           ) : products.length > 0 ? (
             products.map((item) => (
-              <Box key={item.id} miw={350} className="cardHover">
-                <BoxCard data={item} />
+              <Box key={item.id} miw={250} className="cardHover">
+                <CardSingle data={item} />
               </Box>
             ))
           ) : (
-            <Skeleton h={50} w="100%" visible={false}>
-              <Center>
-                <p>No products found in this category.</p>
-              </Center>
-            </Skeleton>
+            <Box py={40} style={{ textAlign: "center", width: "100%" }}>
+              <Text c="dimmed">No products found in this category.</Text>
+            </Box>
           )}
         </Group>
       </ScrollArea>
-    </Box>
+    </Container>
   );
 };

@@ -2,7 +2,7 @@
 
 import { CartItemDto } from "@/types/dtos/CartItemDto";
 import { MenuDto } from "@/types/dtos/MenuDto";
-import { ActionIcon, Box, Center, Container, Group, Indicator, Loader, Menu, rem, Text, Title, UnstyledButton } from "@mantine/core";
+import { ActionIcon, Box, Center, Container, Divider, Group, Indicator, Loader, Menu, rem, Text, Title, UnstyledButton } from "@mantine/core";
 import { IconChevronDown, IconShoppingCart } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
@@ -17,21 +17,16 @@ interface HeaderSectionProps {
 
 export const HeaderSection = ({ cartItems, loadingCart, setCartItems }: HeaderSectionProps) => {
   const router = useRouter();
-
   const [menus, setMenus] = useState<MenuDto[]>([]);
   const [loadingMenu, setLoadingMenu] = useState(true);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-  const handleOpenCart = () => setIsDrawerOpen(true);
 
   useEffect(() => {
     const fetchMenus = async () => {
       try {
         const res = await fetch("/api/menus?isDashboardMenu=false");
         const json = await res.json();
-        if (json.success) {
-          setMenus(json.data);
-        }
+        if (json.success) setMenus(json.data);
       } catch (error) {
         console.error("Gagal ambil menu:", error);
       } finally {
@@ -43,8 +38,8 @@ export const HeaderSection = ({ cartItems, loadingCart, setCartItems }: HeaderSe
 
   if (loadingMenu) {
     return (
-      <Center h="100vh">
-        <Loader color="blue" size="xl" type="dots" />
+      <Center h={rem(70)} bg="white">
+        <Loader color="blue" size="sm" type="dots" />
       </Center>
     );
   }
@@ -53,7 +48,7 @@ export const HeaderSection = ({ cartItems, loadingCart, setCartItems }: HeaderSe
     <>
       <style jsx global>{`
         .nav-link {
-          padding: ${rem(12)} ${rem(20)};
+          padding: ${rem(12)} ${rem(16)};
           cursor: pointer;
           transition: all 0.2s ease;
           position: relative;
@@ -62,7 +57,7 @@ export const HeaderSection = ({ cartItems, loadingCart, setCartItems }: HeaderSe
           gap: 6px;
         }
         .nav-link:hover {
-          background-color: #f8f9fa;
+          color: var(--mantine-color-blue-6) !important;
         }
         .nav-link::after {
           content: "";
@@ -76,7 +71,7 @@ export const HeaderSection = ({ cartItems, loadingCart, setCartItems }: HeaderSe
           transform: translateX(-50%);
         }
         .nav-link:hover::after {
-          width: 40%;
+          width: 60%;
         }
       `}</style>
 
@@ -84,49 +79,50 @@ export const HeaderSection = ({ cartItems, loadingCart, setCartItems }: HeaderSe
         component="header"
         bg="white"
         style={{
-          borderBottom: "1px solid #f1f3f5",
+          borderBottom: "1px solid var(--mantine-color-gray-2)",
           position: "sticky",
           top: 0,
           zIndex: 2,
           boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
         }}
       >
-        <Container fluid h={rem(70)} display="flex" style={{ alignItems: "center" }}>
-          <Group justify="space-between" w="100%">
-            <Title order={3} style={{ fontFamily: "Impact, sans-serif", letterSpacing: 1, cursor: "pointer" }} onClick={() => router.push("/")}>
-              TOKO
-              <Text span c="blue" inherit>
+        <Container size="xl" h={rem(70)}>
+          <Group justify="space-between" h="100%" wrap="nowrap">
+            <Title
+              order={3}
+              style={{ fontFamily: "Impact, sans-serif", letterSpacing: 1, cursor: "pointer", flexShrink: 0 }}
+              onClick={() => router.push("/")}
+            >
+              TOKO{" "}
+              <Text span c="blue.6" inherit>
                 KARTU
               </Text>
             </Title>
 
-            <Group gap={0} visibleFrom="md">
+            <Group gap={0} visibleFrom="md" h="100%">
               {menus
                 .filter((m) => !m.parentId)
                 .map((item) => {
                   const menuChild = menus.filter((sub) => String(sub.parentId) === String(item.id));
                   const hasChild = menuChild.length > 0;
 
-                  const MenuContent = (
-                    <UnstyledButton className="nav-link" onClick={() => router.push(item.url || "#")}>
-                      <Text size="xs" fw={800} lts={1} tt="uppercase" c="gray.8">
+                  const MenuTarget = (
+                    <UnstyledButton className="nav-link" onClick={() => !hasChild && item.url && router.push(item.url)}>
+                      <Text size="xs" fw={800} lts={1} tt="uppercase" c="gray.7">
                         {item.label}
                       </Text>
-                      {hasChild && <IconChevronDown size={14} stroke={3} style={{ opacity: 0.4 }} />}
+                      {hasChild && <IconChevronDown size={14} stroke={3} style={{ opacity: 0.5 }} />}
                     </UnstyledButton>
                   );
 
-                  if (!hasChild) {
-                    return <Box key={item.id}>{MenuContent}</Box>;
-                  }
+                  if (!hasChild) return <Box key={item.id}>{MenuTarget}</Box>;
 
                   return (
-                    <Menu key={item.id} trigger="hover" openDelay={50} closeDelay={150} withinPortal offset={0} width={220}>
-                      <Menu.Target>{MenuContent}</Menu.Target>
-
-                      <Menu.Dropdown style={{ borderRadius: 0, border: "none", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", zIndex: 1001 }}>
+                    <Menu key={item.id} trigger="hover" openDelay={50} closeDelay={150} withinPortal width={200}>
+                      <Menu.Target>{MenuTarget}</Menu.Target>
+                      <Menu.Dropdown styles={{ dropdown: { borderRadius: "0 0 8px 8px", borderTop: "2px solid var(--mantine-color-blue-6)" } }}>
                         {menuChild.map((sub) => (
-                          <Menu.Item key={sub.id} fw={600} onClick={() => router.push(sub.url || "#")}>
+                          <Menu.Item key={sub.id} fw={600} onClick={() => sub.url && router.push(sub.url)}>
                             {sub.label}
                           </Menu.Item>
                         ))}
@@ -136,14 +132,16 @@ export const HeaderSection = ({ cartItems, loadingCart, setCartItems }: HeaderSe
                 })}
             </Group>
 
-            <Group gap="lg">
+            <Group gap="sm" style={{ flexShrink: 0 }}>
               {cartItems && !loadingCart && (
-                <Indicator label={cartItems.length} size={18} color="blue" offset={4} disabled={cartItems.length === 0} withBorder>
-                  <ActionIcon variant="subtle" color="dark" size="lg" onClick={handleOpenCart}>
+                <Indicator label={cartItems.length} size={16} color="red.6" offset={4} disabled={cartItems.length === 0} withBorder>
+                  <ActionIcon variant="subtle" color="gray.7" size="lg" onClick={() => setIsDrawerOpen(true)}>
                     <IconShoppingCart size={24} stroke={1.5} />
                   </ActionIcon>
                 </Indicator>
               )}
+
+              <Divider orientation="vertical" h={25} my="auto" visibleFrom="xs" />
 
               <ProfileTopbar />
             </Group>
@@ -151,12 +149,12 @@ export const HeaderSection = ({ cartItems, loadingCart, setCartItems }: HeaderSe
         </Container>
       </Box>
 
-      {cartItems != null && loadingCart != null && setCartItems != null && (
+      {cartItems && setCartItems && (
         <CartSection
           cartItems={cartItems}
           isDrawerOpen={isDrawerOpen}
           setIsDrawerOpen={setIsDrawerOpen}
-          loadingCart={loadingCart}
+          loadingCart={loadingCart || false}
           setCartItems={setCartItems}
         />
       )}
