@@ -399,6 +399,7 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
   const workbook = new ExcelJS.Workbook();
   const buffer = await file.arrayBuffer();
   await workbook.xlsx.load(buffer);
+
   const worksheet = workbook.getWorksheet(1);
   if (!worksheet) throw new Error("Worksheet tidak ditemukan");
 
@@ -412,51 +413,61 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
 
         for (let i = 2; i <= worksheet.rowCount; i++) {
           const row = worksheet.getRow(i);
-          const name = row.getCell(1).value?.toString();
+          const name = row.getCell(1).value?.toString()?.trim();
           const priceRaw = row.getCell(2).value;
+          const categoryNamesRaw = row.getCell(5).value?.toString() || "";
+
+          if (!name && !priceRaw) continue;
+
+          const selectedCategoryNames = categoryNamesRaw
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s !== "");
+
+          const invalidCategories: string[] = [];
+          const matchedCategoryIds: string[] = [];
+
+          for (const catName of selectedCategoryNames) {
+            const found = allCategories.find((c) => c.name.toLowerCase() === catName.toLowerCase());
+            if (found) {
+              matchedCategoryIds.push(found.id);
+            } else {
+              invalidCategories.push(catName);
+            }
+          }
+
+          if (invalidCategories.length > 0) {
+            throw new Error(`Baris ${i}: Kategori tidak ditemukan: [${invalidCategories.join(", ")}]. Pastikan kategori sudah terdaftar di sistem.`);
+          }
+
           const stockRaw = row.getCell(3).value;
-          const sku = row.getCell(4).value?.toString();
-          const categoryName = row.getCell(5).value?.toString();
+          const sku = row.getCell(4).value?.toString()?.trim();
           const description = row.getCell(6).value?.toString();
           const imageCell = row.getCell(7);
 
-          if (!name && !priceRaw) continue;
           if (!name || priceRaw === null) throw new Error(`Baris ${i}: Nama & Harga wajib.`);
 
           const slug = generateSlug(name);
-          const category = allCategories.find((c) => c.name.toLowerCase() === categoryName?.toLowerCase());
 
-          let newImageData: any = null;
           let imageUrl = "";
-
           if (imageCell.value && typeof imageCell.value === "object") {
             imageUrl = (imageCell.value as any).text || (imageCell.value as any).hyperlink || "";
           } else {
             imageUrl = imageCell.value?.toString() || "";
           }
-          
-          if (imageUrl) {
-            newImageData = {
-              url: imageUrl,
-              path: null,
-              originalName: null,
-              fileName: null,
-              mimeType: null,
-              size: null,
-            };
-          }
 
           const existingCard = await tx.card.findFirst({
-            where: { OR: [{ sku: sku || undefined }, { slug }] },
-            include: { images: true },
+            where: {
+              OR: [...(sku ? [{ sku }] : []), { slug }],
+            },
           });
 
           const commonData = {
             name,
-            price: new Prisma.Decimal(Number(priceRaw)),
+            price: new Prisma.Decimal(Number(priceRaw) || 0),
             stock: Number(stockRaw) || 0,
             description,
-            sku,
+            sku: sku || null,
           };
 
           if (existingCard) {
@@ -464,8 +475,16 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
               where: { id: existingCard.id },
               data: {
                 ...commonData,
-                categories: category ? { deleteMany: {}, create: { categoryId: category.id } } : undefined,
-                images: newImageData ? { deleteMany: {}, create: { ...newImageData, isPrimary: true } } : undefined,
+                categories: {
+                  deleteMany: {},
+                  create: matchedCategoryIds.map((id) => ({ categoryId: id })),
+                },
+                images: imageUrl
+                  ? {
+                      deleteMany: {},
+                      create: { url: imageUrl, isPrimary: true },
+                    }
+                  : undefined,
                 histories: {
                   create: {
                     name: existingCard.name,
@@ -483,25 +502,23 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
               data: {
                 ...commonData,
                 slug,
-                categories: category ? { create: { categoryId: category.id } } : undefined,
-                images: newImageData ? { create: { ...newImageData, isPrimary: true } } : undefined,
+                categories: {
+                  create: matchedCategoryIds.map((id) => ({ categoryId: id })),
+                },
+                images: imageUrl
+                  ? {
+                      create: { url: imageUrl, isPrimary: true },
+                    }
+                  : undefined,
               },
             });
             successCount++;
           }
         }
 
-        await createNotificationByCode({
-          notificationCode: "PRODUCT_NOTIF",
-          title: "Import Produk",
-          message: `${successCount} baru, ${updatedCount} diperbarui.`,
-          type: NotificationType.SYSTEM,
-          url: "",
-        });
-
-        return { success: true, message: `Berhasil import ${successCount} data.` };
+        return { success: true, message: `Berhasil import ${successCount} data baru dan ${updatedCount} diperbarui.` };
       },
-      { timeout: 60000 }
+      { timeout: 300000 }
     );
   } catch (error) {
     logError("CardService.importCardsFromExcel", error);
@@ -584,7 +601,7 @@ export const exportCardsToExcel = async () => {
 export const generateCardTemplate = async () => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Template Import");
-  const categories = await prisma.category.findMany({ select: { name: true } });
+  // const categories = await prisma.category.findMany({ select: { name: true } });
 
   worksheet.columns = [
     { header: "Card Name*", key: "name", width: 30 },
@@ -600,12 +617,12 @@ export const generateCardTemplate = async () => {
   headerRow.font = { bold: true, color: { argb: "FFFFFF" } };
   headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "E67E22" } };
 
-  if (categories.length > 0) {
-    const list = `"${categories.map((c) => c.name).join(",")}"`;
-    for (let i = 2; i <= 50; i++) {
-      worksheet.getCell(`E${i}`).dataValidation = { type: "list", formulae: [list] };
-    }
-  }
+  // if (categories.length > 0) {
+  //   const list = `"${categories.map((c) => c.name).join(",")}"`;
+  //   for (let i = 2; i <= 50; i++) {
+  //     worksheet.getCell(`E${i}`).dataValidation = { type: "list", formulae: [list] };
+  //   }
+  // }
 
   return await workbook.xlsx.writeBuffer();
 };
