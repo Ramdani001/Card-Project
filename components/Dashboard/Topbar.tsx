@@ -2,10 +2,10 @@
 
 import { NotificationDto } from "@/types/dtos/NotificationDto";
 import { formatDate } from "@/utils";
-import { Box, Container, Flex, Group, Indicator, Loader, Menu, ScrollArea, Text, UnstyledButton, rem } from "@mantine/core";
-import { IconBell, IconRefresh } from "@tabler/icons-react";
+import { ActionIcon, Box, Container, Flex, Group, Indicator, Loader, Menu, ScrollArea, Text, Tooltip, rem } from "@mantine/core";
+import { IconBell, IconChecks, IconRefresh } from "@tabler/icons-react";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ProfileTopbar } from "../layout/ProfileTopbar";
 
 const Topbar = () => {
@@ -15,122 +15,156 @@ const Topbar = () => {
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-  async function fetchNotifications() {
+  const fetchNotifications = useCallback(async () => {
     try {
       setLoadingNotif(true);
       const res = await fetch("/api/notifications");
-      const responseData = await res.json();
-      setNotifications(responseData.data);
+      const json = await res.json();
+      if (json.success) setNotifications(json.data);
+    } catch (error) {
+      console.error("Gagal mengambil notifikasi:", error);
     } finally {
       setLoadingNotif(false);
     }
-  }
+  }, []);
 
   async function markAsRead(id: string, url?: string) {
-    await fetch("/api/notifications/read", {
-      method: "PATCH",
-      body: JSON.stringify({ id }),
-    });
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
-    if (url) window.location.href = url;
+
+    try {
+      await fetch("/api/notifications/read", {
+        method: "PATCH",
+        body: JSON.stringify({ id }),
+      });
+      if (url) window.location.href = url;
+    } catch (error) {
+      console.error("Gagal update status baca:", error);
+    }
   }
 
   async function markAllAsRead() {
-    await fetch("/api/notifications/read-all", {
-      method: "PATCH",
-    });
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    try {
+      await fetch("/api/notifications/read-all", { method: "PATCH" });
+    } catch (error) {
+      console.error("Gagal mark all as read:", error);
+    }
   }
 
   useEffect(() => {
     if (session?.user) fetchNotifications();
-  }, [session]);
+  }, [session, fetchNotifications]);
+
+  const handleRefresh = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    fetchNotifications();
+  };
 
   return (
-    <Container fluid h="100%" py="xs">
+    <Container fluid h={rem(70)} py="xs">
       <Flex align="center" justify="flex-end" h="100%">
         {status === "loading" ? (
-          <Loader size="xs" />
+          <Loader size="xs" type="dots" />
         ) : (
-          <Group gap="sm">
-            <Menu shadow="md" width={320} position="bottom-end">
+          <Group gap="md">
+            <Menu shadow="lg" width={350} position="bottom-end" transitionProps={{ transition: "pop-top-right" }} withinPortal>
               <Menu.Target>
-                <Indicator inline disabled={unreadCount === 0} label={unreadCount} size={16}>
-                  <UnstyledButton>
-                    <IconBell style={{ width: rem(22), height: rem(22) }} />
-                  </UnstyledButton>
+                <Indicator inline disabled={unreadCount === 0} label={unreadCount} size={16} color="red.6" offset={2} withBorder>
+                  <ActionIcon variant="subtle" color="gray.7" size="lg" radius="md">
+                    <IconBell size={22} stroke={1.5} />
+                  </ActionIcon>
                 </Indicator>
               </Menu.Target>
 
-              <Menu.Dropdown>
-                <Flex justify="space-between" align="center" px="sm" py={6}>
-                  <Menu.Label style={{ padding: 0 }}>Notifications</Menu.Label>
+              <Menu.Dropdown
+                styles={{
+                  dropdown: {
+                    padding: 0,
+                    overflow: "hidden",
+                    borderRadius: "8px",
+                    borderTop: "3px solid var(--mantine-color-blue-6)",
+                  },
+                }}
+              >
+                <Box p="xs" style={{ backgroundColor: "var(--mantine-color-gray-0)" }}>
+                  <Flex justify="space-between" align="center">
+                    <Text size="xs" fw={800} tt="uppercase" lts={1} c="gray.7">
+                      Notification
+                    </Text>
 
-                  <Flex gap="xs" align="center">
-                    {unreadCount > 0 && (
-                      <Text size="xs" c="blue" style={{ cursor: "pointer", fontWeight: 500 }} onClick={markAllAsRead}>
-                        Mark all as read
+                    <Group gap={5}>
+                      {unreadCount > 0 && (
+                        <Tooltip label="Mark all as read" position="top" withArrow>
+                          <ActionIcon variant="subtle" size="sm" onClick={markAllAsRead} color="blue">
+                            <IconChecks size={16} />
+                          </ActionIcon>
+                        </Tooltip>
+                      )}
+                      <Tooltip label="Refresh" position="top" withArrow>
+                        <ActionIcon variant="subtle" size="sm" onClick={handleRefresh} loading={loadingNotif} color="gray">
+                          <IconRefresh size={16} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                  </Flex>
+                </Box>
+
+                <Menu.Divider m={0} />
+
+                <ScrollArea.Autosize mah={400} type="hover">
+                  {loadingNotif && notifications.length === 0 ? (
+                    <Flex justify="center" p="xl">
+                      <Loader size="sm" type="dots" />
+                    </Flex>
+                  ) : notifications.length === 0 ? (
+                    <Box py="xl" px="md">
+                      <Text size="sm" c="dimmed" ta="center">
+                        Tidak ada notifikasi baru
                       </Text>
-                    )}
-                    <IconRefresh size={16} style={{ cursor: "pointer", color: "var(--mantine-color-dimmed)" }} onClick={fetchNotifications} />
-                  </Flex>
-                </Flex>
+                    </Box>
+                  ) : (
+                    notifications.map((notif) => (
+                      <Menu.Item
+                        key={notif.id}
+                        onClick={() => markAsRead(notif.id, notif.url)}
+                        p="sm"
+                        style={{
+                          borderBottom: "1px solid var(--mantine-color-gray-1)",
+                          backgroundColor: !notif.isRead ? "var(--mantine-color-blue-0)" : "transparent",
+                        }}
+                      >
+                        <Flex align="flex-start" gap="sm">
+                          <Box mt={6}>
+                            <Box
+                              style={{
+                                width: 8,
+                                height: 8,
+                                borderRadius: "50%",
+                                backgroundColor: !notif.isRead ? "var(--mantine-color-blue-6)" : "transparent",
+                                border: !notif.isRead ? "none" : "1px solid var(--mantine-color-gray-4)",
+                              }}
+                            />
+                          </Box>
 
-                <Menu.Divider />
-
-                {loadingNotif ? (
-                  <Flex justify="center" p="sm">
-                    <Loader size="xs" />
-                  </Flex>
-                ) : notifications.length === 0 ? (
-                  <Text size="sm" p="sm" c="dimmed" ta="center">
-                    No notifications
-                  </Text>
-                ) : (
-                  <ScrollArea h={250}>
-                    {notifications.length === 0 ? (
-                      <Menu.Item disabled>
-                        <Text size="sm" c="dimmed" ta="center" py="sm">
-                          No notifications
-                        </Text>
-                      </Menu.Item>
-                    ) : (
-                      notifications.map((notif) => (
-                        <Menu.Item key={notif.id} onClick={() => markAsRead(notif.id, notif.url)}>
-                          <Flex align="flex-start" gap="md">
-                            <Box mt={7} style={{ flexShrink: 0 }}>
-                              <Box
-                                style={{
-                                  width: 8,
-                                  height: 8,
-                                  borderRadius: "50%",
-                                  backgroundColor: !notif.isRead ? "#228be6" : "transparent",
-                                  border: !notif.isRead ? "none" : "1px solid #dee2e6",
-                                }}
-                              />
-                            </Box>
-
-                            <Box style={{ flex: 1 }}>
-                              <Flex justify="space-between" align="center" mb={2}>
-                                <Text size="sm" fw={notif.isRead ? 500 : 700} c={notif.isRead ? "dimmed" : "dark"}>
-                                  {notif.title}
-                                </Text>
-
-                                <Text size="xs" c="dimmed" style={{ whiteSpace: "nowrap", marginLeft: 8 }}>
-                                  {formatDate(notif.createdAt)}
-                                </Text>
-                              </Flex>
-
-                              <Text size="xs" c={notif.isRead ? "dimmed" : "gray.7"} lineClamp={2}>
-                                {notif.message}
+                          <Box style={{ flex: 1 }}>
+                            <Flex justify="space-between" align="flex-start" mb={2}>
+                              <Text size="sm" fw={notif.isRead ? 600 : 800} c={notif.isRead ? "gray.7" : "dark"}>
+                                {notif.title}
                               </Text>
-                            </Box>
-                          </Flex>
-                        </Menu.Item>
-                      ))
-                    )}
-                  </ScrollArea>
-                )}
+                              <Text size="10px" c="dimmed" style={{ whiteSpace: "nowrap" }}>
+                                {formatDate(notif.createdAt)}
+                              </Text>
+                            </Flex>
+
+                            <Text size="xs" c={notif.isRead ? "dimmed" : "gray.8"} lineClamp={2}>
+                              {notif.message}
+                            </Text>
+                          </Box>
+                        </Flex>
+                      </Menu.Item>
+                    ))
+                  )}
+                </ScrollArea.Autosize>
               </Menu.Dropdown>
             </Menu>
 
