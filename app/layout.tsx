@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Toko Kartu Original Indonesia",
     description: "Koleksi kartu TCG terlengkap dan terpercaya.",
-    url: "https://tokokartu.com",
+    url: "https://toko-kartu.com",
     siteName: "Toko Kartu",
     images: [
       {
