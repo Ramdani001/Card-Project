@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     siteName: "Toko Kartu",
     images: [
       {
-        url: "/toko-kartu-logo.png",
+        url: "https://toko-kartu.com/toko-kartu-logo.png",
         width: 1200,
         height: 630,
         alt: "Toko Kartu Logo",
