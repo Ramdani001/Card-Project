@@ -7,6 +7,7 @@ import {
   Box,
   Button,
   Divider,
+  em,
   Grid,
   Group,
   Image,
@@ -18,6 +19,7 @@ import {
   Text,
   ThemeIcon,
 } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { IconInfoCircle, IconMinus, IconPackage, IconPlus, IconShoppingCart, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 
@@ -30,6 +32,7 @@ interface CardCatalogModalProps {
 }
 
 export const CardCatalogModal = ({ opened, onClose, product, handleAddToCart, loadingAction }: CardCatalogModalProps) => {
+  const isMobile = useMediaQuery(`(max-width: ${em(768)})`);
   const [quantity, setQuantity] = useState<number>(1);
 
   if (!product) return null;
@@ -42,10 +45,11 @@ export const CardCatalogModal = ({ opened, onClose, product, handleAddToCart, lo
       opened={opened}
       onClose={onClose}
       centered
-      fullScreen
+      fullScreen={isMobile}
+      size={isMobile ? "100%" : "80%"}
       padding={0}
       radius="md"
-      withCloseButton={false} // Custom close button untuk kontrol desain
+      withCloseButton={false}
       overlayProps={{
         backgroundOpacity: 0.6,
         blur: 4,
