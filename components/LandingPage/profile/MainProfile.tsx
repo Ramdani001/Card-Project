@@ -46,6 +46,8 @@ export const MainProfile = () => {
   const [instagramUrl, setInstagramUrl] = useState("");
   const [twitterUrl, setTwitterUrl] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -87,7 +89,23 @@ export const MainProfile = () => {
 
   const handleUpdate = async () => {
     if (file && file.size > 2 * 1024 * 1024) {
-      return notifications.show({ title: "File Terlalu Besar", message: "Maksimal ukuran file 2MB", color: "orange" });
+      return notifications.show({ title: "File Too Large", message: "Maximum file size 2MB", color: "orange" });
+    }
+
+    if (password && password !== confirmPassword) {
+      return notifications.show({
+        title: "Password Doesn't Match",
+        message: "Password confirmation must be the same as the new password",
+        color: "red",
+      });
+    }
+
+    if (password && password.length < 6) {
+      return notifications.show({
+        title: "Weak Password",
+        message: "Password must be at least 6 characters",
+        color: "orange",
+      });
     }
 
     setLoading(true);
@@ -99,6 +117,7 @@ export const MainProfile = () => {
       formData.append("instagramUrl", instagramUrl);
       formData.append("twitterUrl", twitterUrl);
       if (file) formData.append("file", file);
+      if (password) formData.append("password", password);
 
       const res = await fetch(`/api/profile/${userId}`, { method: "PATCH", body: formData });
       const json = await res.json();
@@ -119,7 +138,10 @@ export const MainProfile = () => {
           color: "teal",
           icon: <IconCheck size={16} />,
         });
+
         setFile(null);
+        setPassword("");
+        setConfirmPassword("");
       } else {
         throw new Error(json.message);
       }
@@ -225,6 +247,37 @@ export const MainProfile = () => {
                       radius="xs"
                     />
                   </SimpleGrid>
+                </Paper>
+
+                <Paper p="md" radius="xs" withBorder shadow="sm">
+                  <Title order={4} mb="lg" fw={700}>
+                    Security
+                  </Title>
+                  <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                    <TextInput
+                      label="New Password"
+                      placeholder="Leave blank to keep current"
+                      type="password"
+                      styles={inputStyles}
+                      value={password}
+                      onChange={(e) => setPassword(e.currentTarget.value)}
+                      radius="xs"
+                    />
+                    <TextInput
+                      label="Confirm New Password"
+                      placeholder="Re-type new password"
+                      type="password"
+                      styles={inputStyles}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.currentTarget.value)}
+                      radius="xs"
+                    />
+                  </SimpleGrid>
+                  {password && (
+                    <Text size="xs" mt="sm" c="dimmed">
+                      Fill in this field only if you want to change your password.
+                    </Text>
+                  )}
                 </Paper>
 
                 <Paper p="md" radius="xs" withBorder shadow="sm">

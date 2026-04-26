@@ -23,6 +23,7 @@ interface UpdateProfileParams {
   instagramUrl?: string;
   twitterUrl?: string;
   file?: File | null;
+  password?: string;
 }
 
 export const register = async ({ email, password, name, phone, file, facebookUrl, instagramUrl, twitterUrl }: RegisterParams) => {
@@ -91,7 +92,7 @@ export const register = async ({ email, password, name, phone, file, facebookUrl
   }
 };
 
-export const updateProfile = async ({ userId, email, name, phone, file, facebookUrl, twitterUrl, instagramUrl }: UpdateProfileParams) => {
+export const updateProfile = async ({ userId, email, name, phone, file, facebookUrl, twitterUrl, instagramUrl, password }: UpdateProfileParams) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
   });
@@ -105,6 +106,11 @@ export const updateProfile = async ({ userId, email, name, phone, file, facebook
 
   let newAvatarUrl: string | null = null;
   let newAvatarPath: string | null = null;
+  let hashedPassword: string | undefined = undefined;
+
+  if (password && password.trim() !== "") {
+    hashedPassword = await hashPassword(password);
+  }
 
   try {
     if (file && file.size > 0) {
@@ -123,6 +129,7 @@ export const updateProfile = async ({ userId, email, name, phone, file, facebook
         twitterUrl: twitterUrl ?? user.twitterUrl,
         instagramUrl: instagramUrl ?? user.instagramUrl,
         avatar: newAvatarUrl ?? user.avatar,
+        ...(hashedPassword && { password: hashedPassword }),
       },
       select: {
         id: true,
