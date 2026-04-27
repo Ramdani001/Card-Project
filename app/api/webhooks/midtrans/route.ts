@@ -3,6 +3,7 @@ import { mapMidtransStatus, savePaymentLog, verifyMidtransSignature } from "@/se
 import { updateTransactionStatus } from "@/services/transaction/transaction.service";
 import { NotificationType } from "@/prisma/generated/prisma/client";
 import { createNotificationByCode } from "@/services/transaction/notification.service";
+import { logError } from "@/lib/logger";
 
 export const POST = async (req: NextRequest) => {
   try {
@@ -56,7 +57,7 @@ export const POST = async (req: NextRequest) => {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("Midtrans Webhook Error:", error);
+    logError("Midtrans Webhook Route [POST]", error);
     return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
 };
