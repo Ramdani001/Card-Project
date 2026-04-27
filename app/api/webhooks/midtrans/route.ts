@@ -44,7 +44,7 @@ export const POST = async (req: NextRequest) => {
 
       midtransNote += ` (Refunded: ${reason}${amount})`;
     } else {
-      midtransNote += ` | Msg: ${body.status_message || "No message"}`;
+      midtransNote += ` | ${body.status_message || "No message"}`;
     }
 
     const transaction = await updateTransactionStatus(body.order_id, newStatus, {
