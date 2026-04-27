@@ -35,8 +35,20 @@ export const POST = async (req: NextRequest) => {
       paymentType = "MANDIRI BILL";
     }
 
+    let midtransNote = `[Midtrans] Status: ${body.transaction_status.toUpperCase()}`;
+
+    if (body.refunds && body.refunds.length > 0) {
+      const latest = body.refunds[body.refunds.length - 1];
+      const reason = latest.reason ? ` | Reason: ${latest.reason}` : "";
+      const amount = latest.refund_amount ? ` | Amount: ${latest.refund_amount}` : "";
+
+      midtransNote += ` (Refunded: ${reason}${amount})`;
+    } else {
+      midtransNote += ` | Msg: ${body.status_message || "No message"}`;
+    }
+
     const transaction = await updateTransactionStatus(body.order_id, newStatus, {
-      note: `Midtrans Webhook: ${body.transaction_status} (${body.status_message || "No Msg"})`,
+      note: midtransNote,
       paymentMethod: paymentType,
       userId: "MIDTRANS_WEBHOOK",
     });
