@@ -20,7 +20,7 @@ export const POST = async (req: NextRequest) => {
     });
 
     if (!isValidSignature) {
-      console.error(`Invalid Signature for Order: ${body.order_id}`);
+      logError("Midtrans Webhook Route [POST]", `Invalid Signature for Order: ${body.order_id}`);
       return NextResponse.json({ message: "Invalid Signature" }, { status: 403 });
     }
 
