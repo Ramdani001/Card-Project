@@ -35,18 +35,16 @@ export const POST = async (req: NextRequest) => {
       paymentType = "MANDIRI BILL";
     }
 
-    const transactionStatusText =
-      body.transaction_status?.replace(/_/g, " ").replace(/\b\w/g, (char: string) => char.toUpperCase()) || "-";
-    let midtransNote = `[Midtrans] Status: ${transactionStatusText}`;
+    let midtransNote = `[Midtrans]`;
 
     if (body.refunds && body.refunds.length > 0) {
       const latest = body.refunds[body.refunds.length - 1];
       const reason = latest.reason ? `${latest.reason}` : "";
       const amount = latest.refund_amount ? `${latest.refund_amount}` : "";
 
-      midtransNote += ` | Refunded: ${amount}, ${reason})`;
+      midtransNote += ` Refunded: ${amount}, ${reason}`;
     } else {
-      midtransNote += ` | ${body.status_message || "No message"}`;
+      midtransNote += ` ${body.status_message || "No message"}`;
     }
 
     const transaction = await updateTransactionStatus(body.order_id, newStatus, {
