@@ -114,7 +114,7 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
       const res = await fetch(`/api/cart/${id}`, { method: "DELETE" });
       if (res.ok) {
         setCartItems((prev) => prev.filter((item) => item.id !== id));
-        notifications.show({ message: "Item removed", color: "gray", position: "top-left" });
+        notifications.show({ message: "Item removed from cart", color: "gray", position: "top-left" });
       }
     } finally {
       setProcessingId(null);

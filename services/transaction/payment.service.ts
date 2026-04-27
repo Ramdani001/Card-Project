@@ -97,15 +97,17 @@ export const savePaymentLog = async (payload: any) => {
 export const mapMidtransStatus = (transactionStatus: string, fraudStatus?: string): TransactionStatus => {
   if (transactionStatus === "capture") {
     if (fraudStatus === "challenge") {
-      return "PENDING";
+      return TransactionStatus.PENDING;
     }
     return TransactionStatus.PAID;
   } else if (transactionStatus === "settlement") {
     return TransactionStatus.PAID;
-  } else if (transactionStatus === "deny" || transactionStatus === "expire") {
+  } else if (transactionStatus === "expire") {
+    return TransactionStatus.EXPIRED;
+  } else if (transactionStatus === "deny") {
     return TransactionStatus.FAILED;
   } else if (transactionStatus === "cancel") {
-    return TransactionStatus.FAILED;
+    return TransactionStatus.CANCELLED;
   } else if (transactionStatus === "pending") {
     return TransactionStatus.PENDING;
   } else if (transactionStatus === "refund" || transactionStatus === "partial_refund") {
