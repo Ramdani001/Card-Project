@@ -1,7 +1,7 @@
 "use client";
 
 import { MenuDto } from "@/types/dtos/MenuDto";
-import { Button, Group, Modal, NumberInput, Select, SimpleGrid, Stack, Switch, TextInput, } from "@mantine/core";
+import { Button, Group, Modal, NumberInput, Select, SimpleGrid, Stack, Switch, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
@@ -10,11 +10,10 @@ interface MenuFormProps {
   opened: boolean;
   onClose: () => void;
   menuToEdit: MenuDto | null;
-  allMenus: MenuDto[];
   onSuccess: () => void;
 }
 
-export const MenuForm = ({ opened, onClose, menuToEdit, allMenus, onSuccess }: MenuFormProps) => {
+export const MenuForm = ({ opened, onClose, menuToEdit, onSuccess }: MenuFormProps) => {
   const [loading, setLoading] = useState(false);
 
   const [label, setLabel] = useState("");
@@ -23,6 +22,31 @@ export const MenuForm = ({ opened, onClose, menuToEdit, allMenus, onSuccess }: M
   const [order, setOrder] = useState<number | "">(0);
   const [parentId, setParentId] = useState<string | null>(null);
   const [isDashboardMenu, setIsDashboardMenu] = useState<boolean>(false);
+  const [allMenu, setAllMenu] = useState<MenuDto[]>([]);
+
+  const fetchMenus = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/menus`);
+      const json = await res.json();
+
+      if (json.success) {
+        setAllMenu(json.data);
+      } else {
+        notifications.show({
+          title: "Error",
+          message: json.message,
+          color: "red",
+          icon: <IconX size={16} />,
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching menus:", error);
+      notifications.show({ title: "Error", message: "Failed to fetch data", color: "red" });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (opened) {
@@ -42,9 +66,11 @@ export const MenuForm = ({ opened, onClose, menuToEdit, allMenus, onSuccess }: M
         setIsDashboardMenu(false);
       }
     }
+
+    fetchMenus();
   }, [menuToEdit, opened]);
 
-  const parentOptions = allMenus
+  const parentOptions = allMenu
     .filter((m) => m.id !== menuToEdit?.id)
     .map((m) => ({
       value: m.id,

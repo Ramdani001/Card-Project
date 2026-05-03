@@ -5,6 +5,7 @@ import {
   IconCards,
   IconCategory,
   IconDiscount,
+  IconHome,
   IconLayoutDashboard,
   IconLayoutGrid,
   IconPhoto,
@@ -13,7 +14,7 @@ import {
   IconTicket,
   IconUsers,
   IconUsersGroup,
-  IconUserShield,
+  IconUserShield
 } from "@tabler/icons-react";
 
 import ListArticle from "@/components/Dashboard/Collection/Article/ListArticle";
@@ -23,6 +24,7 @@ import ListTypeCard from "@/components/Dashboard/Collection/Category/ListCategor
 import ListDiscount from "@/components/Dashboard/Collection/Discount/ListDiscount";
 import ListEvent from "@/components/Dashboard/Collection/Event/ListEvent";
 import ListMenu from "@/components/Dashboard/Collection/Menu/ListMenu";
+import ListShop from "@/components/Dashboard/Collection/Shop/ListShop";
 import ListVoucher from "@/components/Dashboard/Collection/Voucher/ListVoucher";
 import Dashboard from "@/components/Dashboard/Dashboard/Dashboard";
 import ListTransaction from "@/components/Dashboard/Transaction/ListTransaction";
@@ -46,6 +48,7 @@ export const ICON_MAP: Record<string, any> = {
   IconUserShield: IconUserShield,
   IconUsersGroup: IconUsersGroup,
   IconArticle: IconArticle,
+  IconHome: IconHome,
 };
 
 export const COMPONENT_MAP: Record<string, React.ReactNode> = {
@@ -61,4 +64,5 @@ export const COMPONENT_MAP: Record<string, React.ReactNode> = {
   "/banners": <ListBanner />,
   "/vouchers": <ListVoucher />,
   "/articles": <ListArticle />,
+  "/shops": <ListShop />,
 };

@@ -280,7 +280,6 @@ const ListMenu = () => {
         opened={opened}
         onClose={close}
         menuToEdit={selectedMenu}
-        allMenus={menus}
         onSuccess={() => {
           fetchMenus();
         }}
