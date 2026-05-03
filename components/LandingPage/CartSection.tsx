@@ -316,30 +316,34 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
 
                 {deliveryMethod === DeliveryMethod.PICKUP && (
                   <Stack gap="xs">
-                    {listShop.map((item) => (
-                      <Box
-                        key={item.id}
-                        onClick={() => setSelectedShop(item.id)}
-                        p="md"
-                        style={{
-                          borderRadius: 12,
-                          cursor: "pointer",
-                          border: selectedShop === item.id ? "2px solid black" : "1px solid #e9ecef",
-                          background: selectedShop === item.id ? "#fff" : "#f8f9fa",
-                        }}
-                      >
-                        <Group justify="space-between" align="flex-start">
-                          <div>
-                            <Text fw={600} size="sm">
-                              {item.name}
-                            </Text>
-                            <Text size="xs" c="dimmed">
-                              {item.address || "No address"}
-                            </Text>
-                          </div>
-                        </Group>
-                      </Box>
-                    ))}
+                    <ScrollArea h={180} scrollbarSize={4}>
+                      <Stack gap="xs">
+                        {listShop.map((item) => (
+                          <Box
+                            key={item.id}
+                            onClick={() => setSelectedShop(item.id)}
+                            p="md"
+                            style={{
+                              borderRadius: 12,
+                              cursor: "pointer",
+                              border: selectedShop === item.id ? "2px solid black" : "1px solid #e9ecef",
+                              background: selectedShop === item.id ? "#fff" : "#f8f9fa",
+                            }}
+                          >
+                            <Group justify="space-between" align="flex-start">
+                              <div>
+                                <Text fw={600} size="sm">
+                                  {item.name}
+                                </Text>
+                                <Text size="xs" c="dimmed">
+                                  {item.address || "No address"}
+                                </Text>
+                              </div>
+                            </Group>
+                          </Box>
+                        ))}
+                      </Stack>
+                    </ScrollArea>
                   </Stack>
                 )}
               </Stack>
