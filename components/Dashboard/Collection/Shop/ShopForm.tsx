@@ -96,8 +96,20 @@ export const ShopForm = ({ opened, onClose, shopToEdit, onSuccess }: ShopFormPro
     <Modal opened={opened} onClose={onClose} title={isEditMode ? "Edit Shop" : "Create New Shop"} centered size="md">
       <Flex direction="column" gap="md">
         <TextInput label="Name" value={form.name} onChange={(e) => handleChange("name", e.target.value)} withAsterisk data-autofocus />
-        <Textarea label="Address" value={form.address} onChange={(e) => handleChange("address", e.target.value)} minRows={3} />
-
+        <Textarea
+          label="Address"
+          withAsterisk
+          value={form.address}
+          onChange={(e) => handleChange("address", e.target.value)}
+          autosize
+          minRows={3}
+          maxRows={6}
+          styles={{
+            input: {
+              resize: "vertical",
+            },
+          }}
+        />
         <Flex justify="flex-end" gap="sm" mt="md">
           <Button variant="default" onClick={onClose} disabled={loading}>
             Cancel
