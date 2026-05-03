@@ -1,19 +1,19 @@
 enum EmailStatus {
-    PENDING
-    SUCCESS
-    FAILED
+  PENDING
+  SUCCESS
+  FAILED
 }
 
 model EmailHistory {
-    id            String      @id @default(cuid())
-    recipient     String
-    subject       String
-    body          String      @db.Text
-    status        EmailStatus @default(PENDING)
-    errorMessage  String?     @db.Text
-    provider      String?     @default("SMTP")
-    transactionId String?     @db.Uuid
+  id            String      @id @default(cuid())
+  recipient     String
+  subject       String
+  body          String      @db.Text
+  status        EmailStatus @default(PENDING)
+  errorMessage  String?     @db.Text
+  provider      String?     @default("SMTP")
+  transactionId String?     @db.Uuid
 
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

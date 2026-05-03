@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 import { createPaymentToken } from "./payment.service";
-import { DiscountType, NotificationType, Prisma, TransactionStatus } from "@/prisma/generated/prisma/client";
+import { DeliveryMethod, DiscountType, NotificationType, Prisma, TransactionStatus } from "@/prisma/generated/prisma/client";
 import { sendTransactionReceipt } from "../system/email.service";
 import { createNotificationByCode } from "./notification.service";
 import { logError } from "@/lib/logger";
@@ -10,6 +10,8 @@ interface CreateTransactionParams {
   customerName?: string;
   customerEmail?: string;
   voucherCode?: string;
+  shopId?: string;
+  deliveryMethod: DeliveryMethod;
   address: string;
   paymentMethod?: string;
 }
@@ -30,7 +32,7 @@ interface ShipTransactionParams {
 const FAILED_STATUSES: TransactionStatus[] = [TransactionStatus.CANCELLED, TransactionStatus.FAILED, TransactionStatus.EXPIRED];
 
 export const checkout = async (params: CreateTransactionParams) => {
-  const { userId, customerName, customerEmail, voucherCode, address, paymentMethod } = params;
+  const { userId, customerName, customerEmail, shopId, deliveryMethod, voucherCode, address } = params;
 
   const cart = await prisma.cart.findFirst({
     where: { userId },
@@ -141,7 +143,8 @@ export const checkout = async (params: CreateTransactionParams) => {
           customerEmail,
           address,
           voucherId,
-          paymentMethod: paymentMethod,
+          shopId,
+          deliveryMethod,
           statusLogs: { create: { status: TransactionStatus.PENDING, note: "Checkout initiated", createdBy: userId } },
           items: { create: prismaItemsPayload },
         },
@@ -348,6 +351,7 @@ export const getTransactions = async (params: GetTransactionParams) => {
         voucher: true,
         statusLogs: { orderBy: { createdAt: "desc" }, take: 1 },
         user: { select: { email: true, name: true } },
+        shop: true,
       },
     }),
   ]);
@@ -375,6 +379,7 @@ export const getUserTransactions = async (userId: string, params: GetTransaction
         voucher: true,
         statusLogs: { orderBy: { createdAt: "desc" }, take: 1 },
         user: { select: { email: true, name: true } },
+        shop: true,
       },
     }),
   ]);

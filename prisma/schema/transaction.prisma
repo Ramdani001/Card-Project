@@ -1,28 +1,31 @@
 model Transaction {
-  id            String                 @id @default(uuid())
-  invoice       String                 @unique
-  userId        String
-  subTotal      Decimal                @db.Decimal(15, 2)
-  voucherAmount Decimal                @default(0) @db.Decimal(15, 2)
-  totalPrice    Decimal                @db.Decimal(15, 2)
-  status        TransactionStatus      @default(PENDING)
-  paymentMethod String?
-  snapToken     String?
-  snapRedirect  String?
-  customerName  String?
-  customerEmail String?
-  address       String?
-  createdAt     DateTime               @default(now())
-  updatedAt     DateTime               @updatedAt
-  voucherId     String?
-  expedition    String?
-  resi          String?
-  shippingCost  Decimal                @default(0) @db.Decimal(15, 2)
-  paymentLogs   PaymentLog[]
-  user          User                   @relation(fields: [userId], references: [id])
-  voucher       Voucher?               @relation(fields: [voucherId], references: [id])
-  items         TransactionItem[]
-  statusLogs    TransactionStatusLog[]
+  id             String                 @id @default(uuid())
+  invoice        String                 @unique
+  userId         String
+  subTotal       Decimal                @db.Decimal(15, 2)
+  voucherAmount  Decimal                @default(0) @db.Decimal(15, 2)
+  totalPrice     Decimal                @db.Decimal(15, 2)
+  status         TransactionStatus      @default(PENDING)
+  paymentMethod  String?
+  snapToken      String?
+  snapRedirect   String?
+  customerName   String?
+  customerEmail  String?
+  address        String?
+  deliveryMethod DeliveryMethod         @default(SHIP)
+  shopId         String?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  voucherId      String?
+  expedition     String?
+  resi           String?
+  shippingCost   Decimal                @default(0) @db.Decimal(15, 2)
+  shop           Shop?                  @relation(fields: [shopId], references: [id])
+  paymentLogs    PaymentLog[]
+  user           User                   @relation(fields: [userId], references: [id])
+  voucher        Voucher?               @relation(fields: [voucherId], references: [id])
+  items          TransactionItem[]
+  statusLogs     TransactionStatusLog[]
 }
 
 model TransactionItem {
@@ -107,4 +110,9 @@ enum TransactionStatus {
   FAILED
   REFUNDED
   EXPIRED
+}
+
+enum DeliveryMethod {
+  SHIP
+  PICKUP
 }

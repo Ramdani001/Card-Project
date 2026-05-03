@@ -1,13 +1,15 @@
 "use client";
 
 import { CartItemDto } from "@/types/dtos/CartItemDto";
+import { ShopDto } from "@/types/dtos/ShopDto";
 import { formatRupiah, getCardPrice } from "@/utils";
-import { Box, Button, Center, Drawer, Group, Loader, ScrollArea, Stack, Text, TextInput, rem } from "@mantine/core";
+import { Box, Button, Center, Drawer, Group, Loader, ScrollArea, Stack, Text, TextInput, UnstyledButton, rem } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconMapPin, IconShoppingCart, IconTicket } from "@tabler/icons-react";
+import { IconMapPin, IconShoppingCart, IconTicket, IconTruckDelivery } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
-import { Dispatch, SetStateAction, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { CartItemRow } from "../Cart/CartItemRow";
+import { DeliveryMethod } from "@/prisma/generated/prisma/enums";
 
 interface CartSectionProps {
   isDrawerOpen: boolean;
@@ -25,41 +27,92 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const totalAmount = cartItems.reduce((acc, item) => acc + getCardPrice(item) * item.quantity, 0);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>(DeliveryMethod.SHIP);
+  const [selectedShop, setSelectedShop] = useState<string | null>(null);
+  const [listShop, setListShop] = useState<ShopDto[]>([]);
+
+  const fetchShops = async () => {
+    try {
+      const res = await fetch(`/api/shops`);
+      const json = await res.json();
+
+      if (!json.success) throw new Error(json.message);
+
+      setListShop(json.data);
+    } catch (err: any) {
+      console.error("Fetch error:", err);
+      notifications.show({
+        title: "Error",
+        message: err.message || "Failed to fetch data",
+        color: "red",
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchShops();
+  }, []);
 
   const handleCheckout = async (voucherCodeFromCart?: string) => {
-    if (!address) {
-      notifications.show({ message: "Shipping address is required.", color: "red", position: "top-left" });
-      return;
+    // ===== VALIDATION =====
+    if (deliveryMethod === DeliveryMethod.SHIP) {
+      if (!address.trim()) {
+        return notifications.show({
+          message: "Shipping address is required.",
+          color: "red",
+          position: "top-left",
+        });
+      }
+    }
+
+    if (deliveryMethod === DeliveryMethod.PICKUP) {
+      if (!selectedShop) {
+        return notifications.show({
+          message: "Please select a pickup shop.",
+          color: "red",
+          position: "top-left",
+        });
+      }
     }
 
     setIsCheckoutLoading(true);
+
     try {
+      const payload = {
+        deliveryMethod,
+        address: deliveryMethod === DeliveryMethod.SHIP ? address.trim() : null,
+        shopId: deliveryMethod === DeliveryMethod.PICKUP ? selectedShop : null,
+        voucherCode: voucherCodeFromCart || null,
+      };
+
       const res = await fetch("/api/transactions/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          address,
-          paymentMethod: null,
-          voucherCode: voucherCodeFromCart,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const json = await res.json();
 
-      if (res.ok) {
-        notifications.show({
-          title: "Order Placed!",
-          message: "Redirecting to transactions...",
-          color: "dark",
-          position: "top-left",
-        });
-        setIsDrawerOpen(false);
-        router.push("/my-transaction");
-      } else {
+      if (!res.ok) {
         throw new Error(json.message || "Checkout failed");
       }
+
+      notifications.show({
+        title: "Order Placed!",
+        message: "Redirecting to transactions...",
+        color: "dark",
+        position: "top-left",
+      });
+
+      setIsDrawerOpen(false);
+      router.push("/my-transaction");
     } catch (err: any) {
-      notifications.show({ title: "Checkout Failed", message: err.message, color: "red", position: "top-left" });
+      notifications.show({
+        title: "Checkout Failed",
+        message: err.message,
+        color: "red",
+        position: "top-left",
+      });
     } finally {
       setIsCheckoutLoading(false);
     }
@@ -205,15 +258,91 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
                 size="md"
               />
 
-              <TextInput
-                placeholder="Shipping Address"
-                leftSection={<IconMapPin size={16} stroke={1.5} />}
-                radius="md"
-                size="md"
-                value={address}
-                onChange={(e) => setAddress(e.currentTarget.value)}
-                required
-              />
+              <Stack gap="xs">
+                <Text fw={600} size="sm">
+                  Delivery
+                </Text>
+
+                {/* Toggle */}
+                <Group grow>
+                  <UnstyledButton
+                    onClick={() => setDeliveryMethod(DeliveryMethod.SHIP)}
+                    style={{
+                      width: "100%",
+                      borderRadius: 10,
+                      border: deliveryMethod === DeliveryMethod.SHIP ? "2px solid black" : "1px solid #e9ecef",
+                      background: deliveryMethod === DeliveryMethod.SHIP ? "#fff" : "#f8f9fa",
+                      padding: "10px 12px",
+                    }}
+                  >
+                    <Group justify="center" gap={6}>
+                      <IconTruckDelivery size={18} stroke={1.8} />
+                      <Text size="sm" fw={500}>
+                        Ship
+                      </Text>
+                    </Group>
+                  </UnstyledButton>
+
+                  <UnstyledButton
+                    onClick={() => setDeliveryMethod(DeliveryMethod.PICKUP)}
+                    style={{
+                      width: "100%",
+                      borderRadius: 10,
+                      border: deliveryMethod === DeliveryMethod.PICKUP ? "2px solid black" : "1px solid #e9ecef",
+                      background: deliveryMethod === DeliveryMethod.PICKUP ? "#fff" : "#f8f9fa",
+                      padding: "10px 12px",
+                      transition: "all 0.15s ease",
+                    }}
+                  >
+                    <Group justify="center" gap={6}>
+                      <IconMapPin size={18} stroke={1.8} />
+                      <Text size="sm" fw={500}>
+                        Pickup
+                      </Text>
+                    </Group>
+                  </UnstyledButton>
+                </Group>
+
+                {deliveryMethod === DeliveryMethod.SHIP && (
+                  <TextInput
+                    placeholder="Shipping Address"
+                    radius="md"
+                    size="md"
+                    value={address}
+                    onChange={(e) => setAddress(e.currentTarget.value)}
+                    required
+                  />
+                )}
+
+                {deliveryMethod === DeliveryMethod.PICKUP && (
+                  <Stack gap="xs">
+                    {listShop.map((item) => (
+                      <Box
+                        key={item.id}
+                        onClick={() => setSelectedShop(item.id)}
+                        p="md"
+                        style={{
+                          borderRadius: 12,
+                          cursor: "pointer",
+                          border: selectedShop === item.id ? "2px solid black" : "1px solid #e9ecef",
+                          background: selectedShop === item.id ? "#fff" : "#f8f9fa",
+                        }}
+                      >
+                        <Group justify="space-between" align="flex-start">
+                          <div>
+                            <Text fw={600} size="sm">
+                              {item.name}
+                            </Text>
+                            <Text size="xs" c="dimmed">
+                              {item.address || "No address"}
+                            </Text>
+                          </div>
+                        </Group>
+                      </Box>
+                    ))}
+                  </Stack>
+                )}
+              </Stack>
 
               <Button
                 fullWidth
@@ -222,7 +351,7 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
                 size="lg"
                 onClick={() => handleCheckout(voucherCode)}
                 loading={isCheckoutLoading}
-                disabled={!address}
+                disabled={(deliveryMethod === DeliveryMethod.SHIP && !address.trim()) || (deliveryMethod === DeliveryMethod.PICKUP && !selectedShop)}
                 style={{ height: rem(54) }}
               >
                 CHECKOUT NOW

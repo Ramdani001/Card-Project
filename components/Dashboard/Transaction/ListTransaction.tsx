@@ -29,7 +29,7 @@ const ListTransaction = ({ isNonDashboard = false }: ListTransactionProps) => {
   const [searchInvoice, setSearchInvoice] = useState("");
 
   const [detailOpened, { open: openDetail, close: closeDetail }] = useDisclosure(false);
-  const [selectedTrx, setSelectedTrx] = useState<TransactionDto | null>(null);
+  const [selectedTrx, setSelectedTrx] = useState<TransactionDto>();
 
   const [historyOpened, { open: openHistory, close: closeHistory }] = useDisclosure(false);
   const [historyTrx, setHistoryTrx] = useState<{ id: string; invoice: string } | null>(null);
@@ -231,13 +231,15 @@ const ListTransaction = ({ isNonDashboard = false }: ListTransactionProps) => {
         onFilterChange={() => {}}
       />
 
-      <TransactionDetailModal
-        opened={detailOpened}
-        onClose={closeDetail}
-        transaction={selectedTrx}
-        onUpdateSuccess={fetchTransactions}
-        isNonDashboard={isNonDashboard}
-      />
+      {selectedTrx && (
+        <TransactionDetailModal
+          opened={detailOpened}
+          onClose={closeDetail}
+          transaction={selectedTrx}
+          onUpdateSuccess={fetchTransactions}
+          isNonDashboard={isNonDashboard}
+        />
+      )}
 
       <TransactionHistoryModal
         opened={historyOpened}

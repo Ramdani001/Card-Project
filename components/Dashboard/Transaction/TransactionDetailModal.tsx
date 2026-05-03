@@ -1,9 +1,12 @@
 "use client";
 
-import { ALLOWED_NEXT_STATUS, CONSTANT } from "@/constants";
+import { ALLOWED_NEXT_STATUS } from "@/constants";
+import { DeliveryMethod, TransactionStatus } from "@/prisma/generated/prisma/enums";
+import { TransactionDto } from "@/types/dtos/TransactionDto";
 import { formatDate, formatRupiah } from "@/utils";
 import {
   Badge,
+  Box,
   Button,
   Divider,
   Grid,
@@ -29,7 +32,7 @@ import { useReactToPrint } from "react-to-print";
 interface TransactionDetailProps {
   opened: boolean;
   onClose: () => void;
-  transaction: any;
+  transaction: TransactionDto;
   onUpdateSuccess: () => void;
   isNonDashboard: boolean;
 }
@@ -205,39 +208,99 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
 
         <Grid mb="xl">
           <Grid.Col span={6}>
-            <Text size="xs" c="dimmed" tt="uppercase" fw={700} mb={5}>
-              Billed To
-            </Text>
-            <Text fw={600}>{transaction.user?.name || CONSTANT.ROLE_GUEST_NAME}</Text>
-            <Text size="sm" c="dimmed">
-              {transaction.customerEmail || transaction.user?.email}
-            </Text>
-            <Text size="sm" c="dimmed">
-              {transaction.address || "No Address Provided"}
-            </Text>
+            <Stack gap="md">
+              <Box>
+                <Text size="xs" c="dimmed" tt="uppercase" fw={700} mb={6}>
+                  Billed To
+                </Text>
+
+                <Stack gap={4}>
+                  <Group justify="space-between">
+                    <Text size="xs" c="dimmed">
+                      Name
+                    </Text>
+                    <Text size="xs" fw={500}>
+                      {transaction.user?.name || "-"}
+                    </Text>
+                  </Group>
+
+                  <Group justify="space-between">
+                    <Text size="xs" c="dimmed">
+                      Email
+                    </Text>
+                    <Text size="xs" fw={500}>
+                      {transaction.customerEmail || transaction.user?.email}
+                    </Text>
+                  </Group>
+                </Stack>
+              </Box>
+
+              <Box>
+                <Text size="xs" c="dimmed" tt="uppercase" fw={700} mb={6}>
+                  {transaction.deliveryMethod === "SHIP" ? "Shipping Address" : "Pickup Location"}
+                </Text>
+
+                <Text size="sm" fw={500}>
+                  {transaction.deliveryMethod === "SHIP"
+                    ? transaction.address || "No Address Provided"
+                    : transaction.shop?.name || "No Shop Selected"}
+                </Text>
+
+                {transaction.deliveryMethod === "PICKUP" && transaction.shop?.address && (
+                  <Text size="xs" c="dimmed" mt={2}>
+                    {transaction.shop.address}
+                  </Text>
+                )}
+              </Box>
+            </Stack>
           </Grid.Col>
-          <Grid.Col span={6} style={{ textAlign: "right" }}>
-            <Text size="xs" c="dimmed" tt="uppercase" fw={700} mb={5}>
-              Delivery & Payment
-            </Text>
-            <Text size="sm">
-              <Text span c="dimmed">
-                Expedition:
-              </Text>{" "}
-              {expedition || transaction.expedition || "-"}
-            </Text>
-            <Text size="sm">
-              <Text span c="dimmed">
-                Resi:
-              </Text>{" "}
-              {resi || transaction.resi || "-"}
-            </Text>
-            <Text size="sm" mt={4}>
-              <Text span c="dimmed">
-                Payment:
-              </Text>{" "}
-              {transaction.paymentMethod || "-"}
-            </Text>
+
+          <Grid.Col span={6}>
+            <Stack gap="md" align="flex-end">
+              <Box w="100%">
+                <Text size="xs" c="dimmed" tt="uppercase" fw={700} mb={6}>
+                  Delivery & Payment
+                </Text>
+
+                <Stack gap={4}>
+                  <Group justify="space-between">
+                    <Text size="xs" c="dimmed">
+                      Delivery
+                    </Text>
+                    <Text size="xs" fw={500}>
+                      {transaction.deliveryMethod === DeliveryMethod.PICKUP ? "Pickup" : "Shipping"}
+                    </Text>
+                  </Group>
+
+                  {transaction.deliveryMethod === DeliveryMethod.SHIP && (
+                    <>
+                      <Group justify="space-between">
+                        <Text size="xs" c="dimmed">
+                          Expedition
+                        </Text>
+                        <Text size="xs">{expedition || transaction.expedition || "-"}</Text>
+                      </Group>
+
+                      <Group justify="space-between">
+                        <Text size="xs" c="dimmed">
+                          Resi
+                        </Text>
+                        <Text size="xs">{resi || transaction.resi || "-"}</Text>
+                      </Group>
+                    </>
+                  )}
+
+                  <Group justify="space-between" mt={4}>
+                    <Text size="xs" c="dimmed">
+                      Payment
+                    </Text>
+                    <Text size="xs" fw={500}>
+                      {transaction.paymentMethod || "-"}
+                    </Text>
+                  </Group>
+                </Stack>
+              </Box>
+            </Stack>
           </Grid.Col>
         </Grid>
 
@@ -310,7 +373,7 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
               Total
             </Text>
             <Text size="lg" fw={700} c="blue">
-              {formatRupiah(Number(transaction.totalPrice) + (Number(shippingCost) - (transaction.shippingCost || 0)))}
+              {formatRupiah(Number(transaction.totalPrice) + (Number(shippingCost) - (Number(transaction.shippingCost) || 0)))}
             </Text>
           </Group>
         </Stack>
@@ -367,7 +430,11 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
               autosize
               description="This note will be recorded in the transaction history."
               withAsterisk
-              disabled={transaction.status === "CANCELLED" || transaction.status === "FAILED" || transaction.status === "REFUNDED"}
+              disabled={
+                transaction.status === TransactionStatus.CANCELLED ||
+                transaction.status === TransactionStatus.FAILED ||
+                transaction.status === TransactionStatus.REFUNDED
+              }
             />
           </Stack>
         </Paper>

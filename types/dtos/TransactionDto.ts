@@ -1,4 +1,6 @@
+import { DeliveryMethod, TransactionStatus } from "@/prisma/generated/prisma/enums";
 import { VoucherDto } from "./VoucherDto";
+import { ShopDto } from "./ShopDto";
 
 export interface TransactionItemDto {
   id: string;
@@ -30,7 +32,7 @@ export interface TransactionDto {
   subTotal: string | number;
   voucherAmount: string | number;
   totalPrice: string | number;
-  status: "PENDING" | "PAID" | "PROCESSED" | "SHIPPED" | "COMPLETED" | "CANCELLED" | "FAILED";
+  status: TransactionStatus;
   paymentMethod: string | null;
   snapToken: string | null;
   snapRedirect: string | undefined;
@@ -43,6 +45,10 @@ export interface TransactionDto {
   expedition: string | null;
   resi: string | null;
   shippingCost: string | number;
+  deliveryMethod: DeliveryMethod;
+  shopId: string | null;
+  shop: ShopDto;
+  note: string;
 
   items: TransactionItemDto[];
   statusLogs?: StatusLogDto[];
