@@ -5,11 +5,11 @@ import { IconAlertCircle, IconCheck, IconMailForward } from "@tabler/icons-react
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 
-// 1. Buat Komponen Konten yang menggunakan useSearchParams
 function VerifyOtpContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
+  const shouldResend = searchParams.get("resend") === "true";
 
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
@@ -18,14 +18,22 @@ function VerifyOtpContent() {
   const [success, setSuccess] = useState("");
   const [cooldown, setCooldown] = useState(0);
 
-  // Redirect jika email tidak ada di URL
   useEffect(() => {
     if (!email) {
       router.replace("/login");
     }
   }, [email, router]);
 
-  // Timer untuk Cooldown Resend
+  useEffect(() => {
+    if (shouldResend && email) {
+      handleResend();
+
+      const newUrl = window.location.pathname + `?email=${encodeURIComponent(email)}`;
+      window.history.replaceState({}, "", newUrl);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldResend, email]);
+
   useEffect(() => {
     if (cooldown > 0) {
       const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
@@ -52,11 +60,10 @@ function VerifyOtpContent() {
       if (!res.ok) throw new Error(data.message || "Invalid verification code.");
 
       setSuccess("Account verified successfully! Redirecting...");
-      // Gunakan replace agar user tidak bisa back ke sini lagi
       setTimeout(() => router.replace("/login?verified=true"), 2000);
     } catch (err: any) {
       setError(err.message);
-      setOtp(""); // Reset OTP jika salah
+      setOtp("");
     } finally {
       setLoading(false);
     }
@@ -122,7 +129,6 @@ function VerifyOtpContent() {
                 type="number"
                 value={otp}
                 onChange={setOtp}
-                // UX: Verifikasi otomatis saat digit terakhir diisi
                 onComplete={(value) => handleVerify(value)}
                 radius="xs"
                 oneTimeCode
@@ -191,7 +197,6 @@ function VerifyOtpContent() {
   );
 }
 
-// 2. Export Utama dengan Suspense Boundary
 export default function VerifyOtpPage() {
   return (
     <Suspense

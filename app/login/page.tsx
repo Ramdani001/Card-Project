@@ -45,7 +45,7 @@ export default function LoginPage() {
         if (res.error.includes("PLEASE_VERIFY_EMAIL")) {
           setError("Account not verified. Redirecting to verification...");
           setTimeout(() => {
-            router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
+            router.push(`/verify-otp?email=${encodeURIComponent(email)}&resend=true`);
           }, 2000);
         } else {
           setError("Incorrect email or password!");
