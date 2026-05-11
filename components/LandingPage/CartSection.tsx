@@ -3,13 +3,14 @@
 import { CartItemDto } from "@/types/dtos/CartItemDto";
 import { ShopDto } from "@/types/dtos/ShopDto";
 import { formatRupiah, getCardPrice } from "@/utils";
-import { Box, Button, Center, Drawer, Group, Loader, ScrollArea, Stack, Text, TextInput, UnstyledButton, rem } from "@mantine/core";
+import { Box, Button, Center, Drawer, Group, Loader, ScrollArea, Stack, Text, TextInput, Textarea, UnstyledButton, rem } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconMapPin, IconShoppingCart, IconTicket, IconTruckDelivery } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { CartItemRow } from "../Cart/CartItemRow";
 import { DeliveryMethod } from "@/prisma/generated/prisma/enums";
+import { useSession } from "next-auth/react";
 
 interface CartSectionProps {
   isDrawerOpen: boolean;
@@ -21,9 +22,11 @@ interface CartSectionProps {
 
 export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerOpen, setCartItems }: CartSectionProps) => {
   const router = useRouter();
+  const { data: session } = useSession();
+  const userAddress = session?.user?.address;
 
   const [voucherCode, setVoucherCode] = useState("");
-  const [address, setAddress] = useState("");
+  const [address, setAddress] = useState(userAddress || "");
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const totalAmount = cartItems.reduce((acc, item) => acc + getCardPrice(item) * item.quantity, 0);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -54,7 +57,6 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
   }, []);
 
   const handleCheckout = async (voucherCodeFromCart?: string) => {
-    // ===== VALIDATION =====
     if (deliveryMethod === DeliveryMethod.SHIP) {
       if (!address.trim()) {
         return notifications.show({
@@ -263,7 +265,6 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
                   Delivery
                 </Text>
 
-                {/* Toggle */}
                 <Group grow>
                   <UnstyledButton
                     onClick={() => setDeliveryMethod(DeliveryMethod.SHIP)}
@@ -304,13 +305,17 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
                 </Group>
 
                 {deliveryMethod === DeliveryMethod.SHIP && (
-                  <TextInput
-                    placeholder="Shipping Address"
+                  <Textarea
+                    placeholder="Shipping Address (Street name, House number, District, City, and Postal Code)"
+                    label="Shipping Address"
                     radius="md"
                     size="md"
                     value={address}
                     onChange={(e) => setAddress(e.currentTarget.value)}
                     required
+                    autosize
+                    minRows={3}
+                    maxRows={5}
                   />
                 )}
 

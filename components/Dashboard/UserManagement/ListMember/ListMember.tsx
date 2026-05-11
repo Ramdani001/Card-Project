@@ -6,7 +6,7 @@ import { ActionIcon, Avatar, Badge, Button, Flex, Group, Paper, Text, Title, Too
 import { useDisclosure } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconPencil, IconPhone, IconRefresh, IconTrash, IconUserPlus, IconX } from "@tabler/icons-react";
+import { IconAlertCircle, IconCheck, IconPencil, IconPhone, IconRefresh, IconTrash, IconUserPlus, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { ListMemberForm } from "./ListMemberForm";
 import { UserDto } from "@/types/dtos/UserDto";
@@ -185,6 +185,22 @@ const ListMember = () => {
             Guest
           </Badge>
         ),
+    },
+    {
+      key: "isVerified",
+      label: "Status",
+      sortable: true,
+      render: (item) => {
+        return item.isVerified ? (
+          <Badge color="green" variant="light" radius="xs" leftSection={<IconCheck size={10} />}>
+            Verified
+          </Badge>
+        ) : (
+          <Badge color="red" variant="light" radius="xs" leftSection={<IconAlertCircle size={10} />}>
+            Unverified
+          </Badge>
+        );
+      },
     },
     {
       key: "createdAt",

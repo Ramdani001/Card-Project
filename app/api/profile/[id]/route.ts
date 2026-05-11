@@ -35,6 +35,7 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
     const instagramUrl = formData.get("instagramUrl") as string | undefined;
     const twitterUrl = formData.get("twitterUrl") as string | undefined;
     const password = formData.get("password") as string | undefined;
+    const address = formData.get("address") as string | undefined;
 
     const updatedProfile = await updateProfile({
       userId: id,
@@ -46,6 +47,7 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
       twitterUrl,
       file,
       password,
+      address,
     });
 
     return sendResponse({

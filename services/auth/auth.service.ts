@@ -218,7 +218,18 @@ export const resendOtp = async (email: string) => {
   };
 };
 
-export const updateProfile = async ({ userId, email, name, phone, file, facebookUrl, twitterUrl, instagramUrl, password }: UpdateProfileParams) => {
+export const updateProfile = async ({
+  userId,
+  email,
+  name,
+  phone,
+  file,
+  facebookUrl,
+  twitterUrl,
+  instagramUrl,
+  password,
+  address,
+}: UpdateProfileParams) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
   });
@@ -254,6 +265,7 @@ export const updateProfile = async ({ userId, email, name, phone, file, facebook
         facebookUrl: facebookUrl ?? user.facebookUrl,
         twitterUrl: twitterUrl ?? user.twitterUrl,
         instagramUrl: instagramUrl ?? user.instagramUrl,
+        address: address ?? user.address,
         avatar: newAvatarUrl ?? user.avatar,
         ...(hashedPassword && { password: hashedPassword }),
       },
@@ -297,6 +309,7 @@ export const getProfile = async (userId: string) => {
       facebookUrl: true,
       instagramUrl: true,
       twitterUrl: true,
+      address: true,
       role: {
         select: { name: true },
       },

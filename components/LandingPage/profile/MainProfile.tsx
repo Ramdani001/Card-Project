@@ -16,6 +16,7 @@ import {
   Skeleton,
   Stack,
   Text,
+  Textarea,
   TextInput,
   Title,
 } from "@mantine/core";
@@ -48,6 +49,7 @@ export const MainProfile = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [address, setAddress] = useState("");
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
@@ -68,6 +70,7 @@ export const MainProfile = () => {
           setFacebookUrl(json.data.facebookUrl || "");
           setInstagramUrl(json.data.instagramUrl || "");
           setTwitterUrl(json.data.twitterUrl || "");
+          setAddress(json.data.address || "");
         }
       } catch {
         notifications.show({ title: "Error", message: "Gagal memuat profil", color: "red" });
@@ -116,6 +119,7 @@ export const MainProfile = () => {
       formData.append("facebookUrl", facebookUrl);
       formData.append("instagramUrl", instagramUrl);
       formData.append("twitterUrl", twitterUrl);
+      formData.append("address", address);
       if (file) formData.append("file", file);
       if (password) formData.append("password", password);
 
@@ -247,6 +251,18 @@ export const MainProfile = () => {
                       radius="xs"
                     />
                   </SimpleGrid>
+
+                  <Textarea
+                    label="Address"
+                    placeholder="Your complete address (Street, House No, District, City, etc.)"
+                    styles={inputStyles}
+                    value={address}
+                    onChange={(e) => setAddress(e.currentTarget.value)}
+                    radius="xs"
+                    autosize
+                    minRows={3}
+                    maxRows={6}
+                  />
                 </Paper>
 
                 <Paper p="md" radius="xs" withBorder shadow="sm">

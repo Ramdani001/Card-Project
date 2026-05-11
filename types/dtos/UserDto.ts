@@ -7,6 +7,8 @@ export interface UserDto {
   phone: string | null;
   avatar: string | null;
   roleId: string | null;
+  isVerified: string | null;
+  address: string | null;
   role: RoleDto;
   facebookUrl: string;
   instagramUrl: string;

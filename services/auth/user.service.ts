@@ -38,6 +38,8 @@ const userSelectScope = {
   facebookUrl: true,
   instagramUrl: true,
   twitterUrl: true,
+  isVerified: true,
+  address: true,
   role: {
     select: { id: true, name: true },
   },
