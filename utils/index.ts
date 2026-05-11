@@ -35,3 +35,5 @@ export const getCardStock = (item: CartItemDto) => Number(item.card?.stock || 0)
 export const getCardType = (item: CartItemDto) => item.card?.categories?.[0]?.category?.name || "General";
 export const getCardImage = (item: CartItemDto) => item.card?.images?.[0]?.url || "https://placehold.co/60?text=No+Img";
 export const getCardPrice = (item: CartItemDto) => Number(item.card?.price || 0);
+
+export const generateOtpCode = () => Math.floor(100000 + Math.random() * 900000).toString();

@@ -20,7 +20,9 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Email and password are required");
+        }
 
         const user = await prisma.user.findUnique({
           where: { email: credentials.email },
@@ -35,10 +37,18 @@ export const authOptions: NextAuthOptions = {
           },
         });
 
-        if (!user || !user.password) return null;
+        if (!user || !user.password) {
+          throw new Error("Invalid email or password");
+        }
 
         const isValid = await bcrypt.compare(credentials.password, user.password);
-        if (!isValid) return null;
+        if (!isValid) {
+          throw new Error("Invalid email or password");
+        }
+
+        if (!user.isVerified) {
+          throw new Error("PLEASE_VERIFY_EMAIL");
+        }
 
         const permissions: Record<string, PermissionValueDto> = {};
         user.role?.roleApiAccesses.forEach((access) => {
@@ -67,9 +77,9 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role;
-        token.roleId = user.roleId;
-        token.avatar = user.avatar;
+        token.role = (user as any).role;
+        token.roleId = (user as any).roleId;
+        token.avatar = (user as any).avatar;
         token.permissions = (user as any).permissions;
         token.canAccessDashboard = (user as any).canAccessDashboard;
       }
@@ -91,8 +101,8 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).avatar = token.avatar;
         (session.user as any).permissions = token.permissions;
         (session.user as any).canAccessDashboard = token.canAccessDashboard;
-
         session.user.name = token.name;
+        session.user.email = token.email as string;
       }
 
       return session;
@@ -101,5 +111,6 @@ export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: "/login",
+    error: "/login",
   },
 };

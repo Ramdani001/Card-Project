@@ -1,8 +1,9 @@
 "use client";
 
-import { Box, Button, Center, Container, Loader, Paper, PasswordInput, rem, Stack, Text, TextInput, Title } from "@mantine/core";
+import { Anchor, Box, Button, Center, Container, Group, Loader, Paper, PasswordInput, rem, Stack, Text, TextInput, Title } from "@mantine/core";
 import { IconAlertCircle, IconLock, IconMail } from "@tabler/icons-react";
 import { signIn, useSession } from "next-auth/react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -32,10 +33,23 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
+
     try {
-      const res = await signIn("credentials", { email, password, redirect: false });
+      const res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
       if (res?.error) {
-        setError("Incorrect email or password!");
+        if (res.error.includes("PLEASE_VERIFY_EMAIL")) {
+          setError("Account not verified. Redirecting to verification...");
+          setTimeout(() => {
+            router.push(`/verify-otp?email=${encodeURIComponent(email)}`);
+          }, 2000);
+        } else {
+          setError("Incorrect email or password!");
+        }
       } else {
         router.push("/dashboard/main");
         router.refresh();
@@ -120,6 +134,15 @@ export default function LoginPage() {
               >
                 Sign In
               </Button>
+
+              <Group justify="center" mt="md">
+                <Text size="sm" c="dimmed">
+                  Don`t have an account?{" "}
+                  <Anchor component={Link} href="/register" size="sm" fw={700} c="dark">
+                    Register here
+                  </Anchor>
+                </Text>
+              </Group>
             </Stack>
           </form>
         </Paper>
