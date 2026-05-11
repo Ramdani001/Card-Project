@@ -1,70 +1,89 @@
 "use client";
 
-import { Anchor, Box, Button, Container, Divider, Grid, Group, Stack, Text, TextInput, Title } from "@mantine/core";
+import { ActionIcon, Anchor, Box, Container, Grid, Group, Image, Stack, Text, Title } from "@mantine/core";
+import { IconBrandFacebook, IconBrandInstagram, IconBrandTiktok, IconBrandTwitter, IconBrandYoutube } from "@tabler/icons-react";
+import Link from "next/link";
 
 export const FooterSection = () => {
   return (
-    <Box component="footer" bg="#1a1b1e" c="gray.5" py={60} style={{ borderTop: "4px solid var(--mantine-color-blue-filled)" }}>
+    <Box component="footer" bg="#121212" c="gray.5" py={60}>
       <Container size="xl">
-        <Grid>
-          <Grid.Col span={{ base: 12, md: 4 }}>
-            <Title order={4} c="white" mb="md" style={{ fontFamily: "Impact, sans-serif", letterSpacing: 2 }}>
-              TOKO KARTU
-            </Title>
-            <Text size="sm" maw={300} style={{ lineHeight: 1.6 }}>
-              The ultimate destination for trading card games. We sell singles, sealed products, and accessories for all your favorite games.
-            </Text>
+        <Box mb={40}>
+          <Image src="/toko-kartu-logo.png" alt="Toko Kartu Logo" w={140} bg="white" p={8} radius="sm" />
+        </Box>
+
+        <Grid justify="space-between">
+          <Grid.Col span={{ base: 12, md: 6 }}>
+            <Stack gap="xl">
+              <Box>
+                <Title order={5} c="gray.6" mb="lg" tt="uppercase" lts={1} fw={700}>
+                  TOKO KARTU
+                </Title>
+                <Text size="md" maw={500} c="gray.1" style={{ lineHeight: 1.7 }}>
+                  Your journey in the world of TCG starts here. At Toko Kartu, we are dedicated to providing the best collection and service for every
+                  duelist and collector. Thank you for letting us be part of your winning deck!
+                </Text>
+              </Box>
+
+              <Group gap="md">
+                {[
+                  { icon: IconBrandFacebook, link: "https://www.facebook.com/profile.php?id=61589769803425" },
+                  { icon: IconBrandInstagram, link: "https://www.facebook.com/profile.php?id=61589769803425" },
+                  { icon: IconBrandTwitter, link: "https://www.facebook.com/profile.php?id=61589769803425" },
+                  { icon: IconBrandTiktok, link: "https://www.facebook.com/profile.php?id=61589769803425" },
+                  { icon: IconBrandYoutube, link: "https://www.facebook.com/profile.php?id=61589769803425" },
+                ].map((social, index) => (
+                  <ActionIcon
+                    key={index}
+                    size={45}
+                    radius="xl"
+                    variant="outline"
+                    color="gray.1"
+                    component="a"
+                    target="_blank"
+                    href={social.link}
+                    style={{ border: "1px solid #444" }}
+                  >
+                    <social.icon size={20} stroke={1.5} />
+                  </ActionIcon>
+                ))}
+              </Group>
+            </Stack>
           </Grid.Col>
 
-          <Grid.Col span={{ base: 6, md: 2 }}>
-            <Title order={6} c="white" mb="md" tt="uppercase" lts={1}>
-              Shop
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <Title order={5} c="gray.6" mb="lg" tt="uppercase" lts={1} fw={700}>
+              FOOTER MENU
             </Title>
-            <Stack gap="xs">
-              {["New Arrivals", "Pre-Orders", "On Sale", "Best Sellers"].map((link) => (
-                <Anchor key={link} href="#" size="sm" c="dimmed" underline="hover" style={{ transition: "color 0.2s ease" }}>
-                  {link}
+            <Stack gap="sm">
+              {[
+                { label: "Shipping Policy", href: "/shipping-policy" },
+                { label: "Term of Service", href: "/terms" },
+                { label: "Contact US", href: "/contact" },
+              ].map((link) => (
+                <Anchor
+                  component={Link}
+                  key={link.label}
+                  href={link.href}
+                  c="gray.1"
+                  size="md"
+                  underline="never"
+                  style={{ transition: "opacity 0.2s ease" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.7")}
+                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+                >
+                  {link.label}
                 </Anchor>
               ))}
             </Stack>
           </Grid.Col>
-
-          <Grid.Col span={{ base: 12, md: 4 }} offset={{ md: 2 }}>
-            <Title order={6} c="white" mb="md" tt="uppercase" lts={1}>
-              Stay Connected
-            </Title>
-            <Text size="sm" mb="sm">
-              Subscribe to get special offers and game updates.
-            </Text>
-            <Group gap="xs" align="flex-start">
-              <TextInput
-                placeholder="Email Address"
-                radius="md"
-                style={{ flex: 1 }}
-                styles={{ input: { backgroundColor: "#25262b", border: "none", color: "white" } }}
-              />
-              <Button radius="md" color="blue" variant="filled">
-                JOIN
-              </Button>
-            </Group>
-          </Grid.Col>
         </Grid>
 
-        <Divider my={40} color="gray.8" />
-
-        <Group justify="space-between" wrap="wrap">
+        <Box mt={60} style={{ borderTop: "1px solid #333", paddingTop: "20px" }}>
           <Text size="xs" c="dimmed">
             © 2026 TOKO KARTU. All Rights Reserved.
           </Text>
-          <Group gap="xl">
-            <Anchor href="#" size="xs" c="dimmed" underline="hover">
-              Privacy Policy
-            </Anchor>
-            <Anchor href="#" size="xs" c="dimmed" underline="hover">
-              Terms of Service
-            </Anchor>
-          </Group>
-        </Group>
+        </Box>
       </Container>
     </Box>
   );
