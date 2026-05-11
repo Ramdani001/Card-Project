@@ -626,3 +626,39 @@ export const generateCardTemplate = async () => {
 
   return await workbook.xlsx.writeBuffer();
 };
+
+export const getTopThreeSellingCards = async () => {
+  const topSellers = await prisma.transactionItem.groupBy({
+    by: ["cardId"],
+    _sum: {
+      quantity: true,
+    },
+    orderBy: {
+      _sum: {
+        quantity: "desc",
+      },
+    },
+    take: 3,
+  });
+
+  const cardIds = topSellers.map((item) => item.cardId).filter((id): id is string => id !== null);
+
+  const cards = await prisma.card.findMany({
+    where: {
+      id: { in: cardIds },
+    },
+    include: {
+      images: true,
+      discount: true,
+      categories: {
+        include: { category: true },
+      },
+    },
+  });
+
+  return cards.sort((a, b) => {
+    const qtyA = topSellers.find((item) => item.cardId === a.id)?._sum.quantity || 0;
+    const qtyB = topSellers.find((item) => item.cardId === b.id)?._sum.quantity || 0;
+    return qtyB - qtyA;
+  });
+};
