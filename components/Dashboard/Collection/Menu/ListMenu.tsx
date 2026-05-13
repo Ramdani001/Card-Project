@@ -165,9 +165,20 @@ const ListMenu = () => {
       label: "URL Path",
       sortable: true,
       filterable: true,
+      width: 200,
       render: (item) =>
         item.url ? (
-          <Text size="sm" c="blue">
+          <Text
+            size="sm"
+            c="blue"
+            truncate
+            style={{
+              maxWidth: 200,
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
             {item.url}
           </Text>
         ) : (

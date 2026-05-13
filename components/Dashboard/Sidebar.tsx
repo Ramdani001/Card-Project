@@ -1,27 +1,21 @@
 import { ICON_MAP } from "@/config/menuMapping";
+import { MenuDto } from "@/types/dtos/MenuDto";
 import { ActionIcon, Box, Group, NavLink, Stack, Text } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
 
-interface MenuData {
-  id: string;
-  label: string;
-  url: string | null;
-  icon: string | null;
-  subMenus?: MenuData[];
-}
-
 interface SidebarProps {
-  menus?: MenuData[];
+  menus?: MenuDto[];
   activeMenu: string;
   onMenuClick: (url: string) => void;
   onClose?: () => void;
 }
 
 const Sidebar = ({ menus = [], activeMenu, onMenuClick, onClose }: SidebarProps) => {
-  const renderNav = (item: MenuData, depth = 0) => {
+  const renderNav = (item: MenuDto, depth = 0) => {
     const IconComponent = item.icon ? ICON_MAP[item.icon] : null;
     const subMenus = item.subMenus || [];
     const hasSubMenu = subMenus.length > 0;
+
     const isActive = item.url === activeMenu;
 
     return (

@@ -8,10 +8,22 @@ export const getMenus = async (options: Prisma.MenuFindManyArgs) => {
     parent: true,
     subMenus: {
       orderBy: { order: "asc" },
+      include: {
+        subMenus: {
+          orderBy: { order: "asc" },
+          include: {
+            subMenus: {
+              orderBy: { order: "asc" },
+            },
+          },
+        },
+      },
     },
   };
 
-  const whereClause: Prisma.MenuWhereInput = { ...options.where };
+  const whereClause: Prisma.MenuWhereInput = {
+    ...options.where,
+  };
 
   if (whereClause.parent) {
     const parentFilter = whereClause.parent as any;
@@ -43,10 +55,17 @@ export const getMenus = async (options: Prisma.MenuFindManyArgs) => {
       ...defaultInclude,
       ...((options.include as Prisma.MenuInclude) || {}),
     },
-    orderBy: options.orderBy || { order: "asc" },
+    orderBy: options.orderBy || {
+      order: "asc",
+    },
   };
 
-  const [menus, total] = await Promise.all([prisma.menu.findMany(finalOptions), prisma.menu.count({ where: finalOptions.where })]);
+  const [menus, total] = await Promise.all([
+    prisma.menu.findMany(finalOptions),
+    prisma.menu.count({
+      where: finalOptions.where,
+    }),
+  ]);
 
   return { menus, total };
 };
@@ -54,49 +73,92 @@ export const getMenus = async (options: Prisma.MenuFindManyArgs) => {
 export const getUserMenus = async (userId: string) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { role: { select: { id: true, name: true } } },
+    select: {
+      role: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
   });
 
-  if (!user || !user.role) return [];
+  if (!user?.role) return [];
 
   const roleName = user.role.name;
   const roleId = user.role.id;
 
+  const subMenuIncludeAdmin = {
+    orderBy: { order: "asc" as const },
+    where: { isDashboardMenu: true },
+    include: {
+      subMenus: {
+        orderBy: { order: "asc" as const },
+        where: { isDashboardMenu: true },
+        include: {
+          subMenus: {
+            orderBy: { order: "asc" as const },
+            where: { isDashboardMenu: true },
+          },
+        },
+      },
+    },
+  };
+
+  const subMenuIncludeUser = {
+    orderBy: { order: "asc" as const },
+    where: {
+      roleMenuAccesses: {
+        some: { roleId },
+      },
+    },
+    include: {
+      subMenus: {
+        orderBy: { order: "asc" as const },
+        where: {
+          roleMenuAccesses: {
+            some: { roleId },
+          },
+        },
+        include: {
+          subMenus: {
+            orderBy: { order: "asc" as const },
+            where: {
+              roleMenuAccesses: {
+                some: { roleId },
+              },
+            },
+          },
+        },
+      },
+    },
+  };
+
   if (roleName === CONSTANT.ROLE_ADMIN_NAME) {
-    return await prisma.menu.findMany({
+    return prisma.menu.findMany({
       where: {
         parentId: null,
         isDashboardMenu: true,
       },
       orderBy: { order: "asc" },
       include: {
-        subMenus: {
-          orderBy: { order: "asc" },
-          where: { isDashboardMenu: true },
-        },
-      },
-    });
-  } else {
-    return await prisma.menu.findMany({
-      where: {
-        parentId: null,
-        roleMenuAccesses: {
-          some: { roleId: roleId },
-        },
-      },
-      orderBy: { order: "asc" },
-      include: {
-        subMenus: {
-          where: {
-            roleMenuAccesses: {
-              some: { roleId: roleId },
-            },
-          },
-          orderBy: { order: "asc" },
-        },
+        subMenus: subMenuIncludeAdmin,
       },
     });
   }
+
+  return prisma.menu.findMany({
+    where: {
+      parentId: null,
+      roleMenuAccesses: {
+        some: { roleId },
+      },
+    },
+    orderBy: { order: "asc" },
+    include: {
+      subMenus: subMenuIncludeUser,
+    },
+  });
 };
 
 export const getMenuById = async (id: string) => {

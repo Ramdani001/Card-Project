@@ -1,8 +1,0 @@
-model Shop {
-  id           String        @id @default(uuid())
-  name         String
-  address      String
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  transactions Transaction[]
-}

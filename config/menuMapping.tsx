@@ -8,13 +8,15 @@ import {
   IconHome,
   IconLayoutDashboard,
   IconLayoutGrid,
+  IconLocation,
   IconPhoto,
   IconReceipt2,
   IconSettings,
   IconTicket,
   IconUsers,
   IconUsersGroup,
-  IconUserShield
+  IconUserShield,
+  IconWorld,
 } from "@tabler/icons-react";
 
 import ListArticle from "@/components/Dashboard/Collection/Article/ListArticle";
@@ -30,6 +32,7 @@ import Dashboard from "@/components/Dashboard/Dashboard/Dashboard";
 import ListTransaction from "@/components/Dashboard/Transaction/ListTransaction";
 import ListMember from "@/components/Dashboard/UserManagement/ListMember/ListMember";
 import ListRole from "@/components/Dashboard/UserManagement/ListRole/ListRole";
+import ListCountry from "@/components/Dashboard/Collection/Country/ListCountry";
 
 export const ICON_MAP: Record<string, any> = {
   IconLayoutDashboard: IconLayoutDashboard,
@@ -49,6 +52,8 @@ export const ICON_MAP: Record<string, any> = {
   IconUsersGroup: IconUsersGroup,
   IconArticle: IconArticle,
   IconHome: IconHome,
+  IconWorld: IconWorld,
+  IconLocation: IconLocation,
 };
 
 export const COMPONENT_MAP: Record<string, React.ReactNode> = {
@@ -65,4 +70,5 @@ export const COMPONENT_MAP: Record<string, React.ReactNode> = {
   "/vouchers": <ListVoucher />,
   "/articles": <ListArticle />,
   "/shops": <ListShop />,
+  "/countries": <ListCountry />,
 };

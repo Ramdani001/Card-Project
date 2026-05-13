@@ -1,0 +1,59 @@
+model Country {
+    id        String     @id @default(uuid())
+    name      String     @unique
+    isoCode   String     @unique
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+    provinces Province[]
+}
+
+model Province {
+    id        String   @id @default(uuid())
+    name      String
+    code      String   @unique
+    countryId String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    country   Country  @relation(fields: [countryId], references: [id])
+    cities    City[]
+
+    @@unique([name, countryId])
+}
+
+model City {
+    id           String        @id @default(uuid())
+    name         String
+    code         String        @unique
+    provinceId   String
+    createdAt    DateTime      @default(now())
+    updatedAt    DateTime      @updatedAt
+    province     Province      @relation(fields: [provinceId], references: [id])
+    subDistricts SubDistrict[]
+
+    @@unique([name, provinceId])
+}
+
+model SubDistrict {
+    id        String    @id @default(uuid())
+    name      String
+    code      String    @unique
+    cityId    String
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    city      City      @relation(fields: [cityId], references: [id])
+    villages  Village[]
+
+    @@unique([name, cityId])
+}
+
+model Village {
+    id            String      @id @default(uuid())
+    name          String
+    code          String      @unique
+    subDistrictId String
+    createdAt     DateTime    @default(now())
+    updatedAt     DateTime    @updatedAt
+    subDistrict   SubDistrict @relation(fields: [subDistrictId], references: [id])
+
+    @@unique([name, subDistrictId])
+}

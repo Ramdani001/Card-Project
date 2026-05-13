@@ -1,26 +1,3 @@
-model AppConfig {
-  id        String   @id @default(uuid())
-  key       String   @unique
-  value     String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Menu {
-  id               String           @id @default(uuid())
-  label            String
-  url              String?
-  icon             String?
-  order            Int              @default(0)
-  parentId         String?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  isDashboardMenu  Boolean          @default(true)
-  parent           Menu?            @relation("MenuToSubMenu", fields: [parentId], references: [id], onDelete: Cascade)
-  subMenus         Menu[]           @relation("MenuToSubMenu")
-  roleMenuAccesses RoleMenuAccess[]
-}
-
 model Event {
   id        String       @id @default(uuid())
   title     String
@@ -86,4 +63,80 @@ model ArticleImage {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   article      Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
+}
+
+model Discount {
+  id            String        @id @default(uuid())
+  name          String
+  value         Decimal       @db.Decimal(10, 2)
+  type          DiscountType
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  cards         Card[]
+  cardHistories CardHistory[]
+}
+
+model Voucher {
+  id                    String                @id @default(uuid())
+  code                  String                @unique
+  name                  String
+  description           String?
+  type                  DiscountType
+  value                 Decimal               @db.Decimal(10, 2)
+  minPurchase           Decimal?              @db.Decimal(15, 2)
+  maxDiscount           Decimal?              @db.Decimal(15, 2)
+  stock                 Int?
+  usedCount             Int                   @default(0)
+  startDate             DateTime
+  endDate               DateTime
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  transactions          Transaction[]
+  voucherCardCategories VoucherCardCategory[]
+  voucherCards          VoucherCard[]
+  voucherRoles          VoucherRole[]
+
+  @@index([code])
+  @@index([startDate, endDate])
+}
+
+model VoucherCardCategory {
+  id             String @id @default(uuid())
+  voucherId      String
+  cardCategoryId String
+
+  voucher      Voucher  @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  cardCategory Category @relation(fields: [cardCategoryId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VoucherCard {
+  id        String @id @default(uuid())
+  voucherId String
+  cardId    String
+
+  voucher Voucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  card    Card    @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VoucherRole {
+  id        String @id @default(uuid())
+  voucherId String
+  roleId    String
+
+  voucher Voucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  role    Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum DiscountType {
+  NOMINAL
+  PERCENTAGE
 }

@@ -1,0 +1,31 @@
+model AppConfig {
+    id        String   @id @default(uuid())
+    key       String   @unique
+    value     String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Menu {
+    id               String           @id @default(uuid())
+    label            String
+    url              String?
+    icon             String?
+    order            Int              @default(0)
+    parentId         String?
+    createdAt        DateTime         @default(now())
+    updatedAt        DateTime         @updatedAt
+    isDashboardMenu  Boolean          @default(true)
+    parent           Menu?            @relation("MenuToSubMenu", fields: [parentId], references: [id], onDelete: Cascade)
+    subMenus         Menu[]           @relation("MenuToSubMenu")
+    roleMenuAccesses RoleMenuAccess[]
+}
+
+model Shop {
+    id           String        @id @default(uuid())
+    name         String
+    address      String
+    createdAt    DateTime      @default(now())
+    updatedAt    DateTime      @updatedAt
+    transactions Transaction[]
+}
