@@ -19,26 +19,55 @@ export const generateReceiptHtml = (transaction: TransactionWithDetails): string
       ? `
         <tr>
           <td colspan="2" style="padding: 8px; text-align: right;"><strong>Discount (Voucher):</strong></td>
-          <td style="padding: 8px; text-align: right; color: red;">- ${formatRupiah(Number(transaction.voucherAmount))}</td>
+          <td style="padding: 8px; text-align: right; color: #d9534f;">- ${formatRupiah(Number(transaction.voucherAmount))}</td>
         </tr>
       `
       : "";
 
+  const deliveryInfoHtml =
+    transaction.deliveryMethod === "PICKUP"
+      ? `
+        <div style="background-color: #f0f7ff; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #007bff;">
+          <h4 style="margin: 0 0 5px 0; color: #007bff;">Pickup Information</h4>
+          <p style="margin: 0; font-size: 0.9em;">Please collect your order at: <strong>${transaction.shop?.name || "Main Store"}</strong></p>
+          <p style="margin: 0; font-size: 0.9em; color: #666;">Note: Bring this email as proof of purchase.</p>
+        </div>
+      `
+      : `
+        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #28a745;">
+          <h4 style="margin: 0 0 5px 0; color: #28a745;">Shipping Information</h4>
+          <table style="width: 100%; font-size: 0.9em;">
+            <tr>
+              <td width="100" style="color: #666;">Expedition:</td>
+              <td><strong>${transaction.expedition || "-"}</strong></td>
+            </tr>
+            <tr>
+              <td style="color: #666;">Resi Number:</td>
+              <td><strong>${transaction.resi || "-"}</strong></td>
+            </tr>
+          </table>
+        </div>
+      `;
+
   return `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px;">
-      <h2 style="color: #333; text-align: center;">Payment Receipt</h2>
-      <p>Hi ${transaction.customerName || "Customer"},</p>
-      <p>Thank you for your payment. Here are the details of your transaction:</p>
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; color: #333;">
+      <h2 style="color: #333; text-align: center; border-bottom: 2px solid #eee; padding-bottom: 10px;">Payment Receipt</h2>
       
-      <table style="width: 100%; margin-bottom: 20px;">
+      <p>Hi <strong>${transaction.customerName || "Customer"}</strong>,</p>
+      <p>Thank you for your payment. Your transaction has been processed successfully.</p>
+      
+      <table style="width: 100%; margin-bottom: 20px; font-size: 0.9em;">
         <tr>
           <td><strong>Invoice:</strong> ${transaction.invoice}</td>
           <td style="text-align: right;"><strong>Date:</strong> ${formatDate(transaction.createdAt.toDateString())}</td>
         </tr>
         <tr>
-          <td><strong>Status:</strong> <span style="color: green; font-weight: bold;">${transaction.status}</span></td>
+          <td><strong>Payment:</strong> ${transaction.paymentMethod || "-"}</td>
+          <td style="text-align: right;"><strong>Status:</strong> <span style="color: #28a745; font-weight: bold;">${transaction.status}</span></td>
         </tr>
       </table>
+
+      ${deliveryInfoHtml}
 
       <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
         <thead>
@@ -53,20 +82,32 @@ export const generateReceiptHtml = (transaction: TransactionWithDetails): string
         </tbody>
         <tfoot>
           <tr>
-            <td colspan="2" style="padding: 8px; text-align: right;"><strong>Subtotal:</strong></td>
-            <td style="padding: 8px; text-align: right;">${formatRupiah(Number(transaction.subTotal))}</td>
+            <td colspan="2" style="padding: 15px 8px 8px 8px; text-align: right;">Subtotal:</td>
+            <td style="padding: 15px 8px 8px 8px; text-align: right;">${formatRupiah(Number(transaction.subTotal))}</td>
           </tr>
           ${voucherHtml}
+          ${
+            transaction.shippingCost.gt(0)
+              ? `
           <tr>
-            <td colspan="2" style="padding: 8px; text-align: right; font-size: 1.1em;"><strong>Total Paid:</strong></td>
-            <td style="padding: 8px; text-align: right; font-size: 1.1em;"><strong>${formatRupiah(Number(transaction.totalPrice))}</strong></td>
+            <td colspan="2" style="padding: 8px; text-align: right;">Shipping Cost:</td>
+            <td style="padding: 8px; text-align: right;">${formatRupiah(Number(transaction.shippingCost))}</td>
+          </tr>`
+              : ""
+          }
+          <tr>
+            <td colspan="2" style="padding: 8px; text-align: right; font-size: 1.2em;"><strong>Total Paid:</strong></td>
+            <td style="padding: 8px; text-align: right; font-size: 1.2em; color: #007bff;"><strong>${formatRupiah(Number(transaction.totalPrice))}</strong></td>
           </tr>
         </tfoot>
       </table>
 
-      <p style="font-size: 0.9em; color: #666; text-align: center;">
-        If you have any questions, please contact our support.
-      </p>
+      <div style="text-align: center; border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px;">
+        <p style="font-size: 0.85em; color: #777;">
+          If you have any questions regarding this invoice, please reply to this email or contact our support team.
+        </p>
+        <p style="font-weight: bold; color: #333;">Thank you for shopping with us!</p>
+      </div>
     </div>
   `;
 };

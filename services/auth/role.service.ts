@@ -36,7 +36,7 @@ export const getRoles = async (options: Prisma.RoleFindManyArgs) => {
       cardCategoryRoleAccesses: { select: { categoryId: true, category: true } },
       roleMenuAccesses: { include: { menu: true } },
       roleApiAccesses: {
-        include: { apiEndpoints: true },
+        include: { apiEndpoint: true },
       },
     },
     orderBy: options.orderBy || { createdAt: "desc" },
@@ -54,7 +54,7 @@ export const getRoleById = async (id: string) => {
       _count: { select: { users: true } },
       cardCategoryRoleAccesses: { select: { categoryId: true, category: true } },
       roleMenuAccesses: { include: { menu: true } },
-      roleApiAccesses: { include: { apiEndpoints: true } },
+      roleApiAccesses: { include: { apiEndpoint: true } },
     },
   });
 };
@@ -165,7 +165,7 @@ export const updateRole = async ({ id, name, categoryIds, menuIds, apiAccesses, 
       include: {
         cardCategoryRoleAccesses: { include: { category: true } },
         roleMenuAccesses: { include: { menu: true } },
-        roleApiAccesses: { include: { apiEndpoints: true } },
+        roleApiAccesses: { include: { apiEndpoint: true } },
       },
     });
   });

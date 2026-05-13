@@ -13,7 +13,7 @@ model Notification {
 
   toUser User @relation(fields: [toUserId], references: [id], onDelete: Cascade)
 
-  @@index([toUserId])
+  @@index([toUserId, isRead, createdAt])
 }
 
 model RoleNotification {

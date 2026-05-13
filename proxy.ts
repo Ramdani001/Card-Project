@@ -23,14 +23,14 @@ export default withAuth(
       const guestRoleData = await prisma.role.findUnique({
         where: { name: CONSTANT.ROLE_GUEST_NAME },
         include: {
-          roleApiAccesses: { include: { apiEndpoints: true } },
+          roleApiAccesses: { include: { apiEndpoint: true } },
         },
       });
 
       if (guestRoleData) {
         guestRoleData.roleApiAccesses.forEach((access) => {
-          if (access.apiEndpoints?.url) {
-            permissions[access.apiEndpoints.url] = {
+          if (access.apiEndpoint?.url) {
+            permissions[access.apiEndpoint.url] = {
               GET: access.canRead,
               POST: access.canCreate,
               PATCH: access.canUpdate,

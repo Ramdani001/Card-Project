@@ -30,7 +30,7 @@ export const authOptions: NextAuthOptions = {
             role: {
               include: {
                 roleApiAccesses: {
-                  include: { apiEndpoints: true },
+                  include: { apiEndpoint: true },
                 },
               },
             },
@@ -52,7 +52,7 @@ export const authOptions: NextAuthOptions = {
 
         const permissions: Record<string, PermissionValueDto> = {};
         user.role?.roleApiAccesses.forEach((access) => {
-          permissions[access.apiEndpoints.url] = {
+          permissions[access.apiEndpoint.url] = {
             GET: access.canRead,
             POST: access.canCreate,
             PATCH: access.canUpdate,

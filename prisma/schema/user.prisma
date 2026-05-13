@@ -19,7 +19,7 @@ model CardCategoryRoleAccess {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   category   Category @relation(fields: [categoryId], references: [id])
-  role       Role     @relation(fields: [roleId], references: [id])
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, categoryId])
 }
@@ -31,7 +31,7 @@ model RoleMenuAccess {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   menu      Menu     @relation(fields: [menuId], references: [id])
-  role      Role     @relation(fields: [roleId], references: [id])
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, menuId])
 }
@@ -46,10 +46,11 @@ model RoleApiAccess {
   canDelete     Boolean     @default(false)
   canRead       Boolean     @default(false)
   canUpdate     Boolean     @default(false)
-  apiEndpoints  ApiEndpoint @relation(fields: [apiEndpointId], references: [id])
-  role          Role        @relation(fields: [roleId], references: [id])
+  apiEndpoint   ApiEndpoint @relation(fields: [apiEndpointId], references: [id])
+  role          Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, apiEndpointId])
+  @@index([roleId])
 }
 
 model ApiEndpoint {
@@ -86,17 +87,18 @@ model User {
 }
 
 model Otp {
-  id     String @id @default(uuid())
+  id     String  @id @default(uuid())
   code   String
   userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  type OtpType @default(REGISTRATION)
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isUsed Boolean @default(false)
+  type   OtpType @default(REGISTRATION)
 
   expiresAt DateTime
   createdAt DateTime @default(now())
 
   @@index([userId])
+  @@index([code])
 }
 
 enum OtpType {

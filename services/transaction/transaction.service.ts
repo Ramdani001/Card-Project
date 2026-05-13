@@ -264,7 +264,7 @@ export const updateTransactionStatus = async (
     const updatedTransaction = await tx.transaction.update({
       where: { id: transactionId },
       data: updateData,
-      include: { items: true, user: true, voucher: true },
+      include: { items: true, user: true, voucher: true, shop: true },
     });
 
     await tx.transactionStatusLog.create({

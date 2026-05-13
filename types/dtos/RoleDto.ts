@@ -28,7 +28,7 @@ export interface RoleDto {
     canCreate: boolean;
     canUpdate: boolean;
     canDelete: boolean;
-    apiEndpoints: { url: string; description?: string };
+    apiEndpoint: { url: string; description?: string };
   }[];
   _count?: {
     users: number;

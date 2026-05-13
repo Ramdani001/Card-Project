@@ -67,7 +67,7 @@ export const RoleFormModal = ({ opened, onClose, role, onSuccess }: RoleFormModa
         setSelectedMenus(menuIds);
         setApiPermissions(
           role.roleApiAccesses?.map((a) => ({
-            url: a.apiEndpoints.url,
+            url: a.apiEndpoint.url,
             canRead: a.canRead,
             canCreate: a.canCreate,
             canUpdate: a.canUpdate,

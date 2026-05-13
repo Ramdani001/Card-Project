@@ -159,7 +159,7 @@ const ListRole = () => {
                   return (
                     <Tooltip key={idx} label={`Permissions: ${crud}`} withArrow>
                       <Badge variant="dot" color="indigo" size="sm" tt="none">
-                        {access.apiEndpoints.url}
+                        {access.apiEndpoint.url}
                       </Badge>
                     </Tooltip>
                   );

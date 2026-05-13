@@ -49,7 +49,7 @@ model CardHistory {
   changeType     String?
   createdAt      DateTime  @default(now())
   card           Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  user           User?     @relation(fields: [changedBy], references: [id])
+  user           User?     @relation(fields: [changedBy], references: [id], onDelete: SetNull)
   discount       Discount? @relation(fields: [discountId], references: [id])
 }
 
@@ -108,6 +108,9 @@ model Voucher {
   voucherCardCategories VoucherCardCategory[]
   voucherCards          VoucherCard[]
   voucherRoles          VoucherRole[]
+
+  @@index([code])
+  @@index([startDate, endDate])
 }
 
 model VoucherCardCategory {
