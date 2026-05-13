@@ -1,23 +1,5 @@
 import prisma from "@/lib/prisma";
-import { NotificationType } from "@/prisma/generated/prisma/enums";
-
-type CreateNotificationParams = {
-  toUserId: string;
-  title: string;
-  message: string;
-  type: NotificationType;
-  url?: string;
-  metadata?: any;
-};
-
-type CreateNotificationByCodeParams = {
-  notificationCode: string;
-  title: string;
-  message: string;
-  type: NotificationType;
-  url?: string | null;
-  metadata?: any;
-};
+import { CreateNotificationByCodeParams, CreateNotificationParams } from "@/types/params/notificationParams";
 
 export async function createNotificationByCode(params: CreateNotificationByCodeParams) {
   const roleNotifications = await prisma.roleNotification.findMany({

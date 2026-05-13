@@ -1,15 +1,5 @@
 import prisma from "@/lib/prisma";
-
-interface AddToCartParams {
-  userId: string;
-  cardId: string;
-  quantity: number;
-}
-
-interface UpdateCartItemParams {
-  itemId: string;
-  quantity: number;
-}
+import { AddToCartParams, UpdateCartItemParams } from "@/types/params/cartParams";
 
 export const getCartByUserId = async (userId: string) => {
   const cart = await prisma.cart.findFirst({

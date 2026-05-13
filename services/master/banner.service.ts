@@ -2,21 +2,7 @@ import { deleteFile, saveFile } from "@/helpers/file.helper";
 import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
-
-interface CreateBannerParams {
-  link?: string | null;
-  startDate: Date;
-  endDate: Date;
-  file: File;
-}
-
-interface UpdateBannerParams {
-  id: string;
-  link?: string | null;
-  startDate?: Date;
-  endDate?: Date;
-  file?: File | null;
-}
+import { CreateBannerParams, UpdateBannerParams } from "@/types/params/bannerParams";
 
 export const getBanners = async (options: Prisma.BannerImageFindManyArgs) => {
   const finalOptions: Prisma.BannerImageFindManyArgs = {

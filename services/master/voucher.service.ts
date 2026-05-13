@@ -1,39 +1,6 @@
 import prisma from "@/lib/prisma";
-import { Prisma, VoucherCard, VoucherCardCategory, VoucherRole } from "@/prisma/generated/prisma/client";
-import { DiscountType } from "@/prisma/generated/prisma/enums";
-
-interface CreateVoucherParams {
-  code: string;
-  name: string;
-  description?: string;
-  type: DiscountType;
-  value: number;
-  minPurchase?: number;
-  maxDiscount?: number;
-  voucherCardCategories: VoucherCardCategory[];
-  voucherCards: VoucherCard[];
-  voucherRoles: VoucherRole[];
-  stock?: number;
-  startDate: Date | string;
-  endDate: Date | string;
-}
-
-interface UpdateVoucherParams {
-  id: string;
-  code?: string;
-  name?: string;
-  description?: string;
-  type?: DiscountType;
-  value?: number;
-  minPurchase?: number;
-  maxDiscount?: number;
-  voucherCardCategories: VoucherCardCategory[];
-  voucherCards: VoucherCard[];
-  voucherRoles: VoucherRole[];
-  stock?: number;
-  startDate?: Date | string;
-  endDate?: Date | string;
-}
+import { Prisma } from "@/prisma/generated/prisma/client";
+import { CreateVoucherParams, UpdateVoucherParams } from "@/types/params/voucherParams";
 
 export const getVouchers = async (options: Prisma.VoucherFindManyArgs) => {
   const finalOptions: Prisma.VoucherFindManyArgs = {

@@ -1,25 +1,7 @@
 import { CONSTANT } from "@/constants";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
-
-interface CreateMenuParams {
-  label: string;
-  url?: string;
-  icon?: string;
-  order?: number;
-  parentId?: string | null;
-  isDashboardMenu: boolean;
-}
-
-interface UpdateMenuParams {
-  id: string;
-  label?: string;
-  url?: string;
-  icon?: string;
-  order?: number;
-  parentId?: string | null;
-  isDashboardMenu: boolean;
-}
+import { CreateMenuParams, UpdateMenuParams } from "@/types/params/menuParams";
 
 export const getMenus = async (options: Prisma.MenuFindManyArgs) => {
   const defaultInclude: Prisma.MenuInclude = {

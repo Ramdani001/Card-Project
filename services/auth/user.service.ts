@@ -3,31 +3,7 @@ import { hashPassword } from "@/helpers/auth.helper";
 import { Prisma } from "@/prisma/generated/prisma/client";
 import { deleteFile, saveFile } from "@/helpers/file.helper";
 import { logError } from "@/lib/logger";
-
-interface CreateUserParams {
-  name: string;
-  email: string;
-  password: string;
-  phone?: string;
-  roleId?: string;
-  facebookUrl?: string;
-  instagramUrl?: string;
-  twitterUrl?: string;
-  file?: File | null;
-}
-
-interface UpdateUserParams {
-  id: string;
-  name?: string;
-  email?: string;
-  password?: string;
-  phone?: string;
-  roleId?: string;
-  facebookUrl?: string;
-  instagramUrl?: string;
-  twitterUrl?: string;
-  file?: File | null;
-}
+import { CreateUserParams, UpdateUserParams } from "@/types/params/userParams";
 
 const userSelectScope = {
   id: true,

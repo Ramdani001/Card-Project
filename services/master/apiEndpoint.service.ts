@@ -1,16 +1,6 @@
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
-
-interface CreateApiEndpointParams {
-  url: string;
-  description?: string;
-}
-
-interface UpdateApiEndpointParams {
-  id: string;
-  url?: string;
-  description?: string;
-}
+import { CreateApiEndpointParams, UpdateApiEndpointParams } from "@/types/params/apiEndpointParams";
 
 export const getApiEndpoints = async (options: Prisma.ApiEndpointFindManyArgs) => {
   const finalOptions: Prisma.ApiEndpointFindManyArgs = {

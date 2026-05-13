@@ -2,25 +2,8 @@ import { deleteFile, saveFile } from "@/helpers/file.helper";
 import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
+import { CreateEventParams, UpdateEventParams } from "@/types/params/eventParams";
 import { generateSlug } from "@/utils";
-
-interface CreateEventParams {
-  title: string;
-  content: string;
-  startDate: Date;
-  endDate: Date;
-  files: File[];
-}
-
-interface UpdateEventParams {
-  id: string;
-  title?: string;
-  content?: string;
-  startDate?: Date;
-  endDate?: Date;
-  files?: File[];
-  removedImageIds: string[];
-}
 
 export const getEvents = async (options: Prisma.EventFindManyArgs) => {
   const finalOptions: Prisma.EventFindManyArgs = {

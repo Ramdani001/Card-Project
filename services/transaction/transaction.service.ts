@@ -1,35 +1,11 @@
+import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
-import { createPaymentToken } from "./payment.service";
-import { DeliveryMethod, DiscountType, NotificationType, Prisma, TransactionStatus } from "@/prisma/generated/prisma/client";
+import { DiscountType, NotificationType, Prisma, TransactionStatus } from "@/prisma/generated/prisma/client";
+import { CreateTransactionParams, GetTransactionParams, ShipTransactionParams } from "@/types/params/transactionParams";
 import { sendTransactionReceipt } from "../system/email.service";
 import { createNotificationByCode } from "./notification.service";
-import { logError } from "@/lib/logger";
-
-interface CreateTransactionParams {
-  userId: string;
-  customerName?: string;
-  customerEmail?: string;
-  voucherCode?: string;
-  shopId?: string;
-  deliveryMethod: DeliveryMethod;
-  address: string;
-  paymentMethod?: string;
-}
-
-interface GetTransactionParams {
-  skip?: number;
-  take?: number;
-  orderBy?: Prisma.TransactionOrderByWithRelationInput;
-  where?: Prisma.TransactionWhereInput;
-}
-
-interface ShipTransactionParams {
-  resi: string;
-  expedition: string;
-  shippingCost?: number;
-}
-
-const FAILED_STATUSES: TransactionStatus[] = [TransactionStatus.CANCELLED, TransactionStatus.FAILED, TransactionStatus.EXPIRED];
+import { createPaymentToken } from "./payment.service";
+import { FAILED_STATUSES } from "@/constants";
 
 export const checkout = async (params: CreateTransactionParams) => {
   const { userId, customerName, customerEmail, shopId, deliveryMethod, voucherCode, address } = params;

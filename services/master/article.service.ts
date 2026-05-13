@@ -2,21 +2,8 @@ import { deleteFile, saveFile } from "@/helpers/file.helper";
 import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
+import { CreateArticleParams, UpdateArticleParams } from "@/types/params/articleParams";
 import { generateSlug } from "@/utils";
-
-interface CreateArticleParams {
-  title: string;
-  content: string;
-  files: File[];
-}
-
-interface UpdateArticleParams {
-  id: string;
-  title?: string;
-  content?: string;
-  files?: File[];
-  removedImageIds: string[];
-}
 
 export const getArticles = async (options: Prisma.ArticleFindManyArgs) => {
   const finalOptions: Prisma.ArticleFindManyArgs = {

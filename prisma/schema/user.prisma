@@ -75,7 +75,6 @@ model User {
   instagramUrl  String?
   twitterUrl    String?
   isVerified    Boolean        @default(false)
-  otpExpiresAt  DateTime?
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   cardHistories CardHistory[]
@@ -91,7 +90,6 @@ model Otp {
   code   String
   userId String
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  isUsed Boolean @default(false)
   type   OtpType @default(REGISTRATION)
 
   expiresAt DateTime

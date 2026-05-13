@@ -1,32 +1,7 @@
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
 import { deleteUnusedApiEndpoints } from "../master/apiEndpoint.service";
-
-export interface ApiAccessInput {
-  url: string;
-  description?: string;
-  canRead: boolean;
-  canCreate: boolean;
-  canUpdate: boolean;
-  canDelete: boolean;
-}
-
-interface CreateRoleParams {
-  name: string;
-  canAccessDashboard: boolean;
-  categoryIds?: string[];
-  menuIds?: string[];
-  apiAccesses?: ApiAccessInput[];
-}
-
-interface UpdateRoleParams {
-  id: string;
-  name?: string;
-  canAccessDashboard: boolean;
-  categoryIds?: string[];
-  menuIds?: string[];
-  apiAccesses?: ApiAccessInput[];
-}
+import { CreateRoleParams, UpdateRoleParams } from "@/types/params/roleParams";
 
 export const getRoles = async (options: Prisma.RoleFindManyArgs) => {
   const finalOptions: Prisma.RoleFindManyArgs = {

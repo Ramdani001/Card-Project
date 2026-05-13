@@ -3,20 +3,8 @@ import { deleteFile, saveFile } from "@/helpers/file.helper";
 import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
+import { CreateCategoryParams, UpdateCategoryParams } from "@/types/params/categoryParams";
 import { generateSlug } from "@/utils";
-
-interface CreateCategoryParams {
-  name: string;
-  note?: string;
-  file?: File | null;
-}
-
-interface UpdateCategoryParams {
-  id: string;
-  name?: string;
-  note?: string;
-  file?: File | null;
-}
 
 export const getCategories = async (options: Prisma.CategoryFindManyArgs, userId?: string) => {
   let roleSecurityFilter: Prisma.CategoryWhereInput = {};

@@ -5,31 +5,7 @@ import { logError } from "@/lib/logger";
 import { generateOtpCode } from "@/utils";
 import { sendOtpEmail } from "../system/email.service";
 import { OtpType } from "@/prisma/generated/prisma/enums";
-
-interface RegisterParams {
-  email: string;
-  password: string;
-  name?: string;
-  phone?: string;
-  address?: string;
-  facebookUrl?: string;
-  instagramUrl?: string;
-  twitterUrl?: string;
-  file?: File | null;
-}
-
-interface UpdateProfileParams {
-  userId: string;
-  email?: string;
-  name?: string;
-  phone?: string;
-  address?: string;
-  facebookUrl?: string;
-  instagramUrl?: string;
-  twitterUrl?: string;
-  file?: File | null;
-  password?: string;
-}
+import { RegisterParams, UpdateProfileParams } from "@/types/params/authParams";
 
 export const register = async ({ email, password, name, phone, address, file, facebookUrl, instagramUrl, twitterUrl }: RegisterParams) => {
   const existingUser = await prisma.user.findUnique({

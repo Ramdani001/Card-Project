@@ -1,17 +1,7 @@
 import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
-
-interface CreateShopParams {
-  name: string;
-  address: string;
-}
-
-interface UpdateShopParams {
-  id: string;
-  name?: string;
-  address?: string;
-}
+import { CreateShopParams, UpdateShopParams } from "@/types/params/shopParams";
 
 export const getShops = async (options: Prisma.ShopFindManyArgs) => {
   const finalOptions: Prisma.ShopFindManyArgs = {

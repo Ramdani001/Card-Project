@@ -1,18 +1,6 @@
 import prisma from "@/lib/prisma";
-import { DiscountType, Prisma } from "@/prisma/generated/prisma/client";
-
-interface CreateDiscountParams {
-  name: string;
-  value: number;
-  type: DiscountType;
-}
-
-interface UpdateDiscountParams {
-  id: string;
-  name?: string;
-  value?: number;
-  type?: DiscountType;
-}
+import { Prisma } from "@/prisma/generated/prisma/client";
+import { CreateDiscountParams, UpdateDiscountParams } from "@/types/params/discountParams";
 
 export const getDiscounts = async (options: Prisma.DiscountFindManyArgs) => {
   const finalOptions: Prisma.DiscountFindManyArgs = {

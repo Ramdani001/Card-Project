@@ -6,35 +6,7 @@ import ExcelJS from "exceljs";
 import { createNotificationByCode } from "../transaction/notification.service";
 import { CONSTANT } from "@/constants";
 import { logError } from "@/lib/logger";
-
-interface CreateCardParams {
-  name: string;
-  price: number;
-  stock: number;
-  categoryIds: string[];
-  discountId?: string | null;
-  description?: string;
-  minQtyPurchase?: number | null;
-  maxQtyPurchase?: number | null;
-  sku?: string;
-  file: File;
-  userId: string;
-}
-
-interface UpdateCardParams {
-  id: string;
-  name?: string;
-  price?: number;
-  stock?: number;
-  categoryIds?: string[];
-  discountId?: string | null;
-  description?: string;
-  minQtyPurchase?: number | null;
-  maxQtyPurchase?: number | null;
-  sku?: string;
-  file?: File | null;
-  userId: string;
-}
+import { CreateCardParams, UpdateCardParams } from "@/types/params/cardParams";
 
 export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string) => {
   const defaultInclude: Prisma.CardInclude = {
