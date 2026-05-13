@@ -26,7 +26,7 @@ export const CountryForm = ({ opened, onClose, countryToEdit, onSuccess }: Count
     if (countryToEdit) {
       setForm({
         name: countryToEdit.name,
-        isoCode: countryToEdit.isoCode || "",
+        isoCode: countryToEdit.isoCode,
       });
     } else {
       setForm({

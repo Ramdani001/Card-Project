@@ -5,7 +5,6 @@ export interface CreateProvinceParams {
 }
 
 export interface UpdateProvinceParams {
-  id: string;
   name?: string;
   code?: string;
   countryId?: string;

@@ -33,6 +33,7 @@ import ListTransaction from "@/components/Dashboard/Transaction/ListTransaction"
 import ListMember from "@/components/Dashboard/UserManagement/ListMember/ListMember";
 import ListRole from "@/components/Dashboard/UserManagement/ListRole/ListRole";
 import ListCountry from "@/components/Dashboard/Collection/Country/ListCountry";
+import ListProvince from "@/components/Dashboard/Collection/Province/ListProvince";
 
 export const ICON_MAP: Record<string, any> = {
   IconLayoutDashboard: IconLayoutDashboard,
@@ -71,4 +72,5 @@ export const COMPONENT_MAP: Record<string, React.ReactNode> = {
   "/articles": <ListArticle />,
   "/shops": <ListShop />,
   "/countries": <ListCountry />,
+  "/provincies": <ListProvince />,
 };

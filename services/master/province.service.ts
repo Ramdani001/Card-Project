@@ -10,6 +10,9 @@ export const getProvincies = async (options: Prisma.ProvinceFindManyArgs) => {
       ...options.where,
     },
     orderBy: options.orderBy || { name: "asc" },
+    include: {
+      country: true,
+    },
   };
 
   const [provincies, total] = await Promise.all([prisma.province.findMany(finalOptions), prisma.province.count({ where: finalOptions.where })]);
@@ -40,17 +43,17 @@ export const createProvince = async (params: CreateProvinceParams) => {
   }
 };
 
-export const updateProvince = async (params: UpdateProvinceParams) => {
-  const { id, name, code, countryId } = params;
+export const updateProvince = async (id: string, params: UpdateProvinceParams) => {
+  const { name, code, countryId } = params;
 
-  const existingProvince = await prisma.shop.findUnique({
+  const existingProvince = await prisma.province.findUnique({
     where: { id },
   });
 
   if (!existingProvince) throw new Error("Province not found");
 
   try {
-    const updated = await prisma.shop.update({
+    const updated = await prisma.province.update({
       where: { id },
       data: {
         ...(name && { name }),

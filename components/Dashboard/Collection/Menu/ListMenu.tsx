@@ -3,7 +3,7 @@
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
 import { MenuDto } from "@/types/dtos/MenuDto";
 import { PaginationMetaDataDto } from "@/types/dtos/PaginationMetaDataDto";
-import { ActionIcon, Badge, Button, Code, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Badge, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
@@ -138,27 +138,8 @@ const ListMenu = () => {
       label: "Label",
       sortable: true,
       filterable: true,
+      width: 250,
       render: (item) => <Text fw={500}>{item.label}</Text>,
-    },
-    {
-      key: "icon",
-      label: "Icon",
-      sortable: true,
-      filterable: true,
-      width: 120,
-      render: (item) => (item.icon ? <Code>{item.icon}</Code> : <Text c="dimmed">-</Text>),
-    },
-    {
-      key: "order",
-      label: "Order",
-      sortable: true,
-      filterable: true,
-      width: 80,
-      render: (item) => (
-        <Badge variant="outline" color="gray">
-          {item.order}
-        </Badge>
-      ),
     },
     {
       key: "url",
@@ -192,7 +173,7 @@ const ListMenu = () => {
       label: "Dashboard Menu",
       sortable: true,
       filterable: true,
-      width: 150,
+      width: 200,
       render: (item) => (
         <Badge
           variant="light"
@@ -208,6 +189,7 @@ const ListMenu = () => {
       label: "Parent",
       sortable: true,
       filterable: true,
+      width: 200,
       render: (item) =>
         item.parent ? (
           <Badge color="cyan" variant="light">
@@ -220,23 +202,16 @@ const ListMenu = () => {
         ),
     },
     {
-      key: "subMenus",
-      label: "Children",
+      key: "order",
+      label: "Order",
       sortable: true,
-      filterable: false,
-      width: 100,
-      render: (item) => {
-        const count = item.subMenus?.length || 0;
-        return count > 0 ? (
-          <Badge circle color="teal">
-            {count}
-          </Badge>
-        ) : (
-          <Text size="xs" c="dimmed">
-            -
-          </Text>
-        );
-      },
+      filterable: true,
+      width: 80,
+      render: (item) => (
+        <Badge variant="outline" color="gray">
+          {item.order}
+        </Badge>
+      ),
     },
     {
       key: "actions",
