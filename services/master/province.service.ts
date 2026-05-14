@@ -1,7 +1,7 @@
 import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
-import { CreateProvinceParams, UpdateProvinceParams } from "@/types/params/provinceParams";
+import { CreateProvinceParams, ProvinceApiResponse, UpdateProvinceParams } from "@/types/params/provinceParams";
 
 export const getProvincies = async (options: Prisma.ProvinceFindManyArgs) => {
   const finalOptions: Prisma.ProvinceFindManyArgs = {
@@ -85,4 +85,65 @@ export const deleteProvince = async (id: string) => {
   });
 
   return deletedProvince;
+};
+
+export const syncProvincesFromApi = async () => {
+  try {
+    const country = await prisma.country.findFirst({
+      where: {
+        name: {
+          equals: "Indonesia",
+          mode: "insensitive",
+        },
+      },
+    });
+
+    if (!country) {
+      throw new Error("Master country Indonesia not found.");
+    }
+
+    const response = await fetch("https://wilayah.id/api/provinces.json", {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch provinces: ${response.status}`);
+    }
+
+    const result: ProvinceApiResponse = await response.json();
+
+    if (!Array.isArray(result.data)) {
+      throw new Error("Invalid provinces response.");
+    }
+
+    const synced = await Promise.all(
+      result.data.map((province) =>
+        prisma.province.upsert({
+          where: {
+            code: province.code,
+          },
+          update: {
+            name: province.name,
+            countryId: country.id,
+          },
+          create: {
+            code: province.code,
+            name: province.name,
+            countryId: country.id,
+          },
+        })
+      )
+    );
+
+    return {
+      success: true,
+      total: synced.length,
+      updatedAt: result.meta.updated_at,
+      data: synced,
+    };
+  } catch (error) {
+    logError("ProvinceService.syncProvincesFromApi", error);
+    throw error;
+  }
 };

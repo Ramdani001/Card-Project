@@ -9,3 +9,10 @@ export interface UpdateCityParams {
   code?: string;
   provinceId?: string;
 }
+
+export type CityApiResponse = {
+  data: {
+    code: string;
+    name: string;
+  }[];
+};
