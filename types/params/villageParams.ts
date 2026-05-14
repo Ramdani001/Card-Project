@@ -9,3 +9,10 @@ export interface UpdateVillageParams {
   code?: string;
   subDistrictId?: string;
 }
+
+export type VillageApiResponse = {
+  data: {
+    code: string;
+    name: string;
+  }[];
+};
