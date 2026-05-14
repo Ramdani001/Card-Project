@@ -10,6 +10,7 @@ export const getSubDistricts = async (options: Prisma.SubDistrictFindManyArgs) =
       ...options.where,
     },
     orderBy: options.orderBy || { name: "asc" },
+    include: { city: true },
   };
 
   const [subDistricts, total] = await Promise.all([
@@ -23,11 +24,14 @@ export const getSubDistricts = async (options: Prisma.SubDistrictFindManyArgs) =
 export const getSubDistrictById = async (id: string) => {
   return await prisma.subDistrict.findUnique({
     where: { id },
+    include: { city: true },
   });
 };
 
 export const createSubDistrict = async (params: CreateSubDistrictParams) => {
   const { name, code, cityId } = params;
+
+  if (!cityId) throw new Error("City cannot empty.");
 
   try {
     return await prisma.subDistrict.create({
@@ -45,6 +49,8 @@ export const createSubDistrict = async (params: CreateSubDistrictParams) => {
 
 export const updateSubDistrict = async (id: string, params: UpdateSubDistrictParams) => {
   const { name, code, cityId } = params;
+
+  if (!cityId) throw new Error("City cannot empty.");
 
   const existingSubDistrict = await prisma.subDistrict.findUnique({
     where: { id },

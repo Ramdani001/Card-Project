@@ -10,6 +10,7 @@ export const getCities = async (options: Prisma.CityFindManyArgs) => {
       ...options.where,
     },
     orderBy: options.orderBy || { name: "asc" },
+    include: { province: true },
   };
 
   const [cities, total] = await Promise.all([prisma.city.findMany(finalOptions), prisma.city.count({ where: finalOptions.where })]);
@@ -20,11 +21,14 @@ export const getCities = async (options: Prisma.CityFindManyArgs) => {
 export const getCityById = async (id: string) => {
   return await prisma.city.findUnique({
     where: { id },
+    include: { province: true },
   });
 };
 
 export const createCity = async (params: CreateCityParams) => {
   const { name, code, provinceId } = params;
+
+  if (!provinceId) throw new Error("Province cannot empty.");
 
   try {
     return await prisma.city.create({
@@ -42,6 +46,8 @@ export const createCity = async (params: CreateCityParams) => {
 
 export const updateCity = async (id: string, params: UpdateCityParams) => {
   const { name, code, provinceId } = params;
+
+  if (!provinceId) throw new Error("Province cannot empty.");
 
   const existingCity = await prisma.city.findUnique({
     where: { id },

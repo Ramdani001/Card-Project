@@ -29,6 +29,8 @@ export const getProvinceById = async (id: string) => {
 export const createProvince = async (params: CreateProvinceParams) => {
   const { name, code, countryId } = params;
 
+  if (!countryId) throw new Error("Country cannot empty.");
+
   try {
     return await prisma.province.create({
       data: {
@@ -45,6 +47,8 @@ export const createProvince = async (params: CreateProvinceParams) => {
 
 export const updateProvince = async (id: string, params: UpdateProvinceParams) => {
   const { name, code, countryId } = params;
+
+  if (!countryId) throw new Error("Country cannot empty.");
 
   const existingProvince = await prisma.province.findUnique({
     where: { id },

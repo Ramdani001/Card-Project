@@ -26,81 +26,139 @@ export const sendResponse = <T>({ success, message, data, metadata, error, statu
     { status }
   );
 };
+type ApiErrorResponse = {
+  success: false;
+  message: string;
+  error?: unknown;
+};
 
-export const handleApiError = (err: any) => {
-  console.error("API_ERROR_LOG:", err);
+const isDev = process.env.NODE_ENV === "development";
 
-  if (err instanceof Prisma.PrismaClientKnownRequestError) {
-    switch (err.code) {
-      case "P2002":
-        const target = (err.meta?.target as string[])?.join(", ") || "field";
-        return sendResponse({
-          success: false,
-          message: `Duplicate entry: Data with this ${target} already exists.`,
-          status: 409,
-          error: { code: err.code, target },
-        });
+export function handleApiError(error: unknown) {
+  console.error("API_ERROR_LOG:", error);
+
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    switch (error.code) {
+      case "P2002": {
+        const target = (error.meta?.target as string[])?.join(", ") || "field";
+
+        return NextResponse.json<ApiErrorResponse>(
+          {
+            success: false,
+            message: `Duplicate entry: ${target} already exists.`,
+            error: isDev
+              ? {
+                  code: error.code,
+                  target,
+                }
+              : undefined,
+          },
+          { status: 409 }
+        );
+      }
 
       case "P2025":
-        return sendResponse({
-          success: false,
-          message: "Data not found. It may have been deleted or never existed.",
-          status: 404, // Not Found
-          error: { code: err.code },
-        });
+        return NextResponse.json<ApiErrorResponse>(
+          {
+            success: false,
+            message: "Data not found.",
+            error: isDev
+              ? {
+                  code: error.code,
+                }
+              : undefined,
+          },
+          { status: 404 }
+        );
 
       case "P2003":
-        return sendResponse({
-          success: false,
-          message: "Cannot delete or update this data because it is currently used/referenced by other records (e.g., Transactions, History).",
-          status: 409,
-          error: { code: err.code, detail: err.meta?.field_name },
-        });
+        return NextResponse.json<ApiErrorResponse>(
+          {
+            success: false,
+            message: "Cannot delete/update data because it is referenced by other records.",
+            error: isDev
+              ? {
+                  code: error.code,
+                  field: error.meta?.field_name,
+                }
+              : undefined,
+          },
+          { status: 409 }
+        );
 
       case "P2001":
-        return sendResponse({
-          success: false,
-          message: "The record searched for in the where condition does not exist.",
-          status: 404,
-          error: { code: err.code },
-        });
+        return NextResponse.json<ApiErrorResponse>(
+          {
+            success: false,
+            message: "Record does not exist.",
+            error: isDev
+              ? {
+                  code: error.code,
+                }
+              : undefined,
+          },
+          { status: 404 }
+        );
 
       default:
-        return sendResponse({
-          success: false,
-          message: `Database operation failed (Code: ${err.code})`,
-          status: 400,
-          error: { code: err.code, meta: err.meta },
-        });
+        return NextResponse.json<ApiErrorResponse>(
+          {
+            success: false,
+            message: "Database operation failed.",
+            error: isDev
+              ? {
+                  code: error.code,
+                  meta: error.meta,
+                }
+              : undefined,
+          },
+          { status: 400 }
+        );
     }
   }
 
-  if (err instanceof Prisma.PrismaClientValidationError) {
-    return sendResponse({
-      success: false,
-      message: "Invalid data format provided. Please check your input fields.",
-      status: 400,
-      error: {
-        detail: process.env.NODE_ENV === "development" ? err.message : "Validation Error",
+  if (error instanceof Prisma.PrismaClientValidationError) {
+    return NextResponse.json<ApiErrorResponse>(
+      {
+        success: false,
+        message: "Invalid query or data format.",
+        error: isDev ? error.message : undefined,
       },
-    });
+      { status: 400 }
+    );
   }
 
-  if (err instanceof Prisma.PrismaClientInitializationError) {
-    return sendResponse({
+  if (error instanceof Prisma.PrismaClientInitializationError) {
+    return NextResponse.json<ApiErrorResponse>(
+      {
+        success: false,
+        message: "Database connection failed.",
+        error: isDev
+          ? {
+              code: error.errorCode,
+            }
+          : undefined,
+      },
+      { status: 500 }
+    );
+  }
+
+  if (error instanceof Error) {
+    return NextResponse.json<ApiErrorResponse>(
+      {
+        success: false,
+        message: error.message,
+        error: isDev ? error.stack : undefined,
+      },
+      { status: 500 }
+    );
+  }
+
+  return NextResponse.json<ApiErrorResponse>(
+    {
       success: false,
-      message: "Failed to connect to the database server.",
-      status: 500,
-      error: { code: err.errorCode },
-    });
-  }
-
-  const isDev = process.env.NODE_ENV === "development";
-
-  return sendResponse({
-    success: false,
-    message: err instanceof Error ? err.message : "An unexpected server error occurred.",
-    status: 500,
-    error: isDev ? err : undefined,
-  });
-};
+      message: "Internal server error.",
+    },
+    { status: 500 }
+  );
+}

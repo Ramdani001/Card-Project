@@ -23,17 +23,19 @@ import ListArticle from "@/components/Dashboard/Collection/Article/ListArticle";
 import ListBanner from "@/components/Dashboard/Collection/Banner/ListBanner";
 import ListCard from "@/components/Dashboard/Collection/Card/ListCard";
 import ListTypeCard from "@/components/Dashboard/Collection/Category/ListCategory";
+import ListCity from "@/components/Dashboard/Collection/City/ListCity";
+import ListCountry from "@/components/Dashboard/Collection/Country/ListCountry";
 import ListDiscount from "@/components/Dashboard/Collection/Discount/ListDiscount";
 import ListEvent from "@/components/Dashboard/Collection/Event/ListEvent";
 import ListMenu from "@/components/Dashboard/Collection/Menu/ListMenu";
+import ListProvince from "@/components/Dashboard/Collection/Province/ListProvince";
 import ListShop from "@/components/Dashboard/Collection/Shop/ListShop";
 import ListVoucher from "@/components/Dashboard/Collection/Voucher/ListVoucher";
 import Dashboard from "@/components/Dashboard/Dashboard/Dashboard";
 import ListTransaction from "@/components/Dashboard/Transaction/ListTransaction";
 import ListMember from "@/components/Dashboard/UserManagement/ListMember/ListMember";
 import ListRole from "@/components/Dashboard/UserManagement/ListRole/ListRole";
-import ListCountry from "@/components/Dashboard/Collection/Country/ListCountry";
-import ListProvince from "@/components/Dashboard/Collection/Province/ListProvince";
+import ListSubDistrict from "@/components/Dashboard/Collection/SubDistrict/ListSubDistrict";
 
 export const ICON_MAP: Record<string, any> = {
   IconLayoutDashboard: IconLayoutDashboard,
@@ -73,4 +75,6 @@ export const COMPONENT_MAP: Record<string, React.ReactNode> = {
   "/shops": <ListShop />,
   "/countries": <ListCountry />,
   "/provincies": <ListProvince />,
+  "/cities": <ListCity />,
+  "/sub-districts": <ListSubDistrict />,
 };
