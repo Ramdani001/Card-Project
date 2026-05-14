@@ -1,6 +1,7 @@
 import {
   IconArticle,
   IconBox,
+  IconBuilding,
   IconCalendarEvent,
   IconCards,
   IconCategory,
@@ -9,6 +10,8 @@ import {
   IconLayoutDashboard,
   IconLayoutGrid,
   IconLocation,
+  IconMap2,
+  IconMapPin,
   IconPhoto,
   IconReceipt2,
   IconSettings,
@@ -43,7 +46,6 @@ export const ICON_MAP: Record<string, any> = {
   IconBox: IconBox,
   IconUsers: IconUsers,
   IconSettings: IconSettings,
-
   IconCards: IconCards,
   IconCategory: IconCategory,
   IconCalendarEvent: IconCalendarEvent,
@@ -57,6 +59,9 @@ export const ICON_MAP: Record<string, any> = {
   IconHome: IconHome,
   IconWorld: IconWorld,
   IconLocation: IconLocation,
+  IconMap2: IconMap2,
+  IconBuilding: IconBuilding,
+  IconMapPin: IconMapPin,
 };
 
 export const COMPONENT_MAP: Record<string, React.ReactNode> = {
