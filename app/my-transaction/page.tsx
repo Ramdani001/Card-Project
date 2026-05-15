@@ -342,7 +342,6 @@ const MyTransaction = () => {
         </Grid>
       </Container>
 
-      {/* Modals */}
       <MyTransactionDetailModal opened={detailOpened} onClose={() => setDetailOpened(false)} transaction={selectedTrx} />
       <MyTransactionHistoryModal
         opened={historyOpened}

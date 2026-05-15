@@ -63,26 +63,37 @@ model ApiEndpoint {
 }
 
 model User {
-  id            String         @id @default(uuid())
-  email         String         @unique
-  password      String
-  name          String?
-  phone         String?
-  avatar        String?
-  address       String?
-  roleId        String?
-  facebookUrl   String?
-  instagramUrl  String?
-  twitterUrl    String?
-  isVerified    Boolean        @default(false)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  cardHistories CardHistory[]
-  carts         Cart[]
-  transactions  Transaction[]
-  role          Role?          @relation(fields: [roleId], references: [id])
-  notifications Notification[]
-  otps          Otp[]
+  id              String         @id @default(uuid())
+  email           String         @unique
+  password        String
+  name            String?
+  phone           String?
+  avatar          String?
+  roleId          String?
+  facebookUrl     String?
+  instagramUrl    String?
+  twitterUrl      String?
+  countryIsoCode  String?
+  provinceCode    String?
+  cityCode        String?
+  subDistrictCode String?
+  villageCode     String?
+  postalCode      String?
+  address         String?
+  isVerified      Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  cardHistories   CardHistory[]
+  carts           Cart[]
+  transactions    Transaction[]
+  role            Role?          @relation(fields: [roleId], references: [id])
+  notifications   Notification[]
+  otps            Otp[]
+  country         Country?       @relation(fields: [countryIsoCode], references: [isoCode])
+  province        Province?      @relation(fields: [provinceCode], references: [code])
+  city            City?          @relation(fields: [cityCode], references: [code])
+  subDistrict     SubDistrict?   @relation(fields: [subDistrictCode], references: [code])
+  village         Village?       @relation(fields: [villageCode], references: [code])
 }
 
 model Otp {

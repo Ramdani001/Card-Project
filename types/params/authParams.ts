@@ -7,6 +7,12 @@ export interface RegisterParams {
   facebookUrl?: string;
   instagramUrl?: string;
   twitterUrl?: string;
+  countryIsoCode?: string;
+  provinceCode?: string;
+  cityCode?: string;
+  subDistrictCode?: string;
+  villageCode?: string;
+  postalCode?: string;
   file?: File | null;
 }
 
@@ -19,6 +25,12 @@ export interface UpdateProfileParams {
   facebookUrl?: string;
   instagramUrl?: string;
   twitterUrl?: string;
+  countryIsoCode?: string;
+  provinceCode?: string;
+  cityCode?: string;
+  subDistrictCode?: string;
+  villageCode?: string;
+  postalCode?: string;
   file?: File | null;
   password?: string;
 }

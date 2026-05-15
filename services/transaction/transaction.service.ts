@@ -1,6 +1,6 @@
 import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
-import { DiscountType, NotificationType, Prisma, TransactionStatus } from "@/prisma/generated/prisma/client";
+import { DeliveryMethod, DiscountType, NotificationType, Prisma, TransactionStatus } from "@/prisma/generated/prisma/client";
 import { CreateTransactionParams, GetTransactionParams, ShipTransactionParams } from "@/types/params/transactionParams";
 import { sendTransactionReceipt } from "../system/email.service";
 import { createNotificationByCode } from "./notification.service";
@@ -8,7 +8,21 @@ import { createPaymentToken } from "./payment.service";
 import { FAILED_STATUSES } from "@/constants";
 
 export const checkout = async (params: CreateTransactionParams) => {
-  const { userId, customerName, customerEmail, shopId, deliveryMethod, voucherCode, address } = params;
+  const {
+    userId,
+    customerName,
+    customerEmail,
+    shopId,
+    deliveryMethod,
+    voucherCode,
+    address,
+    countryIsoCode,
+    provinceCode,
+    cityCode,
+    subDistrictCode,
+    villageCode,
+    postalCode,
+  } = params;
 
   const cart = await prisma.cart.findFirst({
     where: { userId },
@@ -117,7 +131,6 @@ export const checkout = async (params: CreateTransactionParams) => {
           status: TransactionStatus.PENDING,
           customerName,
           customerEmail,
-          address,
           voucherId,
           shopId,
           deliveryMethod,
@@ -125,6 +138,36 @@ export const checkout = async (params: CreateTransactionParams) => {
           items: { create: prismaItemsPayload },
         },
       });
+
+      if (deliveryMethod == DeliveryMethod.SHIP) {
+        if (!countryIsoCode || !provinceCode || !cityCode || !subDistrictCode || !villageCode || !postalCode || !address) {
+          throw new Error("Missing required shipping information fields.");
+        }
+
+        const country = await tx.country.findFirst({ where: { isoCode: countryIsoCode } });
+        const province = await tx.province.findFirst({ where: { code: provinceCode } });
+        const city = await tx.city.findFirst({ where: { code: cityCode } });
+        const subDistrict = await tx.subDistrict.findFirst({ where: { code: subDistrictCode } });
+        const village = await tx.village.findFirst({ where: { code: villageCode } });
+
+        await tx.transactionShipmentAddress.create({
+          data: {
+            transactionId: newTransaction.id,
+            countryIsoCode: country?.isoCode || "-",
+            countryName: country?.name || "-",
+            provinceCode: province?.code || "-",
+            provinceName: province?.name || "-",
+            cityCode: city?.code || "-",
+            cityName: city?.name || "-",
+            subDistrictCode: subDistrict?.code || "-",
+            subDistrictName: subDistrict?.name || "-",
+            villageCode: village?.code || "-",
+            villageName: village?.name || "-",
+            postalCode: postalCode || "-",
+            address,
+          },
+        });
+      }
 
       for (const item of cart.items) {
         const card = item.card!;
@@ -240,7 +283,7 @@ export const updateTransactionStatus = async (
     const updatedTransaction = await tx.transaction.update({
       where: { id: transactionId },
       data: updateData,
-      include: { items: true, user: true, voucher: true, shop: true },
+      include: { items: true, user: true, voucher: true, shop: true, transactionShipmentAddress: true },
     });
 
     await tx.transactionStatusLog.create({
@@ -328,6 +371,7 @@ export const getTransactions = async (params: GetTransactionParams) => {
         statusLogs: { orderBy: { createdAt: "desc" }, take: 1 },
         user: { select: { email: true, name: true } },
         shop: true,
+        transactionShipmentAddress: true,
       },
     }),
   ]);
@@ -356,6 +400,7 @@ export const getUserTransactions = async (userId: string, params: GetTransaction
         statusLogs: { orderBy: { createdAt: "desc" }, take: 1 },
         user: { select: { email: true, name: true } },
         shop: true,
+        transactionShipmentAddress: true,
       },
     }),
   ]);
@@ -435,6 +480,7 @@ export const getTransactionById = async (id: string) => {
       voucher: true,
       statusLogs: { orderBy: { createdAt: "desc" } },
       user: { select: { name: true, email: true } },
+      transactionShipmentAddress: true,
     },
   });
 

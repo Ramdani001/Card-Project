@@ -7,6 +7,13 @@ export interface CreateUserParams {
   facebookUrl?: string;
   instagramUrl?: string;
   twitterUrl?: string;
+  address?: string;
+  countryIsoCode?: string;
+  provinceCode?: string;
+  cityCode?: string;
+  subDistrictCode?: string;
+  villageCode?: string;
+  postalCode?: string;
   file?: File | null;
 }
 
@@ -20,5 +27,12 @@ export interface UpdateUserParams {
   facebookUrl?: string;
   instagramUrl?: string;
   twitterUrl?: string;
+  address?: string;
+  countryIsoCode?: string;
+  provinceCode?: string;
+  cityCode?: string;
+  subDistrictCode?: string;
+  villageCode?: string;
+  postalCode?: string;
   file?: File | null;
 }

@@ -54,7 +54,7 @@ export const getQueryPaginationOptions = (req: NextRequest) => {
     } else if (isBooleanLabel) {
       parsedValue = value.toLowerCase() === "yes";
     } else if (isNumber && key !== "name") {
-      parsedValue = Number(value);
+      parsedValue = String(value);
     } else {
       parsedValue = {
         contains: value,

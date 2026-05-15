@@ -1,31 +1,56 @@
 model Transaction {
-  id             String                 @id @default(uuid())
-  invoice        String                 @unique
-  userId         String
-  subTotal       Decimal                @db.Decimal(15, 2)
-  voucherAmount  Decimal                @default(0) @db.Decimal(15, 2)
-  totalPrice     Decimal                @db.Decimal(15, 2)
-  status         TransactionStatus      @default(PENDING)
-  paymentMethod  String?
-  snapToken      String?
-  snapRedirect   String?
-  customerName   String?
-  customerEmail  String?
-  address        String?
-  deliveryMethod DeliveryMethod         @default(SHIP)
-  shopId         String?
-  createdAt      DateTime               @default(now())
-  updatedAt      DateTime               @updatedAt
-  voucherId      String?
-  expedition     String?
-  resi           String?
-  shippingCost   Decimal                @default(0) @db.Decimal(15, 2)
-  shop           Shop?                  @relation(fields: [shopId], references: [id])
-  paymentLogs    PaymentLog[]
-  user           User                   @relation(fields: [userId], references: [id])
-  voucher        Voucher?               @relation(fields: [voucherId], references: [id])
-  items          TransactionItem[]
-  statusLogs     TransactionStatusLog[]
+  id                           String                       @id @default(uuid())
+  invoice                      String                       @unique
+  userId                       String
+  subTotal                     Decimal                      @db.Decimal(15, 2)
+  voucherAmount                Decimal                      @default(0) @db.Decimal(15, 2)
+  totalPrice                   Decimal                      @db.Decimal(15, 2)
+  status                       TransactionStatus            @default(PENDING)
+  paymentMethod                String?
+  snapToken                    String?
+  snapRedirect                 String?
+  customerName                 String?
+  customerEmail                String?
+  address                      String?
+  deliveryMethod               DeliveryMethod               @default(SHIP)
+  shopId                       String?
+  createdAt                    DateTime                     @default(now())
+  updatedAt                    DateTime                     @updatedAt
+  voucherId                    String?
+  expedition                   String?
+  resi                         String?
+  shippingCost                 Decimal                      @default(0) @db.Decimal(15, 2)
+  shop                         Shop?                        @relation(fields: [shopId], references: [id])
+  paymentLogs                  PaymentLog[]
+  user                         User                         @relation(fields: [userId], references: [id])
+  voucher                      Voucher?                     @relation(fields: [voucherId], references: [id])
+  items                        TransactionItem[]
+  statusLogs                   TransactionStatusLog[]
+  transactionShipmentAddress TransactionShipmentAddress[]
+}
+
+model TransactionShipmentAddress {
+  id              String @id @default(uuid())
+  transactionId   String
+  countryIsoCode  String
+  countryName     String
+  provinceCode    String
+  provinceName    String
+  cityCode        String
+  cityName        String
+  subDistrictCode String
+  subDistrictName String
+  villageCode     String
+  villageName     String
+  postalCode      String
+  address         String
+
+  transaction Transaction @relation(fields: [transactionId], references: [id])
+  country     Country     @relation(fields: [countryIsoCode], references: [isoCode])
+  province    Province    @relation(fields: [provinceCode], references: [code])
+  city        City        @relation(fields: [cityCode], references: [code])
+  subDistrict SubDistrict @relation(fields: [subDistrictCode], references: [code])
+  village     Village     @relation(fields: [villageCode], references: [code])
 }
 
 model TransactionItem {

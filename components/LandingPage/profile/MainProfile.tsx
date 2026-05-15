@@ -12,6 +12,7 @@ import {
   Grid,
   Group,
   Paper,
+  Select,
   SimpleGrid,
   Skeleton,
   Stack,
@@ -35,6 +36,7 @@ import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { FooterSection } from "../FooterSection";
 import { HeaderSection } from "../HeaderSection";
+import { Option } from "@/types/dtos/Option";
 
 export const MainProfile = () => {
   const { cartItems, setCartItems, loadingCart } = useCart();
@@ -43,37 +45,150 @@ export const MainProfile = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [file, setFile] = useState<File | null>(null);
+
   const [facebookUrl, setFacebookUrl] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
   const [twitterUrl, setTwitterUrl] = useState("");
+
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
   const [address, setAddress] = useState("");
+
+  const [countryIsoCode, setCountryIsoCode] = useState("");
+  const [provinceCode, setProvinceCode] = useState("");
+  const [cityCode, setCityCode] = useState("");
+  const [subDistrictCode, setSubDistrictCode] = useState("");
+  const [villageCode, setVillageCode] = useState("");
+  const [postalCode, setPostalCode] = useState("");
+
+  const [countries, setCountries] = useState<Option[]>([]);
+  const [provinces, setProvinces] = useState<Option[]>([]);
+  const [cities, setCities] = useState<Option[]>([]);
+  const [subDistricts, setSubDistricts] = useState<Option[]>([]);
+  const [villages, setVillages] = useState<Option[]>([]);
 
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
 
   const userId = session?.user?.id;
 
+  const fetchCountries = async () => {
+    try {
+      const res = await fetch("/api/countries");
+      const json = await res.json();
+
+      setCountries(
+        json.data.map((item: any) => ({
+          value: item.isoCode,
+          label: item.name,
+        }))
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchProvinces = async (countryCode: string) => {
+    try {
+      const res = await fetch(`/api/provincies?country.isoCode=${countryCode}`);
+      const json = await res.json();
+
+      setProvinces(
+        json.data.map((item: any) => ({
+          value: item.code,
+          label: item.name,
+        }))
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchCities = async (provinceCode: string) => {
+    try {
+      const res = await fetch(`/api/cities?province.code=${provinceCode}`);
+      const json = await res.json();
+
+      setCities(
+        json.data.map((item: any) => ({
+          value: item.code,
+          label: item.name,
+        }))
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchSubDistricts = async (cityCode: string) => {
+    try {
+      const res = await fetch(`/api/sub-districts?city.code=${cityCode}`);
+      const json = await res.json();
+
+      setSubDistricts(
+        json.data.map((item: any) => ({
+          value: item.code,
+          label: item.name,
+        }))
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchVillages = async (subDistrictCode: string) => {
+    try {
+      const res = await fetch(`/api/villages?subDistrict.code=${subDistrictCode}`);
+      const json = await res.json();
+
+      setVillages(
+        json.data.map((item: any) => ({
+          value: item.code,
+          label: item.name,
+        }))
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   useEffect(() => {
     const fetchProfile = async () => {
       if (!userId) return;
+
       try {
         setFetching(true);
+
         const res = await fetch(`/api/profile/${userId}`);
         const json = await res.json();
+
         if (json.success) {
           setName(json.data.name || "");
           setEmail(json.data.email || "");
           setPreviewUrl(json.data.avatar || null);
+
           setFacebookUrl(json.data.facebookUrl || "");
           setInstagramUrl(json.data.instagramUrl || "");
           setTwitterUrl(json.data.twitterUrl || "");
+
           setAddress(json.data.address || "");
+
+          setCountryIsoCode(json.data.countryIsoCode || "");
+          setProvinceCode(json.data.provinceCode || "");
+          setCityCode(json.data.cityCode || "");
+          setSubDistrictCode(json.data.subDistrictCode || "");
+          setVillageCode(json.data.villageCode || "");
+          setPostalCode(json.data.postalCode || "");
         }
       } catch {
-        notifications.show({ title: "Error", message: "Gagal memuat profil", color: "red" });
+        notifications.show({
+          title: "Error",
+          message: "Gagal memuat profil",
+          color: "red",
+        });
       } finally {
         setFetching(false);
       }
@@ -84,15 +199,46 @@ export const MainProfile = () => {
   }, [userId, status]);
 
   useEffect(() => {
+    fetchCountries();
+  }, []);
+
+  useEffect(() => {
+    if (countryIsoCode) fetchProvinces(countryIsoCode);
+    else setProvinces([]);
+  }, [countryIsoCode]);
+
+  useEffect(() => {
+    if (provinceCode) fetchCities(provinceCode);
+    else setCities([]);
+  }, [provinceCode]);
+
+  useEffect(() => {
+    if (cityCode) fetchSubDistricts(cityCode);
+    else setSubDistricts([]);
+  }, [cityCode]);
+
+  useEffect(() => {
+    if (subDistrictCode) fetchVillages(subDistrictCode);
+    else setVillages([]);
+  }, [subDistrictCode]);
+
+  useEffect(() => {
     if (!file) return;
+
     const url = URL.createObjectURL(file);
+
     setPreviewUrl(url);
+
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
   const handleUpdate = async () => {
     if (file && file.size > 2 * 1024 * 1024) {
-      return notifications.show({ title: "File Too Large", message: "Maximum file size 2MB", color: "orange" });
+      return notifications.show({
+        title: "File Too Large",
+        message: "Maximum file size 2MB",
+        color: "orange",
+      });
     }
 
     if (password && password !== confirmPassword) {
@@ -112,18 +258,37 @@ export const MainProfile = () => {
     }
 
     setLoading(true);
+
     try {
       const formData = new FormData();
+
       formData.append("name", name);
       formData.append("email", email);
+
       formData.append("facebookUrl", facebookUrl);
       formData.append("instagramUrl", instagramUrl);
       formData.append("twitterUrl", twitterUrl);
-      formData.append("address", address);
-      if (file) formData.append("file", file);
-      if (password) formData.append("password", password);
 
-      const res = await fetch(`/api/profile/${userId}`, { method: "PATCH", body: formData });
+      formData.append("address", address);
+
+      formData.append("countryIsoCode", countryIsoCode);
+      formData.append("provinceCode", provinceCode);
+      formData.append("cityCode", cityCode);
+      formData.append("subDistrictCode", subDistrictCode);
+      formData.append("villageCode", villageCode);
+      formData.append("postalCode", postalCode);
+
+      if (file) formData.append("file", file);
+
+      if (password) {
+        formData.append("password", password);
+      }
+
+      const res = await fetch(`/api/profile/${userId}`, {
+        method: "PATCH",
+        body: formData,
+      });
+
       const json = await res.json();
 
       if (json.success) {
@@ -150,7 +315,11 @@ export const MainProfile = () => {
         throw new Error(json.message);
       }
     } catch (error: any) {
-      notifications.show({ title: "Gagal", message: error.message || "Internal server error", color: "red" });
+      notifications.show({
+        title: "Gagal",
+        message: error.message || "Internal server error",
+        color: "red",
+      });
     } finally {
       setLoading(false);
     }
@@ -159,9 +328,14 @@ export const MainProfile = () => {
   const inputStyles = {
     input: {
       borderRadius: "8px",
-      "&:focus": { borderColor: "var(--mantine-color-indigo-filled)" },
+      "&:focus": {
+        borderColor: "var(--mantine-color-indigo-filled)",
+      },
     },
-    label: { marginBottom: "5px", fontWeight: 600 },
+    label: {
+      marginBottom: "5px",
+      fontWeight: 600,
+    },
   };
 
   return (
@@ -174,6 +348,7 @@ export const MainProfile = () => {
             <Title order={2} fw={800} c="slate.9">
               Profile
             </Title>
+
             <Text c="dimmed" size="sm">
               Manage your account information and social media presence.
             </Text>
@@ -185,7 +360,14 @@ export const MainProfile = () => {
                 <Stack align="center" gap="lg">
                   <Box pos="relative">
                     <Skeleton visible={fetching} circle>
-                      <Avatar src={previewUrl} size={120} radius="100%" style={{ border: "4px solid #f1f5f9" }}>
+                      <Avatar
+                        src={previewUrl}
+                        size={120}
+                        radius="100%"
+                        style={{
+                          border: "4px solid #f1f5f9",
+                        }}
+                      >
                         <IconUser size={50} />
                       </Avatar>
                     </Skeleton>
@@ -196,7 +378,12 @@ export const MainProfile = () => {
                       size="lg"
                       radius="xl"
                       onClick={() => document.getElementById("avatar-input")?.click()}
-                      style={{ position: "absolute", bottom: 5, right: 5, border: "3px solid white" }}
+                      style={{
+                        position: "absolute",
+                        bottom: 5,
+                        right: 5,
+                        border: "3px solid white",
+                      }}
                     >
                       <IconCamera size={18} />
                     </ActionIcon>
@@ -208,6 +395,7 @@ export const MainProfile = () => {
                         {name || "Guest"}
                       </Text>
                     </Skeleton>
+
                     <Skeleton visible={fetching} height={15} width={180} mx="auto">
                       <Text size="sm" c="dimmed">
                         {email}
@@ -232,6 +420,7 @@ export const MainProfile = () => {
                   <Title order={4} mb="lg" fw={700}>
                     Account Information
                   </Title>
+
                   <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
                     <TextInput
                       label="Full name"
@@ -241,6 +430,7 @@ export const MainProfile = () => {
                       onChange={(e) => setName(e.currentTarget.value)}
                       radius="xs"
                     />
+
                     <TextInput
                       label="Email"
                       placeholder="email@example.com"
@@ -253,8 +443,9 @@ export const MainProfile = () => {
                   </SimpleGrid>
 
                   <Textarea
+                    mt="md"
                     label="Address"
-                    placeholder="Your complete address (Street, House No, District, City, etc.)"
+                    placeholder="Your complete address"
                     styles={inputStyles}
                     value={address}
                     onChange={(e) => setAddress(e.currentTarget.value)}
@@ -263,12 +454,95 @@ export const MainProfile = () => {
                     minRows={3}
                     maxRows={6}
                   />
+
+                  <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" mt="md">
+                    <Select
+                      label="Country"
+                      placeholder="Select country"
+                      data={countries}
+                      value={countryIsoCode}
+                      onChange={(value) => {
+                        setCountryIsoCode(value || "");
+                        setProvinceCode("");
+                        setCityCode("");
+                        setSubDistrictCode("");
+                        setVillageCode("");
+                      }}
+                      searchable
+                      radius="xs"
+                    />
+
+                    <Select
+                      label="Province"
+                      placeholder="Select province"
+                      data={provinces}
+                      value={provinceCode}
+                      onChange={(value) => {
+                        setProvinceCode(value || "");
+                        setCityCode("");
+                        setSubDistrictCode("");
+                        setVillageCode("");
+                      }}
+                      searchable
+                      disabled={!countryIsoCode}
+                      radius="xs"
+                    />
+
+                    <Select
+                      label="City / Regency"
+                      placeholder="Select city"
+                      data={cities}
+                      value={cityCode}
+                      onChange={(value) => {
+                        setCityCode(value || "");
+                        setSubDistrictCode("");
+                        setVillageCode("");
+                      }}
+                      searchable
+                      disabled={!provinceCode}
+                      radius="xs"
+                    />
+
+                    <Select
+                      label="Sub District"
+                      placeholder="Select sub district"
+                      data={subDistricts}
+                      value={subDistrictCode}
+                      onChange={(value) => {
+                        setSubDistrictCode(value || "");
+                        setVillageCode("");
+                      }}
+                      searchable
+                      disabled={!cityCode}
+                      radius="xs"
+                    />
+
+                    <Select
+                      label="Village"
+                      placeholder="Select village"
+                      data={villages}
+                      value={villageCode}
+                      onChange={(value) => setVillageCode(value || "")}
+                      searchable
+                      disabled={!subDistrictCode}
+                      radius="xs"
+                    />
+
+                    <TextInput
+                      label="Postal Code"
+                      placeholder="Postal code"
+                      value={postalCode}
+                      onChange={(e) => setPostalCode(e.currentTarget.value)}
+                      radius="xs"
+                    />
+                  </SimpleGrid>
                 </Paper>
 
                 <Paper p="md" radius="xs" withBorder shadow="sm">
                   <Title order={4} mb="lg" fw={700}>
                     Security
                   </Title>
+
                   <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
                     <TextInput
                       label="New Password"
@@ -279,6 +553,7 @@ export const MainProfile = () => {
                       onChange={(e) => setPassword(e.currentTarget.value)}
                       radius="xs"
                     />
+
                     <TextInput
                       label="Confirm New Password"
                       placeholder="Re-type new password"
@@ -289,6 +564,7 @@ export const MainProfile = () => {
                       radius="xs"
                     />
                   </SimpleGrid>
+
                   {password && (
                     <Text size="xs" mt="sm" c="dimmed">
                       Fill in this field only if you want to change your password.
@@ -300,6 +576,7 @@ export const MainProfile = () => {
                   <Title order={4} mb="lg" fw={700}>
                     Social Media
                   </Title>
+
                   <Stack gap="md">
                     <TextInput
                       label="Facebook"
@@ -310,6 +587,7 @@ export const MainProfile = () => {
                       onChange={(e) => setFacebookUrl(e.currentTarget.value)}
                       radius="xs"
                     />
+
                     <TextInput
                       label="Instagram"
                       placeholder="instagram.com/username"
@@ -319,6 +597,7 @@ export const MainProfile = () => {
                       onChange={(e) => setInstagramUrl(e.currentTarget.value)}
                       radius="xs"
                     />
+
                     <TextInput
                       label="X / Twitter"
                       placeholder="twitter.com/username"

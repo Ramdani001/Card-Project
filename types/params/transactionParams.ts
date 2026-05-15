@@ -9,6 +9,12 @@ export interface CreateTransactionParams {
   shopId?: string;
   deliveryMethod: DeliveryMethod;
   address: string;
+  countryIsoCode?: string;
+  provinceCode?: string;
+  cityCode?: string;
+  subDistrictCode?: string;
+  villageCode?: string;
+  postalCode?: string;
   paymentMethod?: string;
 }
 

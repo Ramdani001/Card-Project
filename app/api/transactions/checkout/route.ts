@@ -19,7 +19,20 @@ export const POST = async (req: NextRequest) => {
 
     const body = await req.json();
 
-    const { address, voucherCode, customerEmailGuest, customerNameGuest, deliveryMethod, shopId } = body;
+    const {
+      address,
+      voucherCode,
+      customerEmailGuest,
+      customerNameGuest,
+      deliveryMethod,
+      shopId,
+      countryIsoCode,
+      provinceCode,
+      cityCode,
+      subDistrictCode,
+      villageCode,
+      postalCode,
+    } = body;
 
     if (deliveryMethod === "SHIP" && !address?.trim()) {
       return sendResponse({
@@ -39,12 +52,18 @@ export const POST = async (req: NextRequest) => {
 
     const transaction = await checkout({
       userId: session.user.id,
+      deliveryMethod,
       customerName: session.user.name || customerNameGuest,
       customerEmail: session.user.email || customerEmailGuest,
       address: deliveryMethod === DeliveryMethod.SHIP ? address : null,
       shopId: deliveryMethod === DeliveryMethod.PICKUP ? shopId : null,
-      deliveryMethod,
-      voucherCode,
+      voucherCode: deliveryMethod === DeliveryMethod.SHIP ? voucherCode : null,
+      countryIsoCode: deliveryMethod === DeliveryMethod.SHIP ? countryIsoCode : null,
+      provinceCode: deliveryMethod === DeliveryMethod.SHIP ? provinceCode : null,
+      cityCode: deliveryMethod === DeliveryMethod.SHIP ? cityCode : null,
+      subDistrictCode: deliveryMethod === DeliveryMethod.SHIP ? subDistrictCode : null,
+      villageCode: deliveryMethod === DeliveryMethod.SHIP ? villageCode : null,
+      postalCode: deliveryMethod === DeliveryMethod.SHIP ? postalCode : null,
     });
 
     return sendResponse({

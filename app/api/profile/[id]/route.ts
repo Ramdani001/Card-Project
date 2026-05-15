@@ -36,6 +36,12 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
     const twitterUrl = formData.get("twitterUrl") as string | undefined;
     const password = formData.get("password") as string | undefined;
     const address = formData.get("address") as string | undefined;
+    const countryIsoCode = (formData.get("countryIsoCode") as string) || undefined;
+    const provinceCode = (formData.get("provinceCode") as string) || undefined;
+    const cityCode = (formData.get("cityCode") as string) || undefined;
+    const subDistrictCode = (formData.get("subDistrictCode") as string) || undefined;
+    const villageCode = (formData.get("villageCode") as string) || undefined;
+    const postalCode = formData.get("postalCode") as string | undefined;
 
     const updatedProfile = await updateProfile({
       userId: id,
@@ -48,6 +54,12 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
       file,
       password,
       address,
+      countryIsoCode,
+      provinceCode,
+      cityCode,
+      subDistrictCode,
+      villageCode,
+      postalCode,
     });
 
     return sendResponse({

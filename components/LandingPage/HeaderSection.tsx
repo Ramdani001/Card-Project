@@ -86,7 +86,7 @@ export const HeaderSection = ({ cartItems, loadingCart, setCartItems }: HeaderSe
           boxShadow: "0 4px 12px rgba(0,0,0,0.03)",
         }}
       >
-        <Container size="xl" h={rem(70)}>
+        <Container fluid h={rem(70)} mx={20}>
           <Group justify="space-between" h="100%" wrap="nowrap">
             <Title
               order={3}

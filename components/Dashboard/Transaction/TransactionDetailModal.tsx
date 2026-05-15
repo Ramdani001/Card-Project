@@ -240,11 +240,19 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
                   {transaction.deliveryMethod === "SHIP" ? "Shipping Address" : "Pickup Location"}
                 </Text>
 
-                <Text size="sm" fw={500}>
-                  {transaction.deliveryMethod === "SHIP"
-                    ? transaction.address || "No Address Provided"
-                    : transaction.shop?.name || "No Shop Selected"}
-                </Text>
+                {transaction.deliveryMethod === "SHIP" ? (
+                  <Text size="xs" c="dimmed" style={{ lineHeight: 1.5 }}>
+                    {transaction.transactionShipmentAddress[0]?.address}, {transaction.transactionShipmentAddress[0]?.villageName},{" "}
+                    {transaction.transactionShipmentAddress[0]?.subDistrictName},
+                    <br />
+                    {transaction.transactionShipmentAddress[0]?.cityName}, {transaction.transactionShipmentAddress[0]?.provinceName},{" "}
+                    {transaction.transactionShipmentAddress[0]?.postalCode}
+                  </Text>
+                ) : (
+                  <Text size="sm" fw={500}>
+                    {transaction.shop?.name || "No Shop Selected"}
+                  </Text>
+                )}
 
                 {transaction.deliveryMethod === "PICKUP" && transaction.shop?.address && (
                   <Text size="xs" c="dimmed" mt={2}>

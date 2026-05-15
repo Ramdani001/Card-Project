@@ -16,6 +16,12 @@ const userSelectScope = {
   twitterUrl: true,
   isVerified: true,
   address: true,
+  countryIsoCode: true,
+  provinceCode: true,
+  cityCode: true,
+  subDistrictCode: true,
+  villageCode: true,
+  postalCode: true,
   role: {
     select: { id: true, name: true },
   },
@@ -41,7 +47,24 @@ export const getUsers = async (options: Prisma.UserFindManyArgs) => {
 };
 
 export const createUser = async (data: CreateUserParams) => {
-  const { email, password, name, phone, roleId, file, facebookUrl, instagramUrl, twitterUrl } = data;
+  const {
+    email,
+    password,
+    name,
+    phone,
+    roleId,
+    file,
+    facebookUrl,
+    instagramUrl,
+    twitterUrl,
+    address,
+    countryIsoCode,
+    provinceCode,
+    cityCode,
+    subDistrictCode,
+    villageCode,
+    postalCode,
+  } = data;
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
   if (existingUser) {
@@ -70,6 +93,13 @@ export const createUser = async (data: CreateUserParams) => {
         facebookUrl,
         instagramUrl,
         twitterUrl,
+        address,
+        countryIsoCode,
+        provinceCode,
+        cityCode,
+        subDistrictCode,
+        villageCode,
+        postalCode,
       },
       select: userSelectScope,
     });
@@ -83,7 +113,27 @@ export const createUser = async (data: CreateUserParams) => {
   }
 };
 
-export const updateUser = async ({ id, name, email, phone, password, roleId, file, facebookUrl, instagramUrl, twitterUrl }: UpdateUserParams) => {
+export const updateUser = async (data: UpdateUserParams) => {
+  const {
+    id,
+    name,
+    email,
+    phone,
+    password,
+    roleId,
+    file,
+    facebookUrl,
+    instagramUrl,
+    twitterUrl,
+    address,
+    countryIsoCode,
+    provinceCode,
+    cityCode,
+    subDistrictCode,
+    villageCode,
+    postalCode,
+  } = data;
+
   const existingUser = await prisma.user.findUnique({ where: { id } });
   if (!existingUser) throw new Error("User not found");
 
@@ -95,6 +145,13 @@ export const updateUser = async ({ id, name, email, phone, password, roleId, fil
     ...(facebookUrl && { facebookUrl }),
     ...(instagramUrl && { instagramUrl }),
     ...(twitterUrl && { twitterUrl }),
+    ...(address && { address }),
+    ...(countryIsoCode && { countryIsoCode }),
+    ...(provinceCode && { provinceCode }),
+    ...(cityCode && { cityCode }),
+    ...(subDistrictCode && { subDistrictCode }),
+    ...(villageCode && { villageCode }),
+    ...(postalCode && { postalCode }),
   };
 
   if (password) {

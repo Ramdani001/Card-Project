@@ -25,6 +25,25 @@ export interface StatusLogDto {
   createdAt: string;
 }
 
+export interface TransactionShipmentAddressDto {
+  id: string;
+  transactionId: string;
+  countryIsoCode: string;
+  countryName: string;
+  provinceCode: string;
+  provinceName: string;
+  cityCode: string;
+  cityName: string;
+  subDistrictCode: string;
+  subDistrictName: string;
+  villageCode: string;
+  villageName: string;
+  postalCode: string;
+  address: string;
+  createdBy: string;
+  createdAt: string;
+}
+
 export interface TransactionDto {
   id: string;
   invoice: string;
@@ -47,6 +66,7 @@ export interface TransactionDto {
   shippingCost: string | number;
   deliveryMethod: DeliveryMethod;
   shopId: string | null;
+  transactionShipmentAddress: TransactionShipmentAddressDto[];
   shop: ShopDto;
   note: string;
 

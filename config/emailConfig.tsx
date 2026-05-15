@@ -35,15 +35,33 @@ export const generateReceiptHtml = (transaction: TransactionWithDetails): string
       `
       : `
         <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px; border-left: 4px solid #28a745;">
-          <h4 style="margin: 0 0 5px 0; color: #28a745;">Shipping Information</h4>
-          <table style="width: 100%; font-size: 0.9em;">
+          <h4 style="margin: 0 0 10px 0; color: #28a745;">Shipping Information</h4>
+          <table style="width: 100%; font-size: 0.9em; border-collapse: collapse;">
             <tr>
-              <td width="100" style="color: #666;">Expedition:</td>
-              <td><strong>${transaction.expedition || "-"}</strong></td>
+              <td width="120" style="color: #666; padding-bottom: 5px;">Expedition:</td>
+              <td style="padding-bottom: 5px;"><strong>${transaction.expedition || "-"}</strong></td>
             </tr>
             <tr>
-              <td style="color: #666;">Resi Number:</td>
-              <td><strong>${transaction.resi || "-"}</strong></td>
+              <td style="color: #666; padding-bottom: 5px;">Resi Number:</td>
+              <td style="padding-bottom: 5px;"><strong>${transaction.resi || "-"}</strong></td>
+            </tr>
+            <tr>
+              <td style="color: #666; vertical-align: top;">Shipping Address:</td>
+              <td style="line-height: 1.5;">
+                ${
+                  transaction.transactionShipmentAddress.length
+                    ? `
+                      <strong>${transaction.customerName || "Recipient"}</strong><br />
+                      ${transaction.transactionShipmentAddress[0]?.address}<br />
+                      ${transaction.transactionShipmentAddress[0]?.villageName}, ${transaction.transactionShipmentAddress[0]?.subDistrictName}<br />
+                      ${transaction.transactionShipmentAddress[0]?.cityName}, ${transaction.transactionShipmentAddress[0]?.provinceName}<br />
+                      ${transaction.transactionShipmentAddress[0]?.postalCode}
+                    `
+                    : `
+                        <strong>-</strong>
+                      `
+                }
+              </td>
             </tr>
           </table>
         </div>
@@ -59,7 +77,7 @@ export const generateReceiptHtml = (transaction: TransactionWithDetails): string
       <table style="width: 100%; margin-bottom: 20px; font-size: 0.9em;">
         <tr>
           <td><strong>Invoice:</strong> ${transaction.invoice}</td>
-          <td style="text-align: right;"><strong>Date:</strong> ${formatDate(transaction.createdAt.toDateString())}</td>
+          <td style="text-align: right;"><strong>Date:</strong> ${formatDate(transaction.createdAt.toString())}</td>
         </tr>
         <tr>
           <td><strong>Payment:</strong> ${transaction.paymentMethod || "-"}</td>

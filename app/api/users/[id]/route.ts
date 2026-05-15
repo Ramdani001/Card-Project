@@ -1,10 +1,7 @@
 import { NextRequest } from "next/server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import { deleteUser, getUserById, updateUser } from "@/services/auth/user.service";
-
-type RouteParams = {
-  params: Promise<{ id: string }>;
-};
+import { RouteParams } from "@/types/params/routeParams";
 
 export const GET = async (_req: NextRequest, { params }: RouteParams) => {
   try {
@@ -46,6 +43,13 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
       facebookUrl: (formData.get("facebookUrl") as string) || undefined,
       instagramUrl: (formData.get("instagramUrl") as string) || undefined,
       twitterUrl: (formData.get("twitterUrl") as string) || undefined,
+      address: (formData.get("address") as string) || undefined,
+      countryIsoCode: (formData.get("countryIsoCode") as string) || undefined,
+      provinceCode: (formData.get("provinceCode") as string) || undefined,
+      cityCode: (formData.get("cityCode") as string) || undefined,
+      subDistrictCode: (formData.get("subDistrictCode") as string) || undefined,
+      villageCode: (formData.get("villageCode") as string) || undefined,
+      postalCode: (formData.get("postalCode") as string) || undefined,
       file: formData.get("file") as File | null,
     });
 

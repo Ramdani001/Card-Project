@@ -38,7 +38,6 @@ export const MyTransactionDetailModal = ({ opened, onClose, transaction }: Props
 
         <Divider />
 
-        {/* ADDRESS / PICKUP */}
         <Stack gap={6}>
           <Group gap={6}>
             {isPickup ? <IconMapPin size={16} /> : <IconTruckDelivery size={16} />}
@@ -59,15 +58,18 @@ export const MyTransactionDetailModal = ({ opened, onClose, transaction }: Props
             ) : (
               <>
                 <Text fw={600}>{transaction.customerName}</Text>
-                <Text size="xs" c="dimmed">
-                  {transaction.address || "No address provided"}
+                <Text size="xs" c="dimmed" style={{ lineHeight: 1.5 }}>
+                  {transaction.transactionShipmentAddress[0]?.address}, {transaction.transactionShipmentAddress[0]?.villageName},{" "}
+                  {transaction.transactionShipmentAddress[0]?.subDistrictName},
+                  <br />
+                  {transaction.transactionShipmentAddress[0]?.cityName}, {transaction.transactionShipmentAddress[0]?.provinceName},{" "}
+                  {transaction.transactionShipmentAddress[0]?.postalCode}
                 </Text>
               </>
             )}
           </Paper>
         </Stack>
 
-        {/* ITEMS */}
         <Stack gap={6}>
           <Group gap={6}>
             <IconPackage size={16} />
@@ -110,7 +112,6 @@ export const MyTransactionDetailModal = ({ opened, onClose, transaction }: Props
 
         <Divider />
 
-        {/* SUMMARY */}
         <Stack gap={6}>
           <Group gap={6}>
             <IconReceipt2 size={16} />

@@ -200,7 +200,7 @@ const ListProvince = () => {
   return (
     <Paper shadow="xs" p="md" radius="md" withBorder>
       <Flex justify="space-between" align="center" mb="lg">
-        <Title order={3}>Provincies</Title>
+        <Title order={3}>Provinces</Title>
 
         <Group>
           <ActionIcon variant="default" size="lg" onClick={fetchProvincies} loading={loading}>
