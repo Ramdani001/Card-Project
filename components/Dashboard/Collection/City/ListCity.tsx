@@ -47,7 +47,7 @@ const ListCity = () => {
     return params.toString();
   };
 
-  const fetchProvincies = async () => {
+  const fetchCities = async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/cities?${buildQuery()}`);
@@ -70,7 +70,7 @@ const ListCity = () => {
   };
 
   useEffect(() => {
-    fetchProvincies();
+    fetchCities();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queryParams]);
 
@@ -112,7 +112,7 @@ const ListCity = () => {
             icon: <IconCheck size={16} />,
           });
 
-          fetchProvincies();
+          fetchCities();
         } catch (err: any) {
           notifications.show({
             title: "Error",
@@ -200,10 +200,10 @@ const ListCity = () => {
   return (
     <Paper shadow="xs" p="md" radius="md" withBorder>
       <Flex justify="space-between" align="center" mb="lg">
-        <Title order={3}>Provincies</Title>
+        <Title order={3}>Cities</Title>
 
         <Group>
-          <ActionIcon variant="default" size="lg" onClick={fetchProvincies} loading={loading}>
+          <ActionIcon variant="default" size="lg" onClick={fetchCities} loading={loading}>
             <IconRefresh size={18} />
           </ActionIcon>
 
@@ -227,7 +227,7 @@ const ListCity = () => {
         onFilterChange={handleFilterChange}
       />
 
-      <CityForm opened={opened} onClose={close} provinceToEdit={selectedCity} onSuccess={fetchProvincies} />
+      <CityForm opened={opened} onClose={close} provinceToEdit={selectedCity} onSuccess={fetchCities} />
     </Paper>
   );
 };
