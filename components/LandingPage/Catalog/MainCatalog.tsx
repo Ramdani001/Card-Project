@@ -40,6 +40,7 @@ const SORT_OPTIONS = [
 export default function MainCatalog() {
   const searchParams = useSearchParams();
 
+  const nameParams = searchParams.get("name");
   const categoryParams = searchParams.get("category");
   const sortParams = searchParams.get("sort");
   const titleParams = searchParams.get("title");
@@ -88,6 +89,7 @@ export default function MainCatalog() {
       }
       if (selectedCategoryIds.length > 0) params.append("categories", selectedCategoryIds.join(","));
       if (selectedFilterStock) params.append("stock", selectedFilterStock);
+      if (nameParams) params.append("name", nameParams);
 
       const res = await fetch(`/api/cards?${params.toString()}`);
       const json = await res.json();
