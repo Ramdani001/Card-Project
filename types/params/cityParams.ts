@@ -14,5 +14,6 @@ export type CityApiResponse = {
   data: {
     code: string;
     name: string;
+    province_code: string;
   }[];
 };

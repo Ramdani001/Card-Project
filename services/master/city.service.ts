@@ -90,78 +90,79 @@ export const deleteCity = async (id: string) => {
 export const syncCitiesFromApi = async () => {
   try {
     const provinces = await prisma.province.findMany({
-      select: {
-        id: true,
-        code: true,
-        name: true,
-      },
+      select: { id: true, code: true },
     });
 
+    const provinceMap = new Map<string, string>(provinces.map((p) => [p.code, p.id]));
+
+    const apiKey = process.env.API_KEY_APICOID || "";
+
     let totalSynced = 0;
+    let page = 1;
+    let hasMoreData = true;
 
-    for (const province of provinces) {
-      console.log(`Syncing cities for ${province.name}...`);
+    while (hasMoreData) {
+      console.log(`Fetching city data for page ${page}...`);
 
-      const response = await fetch(`https://wilayah.id/api/regencies/${province.code}.json`, {
+      const response = await fetch(`https://use.api.co.id/regional/indonesia/regencies?page=${page}`, {
         method: "GET",
         cache: "no-store",
+        headers: { "X-API-CO-ID": apiKey },
       });
 
       if (!response.ok) {
-        console.log(`Failed fetch province ${province.name}`);
-        continue;
+        console.error(`Failed to fetch city on page ${page}`);
+        break;
       }
 
       const result: CityApiResponse = await response.json();
 
-      if (!Array.isArray(result.data)) {
-        continue;
+      if (!result || !Array.isArray(result.data) || result.data.length === 0) {
+        console.log(`No more data found. Stopping fetch at page ${page}.`);
+        hasMoreData = false;
+        break;
       }
 
+      const pageQueries = [];
+
       for (const city of result.data) {
-        let existing = await prisma.city.findUnique({
-          where: {
-            code: city.code,
-          },
-        });
+        const provinceId = provinceMap.get(city.province_code);
 
-        if (!existing) {
-          existing = await prisma.city.findFirst({
-            where: {
-              name: city.name,
-              provinceId: province.id,
-            },
-          });
+        if (!provinceId) {
+          console.warn(`Province code ${city.province_code} not found for city ${city.name}. Skipping.`);
+          continue;
         }
 
-        if (existing) {
-          await prisma.city.update({
-            where: {
-              id: existing.id,
+        pageQueries.push(
+          prisma.city.upsert({
+            where: { code: city.code },
+            update: {
+              name: city.name,
+              provinceId: provinceId,
             },
-            data: {
+            create: {
               code: city.code,
               name: city.name,
-              provinceId: province.id,
+              provinceId: provinceId,
             },
-          });
-        } else {
-          await prisma.city.create({
-            data: {
-              code: city.code,
-              name: city.name,
-              provinceId: province.id,
-            },
-          });
-        }
+          })
+        );
 
         totalSynced++;
       }
+
+      if (pageQueries.length > 0) {
+        console.log(`Saving ${pageQueries.length} cities from page ${page} to database...`);
+        await prisma.$transaction(pageQueries);
+      }
+
+      page++;
     }
 
     return {
       success: true,
       total: totalSynced,
+      totalPagesSynced: page - 1,
     };
   } catch (error) {
     logError("CityService.syncCitiesFromApi", error);

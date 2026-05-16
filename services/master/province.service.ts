@@ -102,9 +102,14 @@ export const syncProvincesFromApi = async () => {
       throw new Error("Master country Indonesia not found.");
     }
 
-    const response = await fetch("https://wilayah.id/api/provinces.json", {
+    const apiKey = process.env.API_KEY_APICOID || "";
+
+    const response = await fetch("https://use.api.co.id/regional/indonesia/provinces", {
       method: "GET",
       cache: "no-store",
+      headers: {
+        "X-API-CO-ID": apiKey,
+      },
     });
 
     if (!response.ok) {
@@ -139,7 +144,7 @@ export const syncProvincesFromApi = async () => {
     return {
       success: true,
       total: synced.length,
-      updatedAt: result.meta.updated_at,
+      // updatedAt: result.meta.updated_at,
       data: synced,
     };
   } catch (error) {

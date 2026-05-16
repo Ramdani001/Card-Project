@@ -85,79 +85,105 @@ export const deleteVillage = async (id: string) => {
 
 export const syncVillagesFromApi = async () => {
   try {
-    const subDistricts = await prisma.subDistrict.findMany({
-      select: {
-        id: true,
-        code: true,
-        name: true,
-      },
-    });
+    const subDistrictCache = new Map<string, string>();
+    const apiKey = process.env.API_KEY_APICOID || "";
 
     let totalSynced = 0;
+    let page = 1;
+    let hasMoreData = true;
 
-    for (const subDistrict of subDistricts) {
-      console.log(`Syncing villages for ${subDistrict.name}...`);
+    while (hasMoreData) {
+      console.log(`Fetching village data for page ${page}...`);
 
-      const response = await fetch(`https://wilayah.id/api/villages/${subDistrict.code}.json`, {
+      const response = await fetch(`https://use.api.co.id/regional/indonesia/villages?page=${page}`, {
         method: "GET",
         cache: "no-store",
+        headers: { "X-API-CO-ID": apiKey },
       });
 
       if (!response.ok) {
-        console.log(`Failed fetch sub district ${subDistrict.name}`);
-        continue;
+        console.error(`Failed to fetch village on page ${page}`);
+        break;
       }
 
       const result: VillageApiResponse = await response.json();
 
-      if (!Array.isArray(result.data)) {
-        continue;
+      if (!result || !Array.isArray(result.data) || result.data.length === 0) {
+        console.log(`No more data found. Stopping fetch at page ${page}.`);
+        hasMoreData = false;
+        break;
       }
 
+      const pageQueries = [];
+
       for (const village of result.data) {
-        let existing = await prisma.village.findUnique({
-          where: {
-            code: village.code,
-          },
-        });
+        let subDistrictId = subDistrictCache.get(village.district_code);
 
-        if (!existing) {
-          existing = await prisma.village.findFirst({
-            where: {
-              name: village.name,
-              subDistrictId: subDistrict.id,
-            },
+        if (!subDistrictId) {
+          const subDistrict = await prisma.subDistrict.findUnique({
+            where: { code: village.district_code },
+            select: { id: true },
           });
+
+          if (subDistrict) {
+            subDistrictId = subDistrict.id;
+            subDistrictCache.set(village.district_code, subDistrict.id);
+          }
         }
 
-        if (existing) {
-          await prisma.village.update({
-            where: {
-              id: existing.id,
-            },
-            data: {
-              code: village.code,
-              name: village.name,
-              subDistrictId: subDistrict.id,
-            },
-          });
-        } else {
-          await prisma.village.create({
-            data: {
-              code: village.code,
-              name: village.name,
-              subDistrictId: subDistrict.id,
-            },
-          });
+        if (!subDistrictId) {
+          console.warn(`Sub District code ${village.district_code} not found for village ${village.name}. Skipping.`);
+          continue;
         }
+
+        pageQueries.push(
+          prisma.village.upsert({
+            where: {
+              code: village.code,
+            },
+            update: {
+              code: village.code,
+              name: village.name,
+              subDistrictId: subDistrictId,
+            },
+            create: {
+              code: village.code,
+              name: village.name,
+              subDistrictId: subDistrictId,
+            },
+          })
+        );
 
         totalSynced++;
       }
+
+      if (pageQueries.length > 0) {
+        console.log(`Saving ${pageQueries.length} villages from page ${page} to database...`);
+        try {
+          await prisma.$transaction(pageQueries);
+        } catch (txError: any) {
+          if (txError.code === "P2002") {
+            console.warn(`[Warning] Found unique constraint duplicate on page ${page}. Resolving row by row...`);
+            for (const q of pageQueries) {
+              try {
+                await q;
+              } catch (rowError) {
+                console.error(`Skipping row due to data conflict:`, rowError);
+              }
+            }
+          } else {
+            throw txError;
+          }
+        }
+      }
+
+      page++;
     }
 
     return {
       success: true,
       total: totalSynced,
+      totalPagesSynced: page - 1,
     };
   } catch (error) {
     logError("VillageService.syncVillagesFromApi", error);

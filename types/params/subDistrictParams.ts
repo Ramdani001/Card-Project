@@ -14,5 +14,6 @@ export type SubDistrictApiResponse = {
   data: {
     code: string;
     name: string;
+    regency_code: string;
   }[];
 };

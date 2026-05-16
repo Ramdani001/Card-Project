@@ -93,78 +93,79 @@ export const deleteSubDistrict = async (id: string) => {
 export const syncSubDistrictsFromApi = async () => {
   try {
     const cities = await prisma.city.findMany({
-      select: {
-        id: true,
-        code: true,
-        name: true,
-      },
+      select: { id: true, code: true },
     });
 
+    const cityMap = new Map<string, string>(cities.map((p) => [p.code, p.id]));
+
+    const apiKey = process.env.API_KEY_APICOID || "";
+
     let totalSynced = 0;
+    let page = 1;
+    let hasMoreData = true;
 
-    for (const city of cities) {
-      console.log(`Syncing sub districts for ${city.name}...`);
+    while (hasMoreData) {
+      console.log(`Fetching sub district data for page ${page}...`);
 
-      const response = await fetch(`https://wilayah.id/api/districts/${city.code}.json`, {
+      const response = await fetch(`https://use.api.co.id/regional/indonesia/districts?page=${page}`, {
         method: "GET",
         cache: "no-store",
+        headers: { "X-API-CO-ID": apiKey },
       });
 
       if (!response.ok) {
-        console.log(`Failed fetch city ${city.name}`);
-        continue;
+        console.error(`Failed to fetch city on page ${page}`);
+        break;
       }
 
       const result: SubDistrictApiResponse = await response.json();
 
-      if (!Array.isArray(result.data)) {
-        continue;
+      if (!result || !Array.isArray(result.data) || result.data.length === 0) {
+        console.log(`No more data found. Stopping fetch at page ${page}.`);
+        hasMoreData = false;
+        break;
       }
 
+      const pageQueries = [];
+
       for (const subDistrict of result.data) {
-        let existing = await prisma.subDistrict.findUnique({
-          where: {
-            code: subDistrict.code,
-          },
-        });
+        const cityId = cityMap.get(subDistrict.regency_code);
 
-        if (!existing) {
-          existing = await prisma.subDistrict.findFirst({
-            where: {
-              name: subDistrict.name,
-              cityId: city.id,
-            },
-          });
+        if (!cityId) {
+          console.warn(`City code ${subDistrict.regency_code} not found for sub district ${subDistrict.name}. Skipping.`);
+          continue;
         }
 
-        if (existing) {
-          await prisma.subDistrict.update({
-            where: {
-              id: existing.id,
+        pageQueries.push(
+          prisma.subDistrict.upsert({
+            where: { code: subDistrict.code },
+            update: {
+              name: subDistrict.name,
+              cityId: cityId,
             },
-            data: {
+            create: {
               code: subDistrict.code,
               name: subDistrict.name,
-              cityId: city.id,
+              cityId: cityId,
             },
-          });
-        } else {
-          await prisma.subDistrict.create({
-            data: {
-              code: subDistrict.code,
-              name: subDistrict.name,
-              cityId: city.id,
-            },
-          });
-        }
+          })
+        );
 
         totalSynced++;
       }
+
+      if (pageQueries.length > 0) {
+        console.log(`Saving ${pageQueries.length} sub districts from page ${page} to database...`);
+        await prisma.$transaction(pageQueries);
+      }
+
+      page++;
     }
 
     return {
       success: true,
       total: totalSynced,
+      totalPagesSynced: page - 1,
     };
   } catch (error) {
     logError("SubDistrictService.syncSubDistrictsFromApi", error);

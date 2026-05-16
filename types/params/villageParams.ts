@@ -14,5 +14,6 @@ export type VillageApiResponse = {
   data: {
     code: string;
     name: string;
+    district_code: string;
   }[];
 };
