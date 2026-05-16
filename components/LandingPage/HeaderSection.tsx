@@ -3,11 +3,73 @@
 import { CartItemDto } from "@/types/dtos/CartItemDto";
 import { MenuDto } from "@/types/dtos/MenuDto";
 import { ActionIcon, Box, Center, Container, Divider, Group, Indicator, Loader, Menu, rem, Text, Title, UnstyledButton } from "@mantine/core";
-import { IconChevronDown, IconShoppingCart } from "@tabler/icons-react";
+import { IconChevronDown, IconChevronRight, IconShoppingCart } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { ProfileTopbar } from "../layout/ProfileTopbar";
 import { CartSection } from "./CartSection";
+
+interface RecursiveMenuItemProps {
+  item: MenuDto;
+  allMenus: MenuDto[];
+  router: any;
+  isRoot?: boolean;
+}
+
+const RecursiveMenuItem = ({ item, allMenus, router, isRoot = false }: RecursiveMenuItemProps) => {
+  const menuChild = allMenus.filter((sub) => String(sub.parentId) === String(item.id));
+  const hasChild = menuChild.length > 0;
+
+  const MenuTarget = isRoot ? (
+    <UnstyledButton
+      className="nav-link"
+      onClick={() => !hasChild && item.url && router.push(item.url)}
+      style={{ display: "flex", alignItems: "center", gap: "4px" }}
+    >
+      <Text size="xs" fw={800} lts={1} tt="uppercase" c="gray.7">
+        {item.label}
+      </Text>
+      {hasChild && <IconChevronDown size={14} stroke={3} style={{ opacity: 0.5 }} />}
+    </UnstyledButton>
+  ) : (
+    <Menu.Item
+      fw={600}
+      onClick={() => !hasChild && item.url && router.push(item.url)}
+      closeMenuOnClick={!hasChild}
+      rightSection={hasChild && <IconChevronRight size={14} stroke={3} style={{ opacity: 0.5 }} />}
+    >
+      {item.label}
+    </Menu.Item>
+  );
+
+  if (!hasChild) {
+    return isRoot ? <Box key={item.id}>{MenuTarget}</Box> : MenuTarget;
+  }
+
+  return (
+    <Menu
+      key={item.id}
+      trigger="hover"
+      openDelay={50}
+      closeDelay={150}
+      withinPortal={isRoot}
+      position={isRoot ? "bottom-start" : "right-start"}
+      width={200}
+    >
+      <Menu.Target>{MenuTarget}</Menu.Target>
+
+      <Menu.Dropdown
+        styles={{
+          dropdown: isRoot ? { borderRadius: "0 0 8px 8px", borderTop: "2px solid var(--mantine-color-blue-6)" } : { borderRadius: "8px" },
+        }}
+      >
+        {menuChild.map((sub) => (
+          <RecursiveMenuItem key={sub.id} item={sub} allMenus={allMenus} router={router} isRoot={false} />
+        ))}
+      </Menu.Dropdown>
+    </Menu>
+  );
+};
 
 interface HeaderSectionProps {
   cartItems?: CartItemDto[];
@@ -122,9 +184,7 @@ export const HeaderSection = ({ cartItems, loadingCart, setCartItems }: HeaderSe
                       <Menu.Target>{MenuTarget}</Menu.Target>
                       <Menu.Dropdown styles={{ dropdown: { borderRadius: "0 0 8px 8px", borderTop: "2px solid var(--mantine-color-blue-6)" } }}>
                         {menuChild.map((sub) => (
-                          <Menu.Item key={sub.id} fw={600} onClick={() => sub.url && router.push(sub.url)}>
-                            {sub.label}
-                          </Menu.Item>
+                          <RecursiveMenuItem key={sub.id} item={sub} allMenus={menus} router={router} isRoot={false} />
                         ))}
                       </Menu.Dropdown>
                     </Menu>
