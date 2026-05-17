@@ -11,7 +11,6 @@ model Transaction {
   snapRedirect                 String?
   customerName                 String?
   customerEmail                String?
-  address                      String?
   deliveryMethod               DeliveryMethod               @default(SHIP)
   shopId                       String?
   createdAt                    DateTime                     @default(now())

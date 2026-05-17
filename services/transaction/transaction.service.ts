@@ -22,6 +22,8 @@ export const checkout = async (params: CreateTransactionParams) => {
     subDistrictCode,
     villageCode,
     postalCode,
+    courierCode,
+    shippingFee,
   } = params;
 
   const cart = await prisma.cart.findFirst({
@@ -31,180 +33,188 @@ export const checkout = async (params: CreateTransactionParams) => {
 
   if (!cart || cart.items.length === 0) throw new Error("Your cart is empty.");
 
+  for (const item of cart.items) {
+    if (!item.card) throw new Error(`Product data missing for item ID: ${item.id}`);
+
+    if (item.card.maxQtyPurchase && item.quantity > item.card.maxQtyPurchase) {
+      throw new Error(`Maximum purchase for '${item.card.name}' is ${item.card.maxQtyPurchase} pcs.`);
+    }
+    if (item.card.minQtyPurchase && item.quantity < item.card.minQtyPurchase) {
+      throw new Error(`Minimum purchase for '${item.card.name}' is ${item.card.minQtyPurchase} pcs.`);
+    }
+  }
+
   let subTotal = 0;
   const prismaItemsPayload: Prisma.TransactionItemCreateWithoutTransactionInput[] = [];
   const midtransItemsPayload: any[] = [];
 
   for (const item of cart.items) {
-    if (!item.card) throw new Error(`Product data missing for item ID: ${item.id}`);
-
-    const price = Number(item.card.price);
+    const price = Number(item.card!.price);
     const itemTotal = price * item.quantity;
     subTotal += itemTotal;
 
     prismaItemsPayload.push({
-      card: { connect: { id: item.card.id } },
-      productName: item.card.name,
-      productPrice: item.card.price,
+      card: { connect: { id: item.card!.id } },
+      productName: item.card!.name,
+      productPrice: item.card!.price,
       quantity: item.quantity,
       subTotal: new Prisma.Decimal(itemTotal),
-      skuSnapshot: item.card.sku,
+      skuSnapshot: item.card!.sku,
     });
 
     midtransItemsPayload.push({
-      id: item.card.id.substring(0, 20),
+      id: item.card!.id.substring(0, 20),
       price: price,
       quantity: item.quantity,
-      name: item.card.name.substring(0, 50),
+      name: item.card!.name.substring(0, 50),
     });
   }
 
-  const transactionData = await prisma.$transaction(
-    async (tx) => {
-      let voucherAmount = 0;
-      let voucherId: string | null = null;
-      let finalTotal = subTotal;
+  const actualShippingFee = deliveryMethod === DeliveryMethod.SHIP ? Number(shippingFee || 0) : 0;
 
-      if (voucherCode) {
-        const voucher = await tx.voucher.findUnique({
-          where: { code: voucherCode },
-          include: {
-            voucherRoles: true,
-            voucherCards: true,
-            voucherCardCategories: true,
-          },
-        });
+  const transactionData = await prisma.$transaction(async (tx) => {
+    let voucherAmount = 0;
+    let voucherId: string | null = null;
+    let finalTotal = subTotal;
 
-        if (!voucher) throw new Error("Invalid voucher code.");
-
-        const now = new Date();
-        if (now < voucher.startDate || now > voucher.endDate) throw new Error("Voucher is not active.");
-        if (voucher.stock !== null && voucher.usedCount >= voucher.stock) throw new Error("Voucher out of stock.");
-        if (voucher.minPurchase && subTotal < Number(voucher.minPurchase)) {
-          throw new Error(`Min. purchase Rp ${Number(voucher.minPurchase).toLocaleString()} required.`);
-        }
-
-        if (voucher.voucherRoles.length > 0) {
-          const user = await tx.user.findUnique({ where: { id: userId } });
-          const isRoleAllowed = voucher.voucherRoles.some((vr) => vr.roleId === user?.roleId);
-          if (!isRoleAllowed) throw new Error("Your account level cannot use this voucher.");
-        }
-
-        const hasSpecificProductLimit = voucher.voucherCards.length > 0;
-        const hasSpecificCategoryLimit = voucher.voucherCardCategories.length > 0;
-
-        if (hasSpecificProductLimit || hasSpecificCategoryLimit) {
-          const cartCardIds = cart.items.map((item) => item.cardId);
-          const allowedByCard = voucher.voucherCards.some((vc) => cartCardIds.includes(vc.cardId));
-          const cartCategoryIds = cart.items.flatMap((item) => item.card.categories.map((e) => e.categoryId));
-          const allowedByCategory = voucher.voucherCardCategories.some((vcc) => cartCategoryIds.includes(vcc.cardCategoryId));
-
-          if (!allowedByCard && !allowedByCategory) {
-            throw new Error("This voucher is not applicable to any items in your cart.");
-          }
-        }
-
-        voucherAmount = voucher.type === DiscountType.NOMINAL ? Number(voucher.value) : subTotal * (Number(voucher.value) / 100);
-
-        if (voucher.maxDiscount && voucherAmount > Number(voucher.maxDiscount)) voucherAmount = Number(voucher.maxDiscount);
-        if (voucherAmount > subTotal) voucherAmount = subTotal;
-
-        finalTotal = subTotal - voucherAmount;
-        voucherId = voucher.id;
-
-        await tx.voucher.update({
-          where: { id: voucherId },
-          data: { usedCount: { increment: 1 } },
-        });
-      }
-
-      const randomStr = Math.floor(1000 + Math.random() * 9000);
-      const invoiceNumber = `INV/${new Date().getFullYear()}/${Date.now()}-${randomStr}`;
-
-      const newTransaction = await tx.transaction.create({
-        data: {
-          userId,
-          invoice: invoiceNumber,
-          subTotal: new Prisma.Decimal(subTotal),
-          voucherAmount: new Prisma.Decimal(voucherAmount),
-          totalPrice: new Prisma.Decimal(Math.max(0, finalTotal)),
-          status: TransactionStatus.PENDING,
-          customerName,
-          customerEmail,
-          voucherId,
-          shopId,
-          deliveryMethod,
-          statusLogs: { create: { status: TransactionStatus.PENDING, note: "Checkout initiated", createdBy: userId } },
-          items: { create: prismaItemsPayload },
+    if (voucherCode) {
+      const voucher = await tx.voucher.findUnique({
+        where: { code: voucherCode },
+        include: {
+          voucherRoles: true,
+          voucherCards: true,
+          voucherCardCategories: true,
         },
       });
 
-      if (deliveryMethod == DeliveryMethod.SHIP) {
-        if (!countryIsoCode || !provinceCode || !cityCode || !subDistrictCode || !villageCode || !postalCode || !address) {
-          throw new Error("Missing required shipping information fields.");
-        }
+      if (!voucher) throw new Error("Invalid voucher code.");
 
-        const country = await tx.country.findFirst({ where: { isoCode: countryIsoCode } });
-        const province = await tx.province.findFirst({ where: { code: provinceCode } });
-        const city = await tx.city.findFirst({ where: { code: cityCode } });
-        const subDistrict = await tx.subDistrict.findFirst({ where: { code: subDistrictCode } });
-        const village = await tx.village.findFirst({ where: { code: villageCode } });
-
-        await tx.transactionShipmentAddress.create({
-          data: {
-            transactionId: newTransaction.id,
-            countryIsoCode: country?.isoCode || "-",
-            countryName: country?.name || "-",
-            provinceCode: province?.code || "-",
-            provinceName: province?.name || "-",
-            cityCode: city?.code || "-",
-            cityName: city?.name || "-",
-            subDistrictCode: subDistrict?.code || "-",
-            subDistrictName: subDistrict?.name || "-",
-            villageCode: village?.code || "-",
-            villageName: village?.name || "-",
-            postalCode: postalCode || "-",
-            address,
-          },
-        });
+      const now = new Date();
+      if (now < voucher.startDate || now > voucher.endDate) throw new Error("Voucher is not active.");
+      if (voucher.stock !== null && voucher.usedCount >= voucher.stock) throw new Error("Voucher out of stock.");
+      if (voucher.minPurchase && subTotal < Number(voucher.minPurchase)) {
+        throw new Error(`Min. purchase Rp ${Number(voucher.minPurchase).toLocaleString()} required.`);
       }
 
-      for (const item of cart.items) {
-        const card = item.card!;
+      if (voucher.voucherRoles.length > 0) {
+        const user = await tx.user.findUnique({ where: { id: userId } });
+        const isRoleAllowed = voucher.voucherRoles.some((vr) => vr.roleId === user?.roleId);
+        if (!isRoleAllowed) throw new Error("Your account level cannot use this voucher.");
+      }
 
-        if (card.maxQtyPurchase && item.quantity > card.maxQtyPurchase) {
-          throw new Error(`Maximum purchase for '${card.name}' is ${card.maxQtyPurchase} pcs.`);
-        }
+      const hasSpecificProductLimit = voucher.voucherCards.length > 0;
+      const hasSpecificCategoryLimit = voucher.voucherCardCategories.length > 0;
 
-        if (card.minQtyPurchase && item.quantity < card.minQtyPurchase) {
-          throw new Error(`Minimum purchase for '${card.name}' is ${card.minQtyPurchase} pcs.`);
-        }
+      if (hasSpecificProductLimit || hasSpecificCategoryLimit) {
+        const cartCardIds = cart.items.map((item) => item.cardId);
+        const allowedByCard = voucher.voucherCards.some((vc) => cartCardIds.includes(vc.cardId));
+        const cartCategoryIds = cart.items.flatMap((item) => item.card!.categories.map((e) => e.categoryId));
+        const allowedByCategory = voucher.voucherCardCategories.some((vcc) => cartCategoryIds.includes(vcc.cardCategoryId));
 
-        const updated = await tx.card.updateMany({
-          where: {
-            id: item.cardId,
-            stock: { gte: item.quantity },
-          },
-          data: {
-            stock: { decrement: item.quantity },
-          },
-        });
-
-        if (updated.count === 0) {
-          throw new Error(`Insufficient stock for '${card.name}' (Only ${card.stock} pcs available).`);
+        if (!allowedByCard && !allowedByCategory) {
+          throw new Error("This voucher is not applicable to any items in your cart.");
         }
       }
 
-      await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
+      voucherAmount = voucher.type === DiscountType.NOMINAL ? Number(voucher.value) : subTotal * (Number(voucher.value) / 100);
 
-      return {
-        transaction: newTransaction,
-        finalTotal: Math.max(1, Math.floor(finalTotal)),
-        voucherCode,
-      };
-    },
-    { timeout: 10000 }
-  );
+      if (voucher.maxDiscount && voucherAmount > Number(voucher.maxDiscount)) voucherAmount = Number(voucher.maxDiscount);
+      if (voucherAmount > subTotal) voucherAmount = subTotal;
+
+      finalTotal = subTotal - voucherAmount;
+      voucherId = voucher.id;
+
+      await tx.voucher.update({
+        where: { id: voucherId },
+        data: { usedCount: { increment: 1 } },
+      });
+    }
+
+    finalTotal = finalTotal + actualShippingFee;
+
+    const randomStr = Math.floor(1000 + Math.random() * 9000);
+    const invoiceNumber = `INV/${new Date().getFullYear()}/${Date.now()}-${randomStr}`;
+
+    const newTransaction = await tx.transaction.create({
+      data: {
+        userId,
+        invoice: invoiceNumber,
+        subTotal: new Prisma.Decimal(subTotal),
+        voucherAmount: new Prisma.Decimal(voucherAmount),
+
+        shippingCost: new Prisma.Decimal(actualShippingFee),
+        expedition: courierCode || null,
+
+        totalPrice: new Prisma.Decimal(Math.max(0, finalTotal)),
+        status: TransactionStatus.PENDING,
+        customerName,
+        customerEmail,
+        voucherId,
+        shopId,
+        deliveryMethod,
+        statusLogs: { create: { status: TransactionStatus.PENDING, note: "Checkout initiated", createdBy: userId } },
+        items: { create: prismaItemsPayload },
+      },
+    });
+
+    if (deliveryMethod == DeliveryMethod.SHIP) {
+      if (!countryIsoCode || !provinceCode || !cityCode || !subDistrictCode || !villageCode || !postalCode || !address || !courierCode) {
+        throw new Error("Missing required shipping information fields or courier choice.");
+      }
+
+      const [country, province, city, subDistrict, village] = await Promise.all([
+        tx.country.findFirst({ where: { isoCode: countryIsoCode } }),
+        tx.province.findFirst({ where: { code: provinceCode } }),
+        tx.city.findFirst({ where: { code: cityCode } }),
+        tx.subDistrict.findFirst({ where: { code: subDistrictCode } }),
+        tx.village.findFirst({ where: { code: villageCode } }),
+      ]);
+
+      await tx.transactionShipmentAddress.create({
+        data: {
+          transactionId: newTransaction.id,
+          countryIsoCode: country?.isoCode || "-",
+          countryName: country?.name || "-",
+          provinceCode: province?.code || "-",
+          provinceName: province?.name || "-",
+          cityCode: city?.code || "-",
+          cityName: city?.name || "-",
+          subDistrictCode: subDistrict?.code || "-",
+          subDistrictName: subDistrict?.name || "-",
+          villageCode: village?.code || "-",
+          villageName: village?.name || "-",
+          postalCode: postalCode || "-",
+          address,
+        },
+      });
+    }
+
+    for (const item of cart.items) {
+      const card = item.card!;
+
+      const updated = await tx.card.updateMany({
+        where: {
+          id: item.cardId,
+          stock: { gte: item.quantity },
+        },
+        data: {
+          stock: { decrement: item.quantity },
+        },
+      });
+
+      if (updated.count === 0) {
+        throw new Error(`Insufficient stock for '${card.name}'. Someone else might have just bought it.`);
+      }
+    }
+
+    await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
+
+    return {
+      transaction: newTransaction,
+      finalTotal: Math.max(1, Math.floor(finalTotal)),
+      voucherCode,
+    };
+  });
 
   try {
     if (voucherCode && transactionData.transaction.voucherAmount.toNumber() > 0) {
@@ -213,6 +223,15 @@ export const checkout = async (params: CreateTransactionParams) => {
         price: -Math.floor(transactionData.transaction.voucherAmount.toNumber()),
         quantity: 1,
         name: `Discount: ${voucherCode}`,
+      });
+    }
+
+    if (deliveryMethod === DeliveryMethod.SHIP && actualShippingFee > 0) {
+      midtransItemsPayload.push({
+        id: "SHIPPING-FEE",
+        price: actualShippingFee,
+        quantity: 1,
+        name: `Shipping: ${courierCode}`,
       });
     }
 

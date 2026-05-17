@@ -13,6 +13,7 @@ export interface CardDto {
   minQtyPurchase?: number | null;
   maxQtyPurchase?: number | null;
   description?: string;
+  weight: number;
   images: { id: string; url: string; isPrimary: boolean }[];
   categories: {
     category: CategoryCardDto;

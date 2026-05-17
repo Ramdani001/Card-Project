@@ -16,6 +16,8 @@ export interface CreateTransactionParams {
   villageCode?: string;
   postalCode?: string;
   paymentMethod?: string;
+  courierCode?: string | null;
+  shippingFee?: number | null;
 }
 
 export interface GetTransactionParams {

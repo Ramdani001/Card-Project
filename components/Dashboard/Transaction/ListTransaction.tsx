@@ -232,13 +232,7 @@ const ListTransaction = ({ isNonDashboard = false }: ListTransactionProps) => {
       />
 
       {selectedTrx && (
-        <TransactionDetailModal
-          opened={detailOpened}
-          onClose={closeDetail}
-          transaction={selectedTrx}
-          onUpdateSuccess={fetchTransactions}
-          isNonDashboard={isNonDashboard}
-        />
+        <TransactionDetailModal opened={detailOpened} onClose={closeDetail} transaction={selectedTrx} onUpdateSuccess={fetchTransactions} />
       )}
 
       <TransactionHistoryModal

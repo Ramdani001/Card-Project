@@ -31,7 +31,7 @@ export const MyTransactionDetailModal = ({ opened, onClose, transaction }: Props
               {isPickup ? DeliveryMethod.PICKUP : DeliveryMethod.SHIP}
             </Badge>
             <Text size="xs" c="dimmed">
-              {transaction.paymentMethod || "-"}
+              {transaction.paymentMethod || "Payment method not selected"}
             </Text>
           </Stack>
         </Group>
@@ -41,7 +41,6 @@ export const MyTransactionDetailModal = ({ opened, onClose, transaction }: Props
         <Stack gap={6}>
           <Group gap={6}>
             {isPickup ? <IconMapPin size={16} /> : <IconTruckDelivery size={16} />}
-
             <Text size="sm" fw={700}>
               {isPickup ? "Pickup Location" : "Shipping Address"}
             </Text>
@@ -56,16 +55,37 @@ export const MyTransactionDetailModal = ({ opened, onClose, transaction }: Props
                 </Text>
               </>
             ) : (
-              <>
-                <Text fw={600}>{transaction.customerName}</Text>
-                <Text size="xs" c="dimmed" style={{ lineHeight: 1.5 }}>
-                  {transaction.transactionShipmentAddress[0]?.address}, {transaction.transactionShipmentAddress[0]?.villageName},{" "}
-                  {transaction.transactionShipmentAddress[0]?.subDistrictName},
-                  <br />
-                  {transaction.transactionShipmentAddress[0]?.cityName}, {transaction.transactionShipmentAddress[0]?.provinceName},{" "}
-                  {transaction.transactionShipmentAddress[0]?.postalCode}
-                </Text>
-              </>
+              <Stack gap="xs">
+                <Box>
+                  <Text fw={600}>{transaction.customerName}</Text>
+                  <Text size="xs" c="dimmed" style={{ lineHeight: 1.5 }}>
+                    {transaction.transactionShipmentAddress[0]?.address}, {transaction.transactionShipmentAddress[0]?.villageName},{" "}
+                    {transaction.transactionShipmentAddress[0]?.subDistrictName},
+                    <br />
+                    {transaction.transactionShipmentAddress[0]?.cityName}, {transaction.transactionShipmentAddress[0]?.provinceName},{" "}
+                    {transaction.transactionShipmentAddress[0]?.postalCode}
+                  </Text>
+                </Box>
+
+                <Group gap="xl" pt="xs" style={{ borderTop: "1px dashed #e9ecef" }}>
+                  <Box>
+                    <Text size="sm" fw={600}>
+                      Courier
+                    </Text>
+                    <Text size="xs" c="dimmed" style={{ lineHeight: 1.5 }}>
+                      {transaction.expedition || "-"}
+                    </Text>
+                  </Box>
+                  <Box>
+                    <Text size="sm" fw={600}>
+                      Tracking Number
+                    </Text>
+                    <Text size="xs" c="dimmed" style={{ lineHeight: 1.5 }}>
+                      {transaction.resi || "-"}
+                    </Text>
+                  </Box>
+                </Group>
+              </Stack>
             )}
           </Paper>
         </Stack>
@@ -99,9 +119,7 @@ export const MyTransactionDetailModal = ({ opened, onClose, transaction }: Props
                         {item.skuSnapshot || "-"}
                       </Text>
                     </Table.Td>
-
                     <Table.Td ta="center">{item.quantity}x</Table.Td>
-
                     <Table.Td ta="right">{formatRupiah(Number(item.productPrice))}</Table.Td>
                   </Table.Tr>
                 ))}

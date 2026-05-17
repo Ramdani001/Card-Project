@@ -25,6 +25,7 @@ model Card {
   updatedAt        DateTime            @updatedAt
   maxQtyPurchase   Int?
   minQtyPurchase   Int?
+  weight           Float               @default(0.1)
   discount         Discount?           @relation(fields: [discountId], references: [id])
   histories        CardHistory[]
   cartItems        CartItem[]

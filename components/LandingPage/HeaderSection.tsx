@@ -7,7 +7,7 @@ import { IconChevronDown, IconChevronRight, IconShoppingCart } from "@tabler/ico
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { ProfileTopbar } from "../layout/ProfileTopbar";
-import { CartSection } from "./CartSection";
+import { CartSection } from "./Cart/CartSection";
 
 interface RecursiveMenuItemProps {
   item: MenuDto;

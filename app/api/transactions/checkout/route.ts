@@ -32,17 +32,28 @@ export const POST = async (req: NextRequest) => {
       subDistrictCode,
       villageCode,
       postalCode,
+      courierCode,
+      shippingFee,
     } = body;
 
-    if (deliveryMethod === "SHIP" && !address?.trim()) {
-      return sendResponse({
-        success: false,
-        message: "Shipping address is required",
-        status: 400,
-      });
+    if (deliveryMethod === DeliveryMethod.SHIP) {
+      if (!address?.trim()) {
+        return sendResponse({
+          success: false,
+          message: "Shipping address is required",
+          status: 400,
+        });
+      }
+      if (!courierCode) {
+        return sendResponse({
+          success: false,
+          message: "Courier service is required",
+          status: 400,
+        });
+      }
     }
 
-    if (deliveryMethod === "PICKUP" && !shopId) {
+    if (deliveryMethod === DeliveryMethod.PICKUP && !shopId) {
       return sendResponse({
         success: false,
         message: "Pickup shop is required",
@@ -55,15 +66,20 @@ export const POST = async (req: NextRequest) => {
       deliveryMethod,
       customerName: session.user.name || customerNameGuest,
       customerEmail: session.user.email || customerEmailGuest,
+
+      voucherCode: voucherCode || null,
+
       address: deliveryMethod === DeliveryMethod.SHIP ? address : null,
-      shopId: deliveryMethod === DeliveryMethod.PICKUP ? shopId : null,
-      voucherCode: deliveryMethod === DeliveryMethod.SHIP ? voucherCode : null,
       countryIsoCode: deliveryMethod === DeliveryMethod.SHIP ? countryIsoCode : null,
       provinceCode: deliveryMethod === DeliveryMethod.SHIP ? provinceCode : null,
       cityCode: deliveryMethod === DeliveryMethod.SHIP ? cityCode : null,
       subDistrictCode: deliveryMethod === DeliveryMethod.SHIP ? subDistrictCode : null,
       villageCode: deliveryMethod === DeliveryMethod.SHIP ? villageCode : null,
       postalCode: deliveryMethod === DeliveryMethod.SHIP ? postalCode : null,
+      courierCode: deliveryMethod === DeliveryMethod.SHIP ? courierCode : null,
+      shippingFee: deliveryMethod === DeliveryMethod.SHIP ? Number(shippingFee) : 0,
+
+      shopId: deliveryMethod === DeliveryMethod.PICKUP ? shopId : null,
     });
 
     return sendResponse({
@@ -73,12 +89,18 @@ export const POST = async (req: NextRequest) => {
       status: 201,
     });
   } catch (err: any) {
-    if (err.message === "Cart is empty") {
-      return sendResponse({ success: false, message: err.message, status: 400 });
-    }
-
-    if (err.message.includes("Insufficient stock")) {
-      return sendResponse({ success: false, message: err.message, status: 400 });
+    if (
+      err.message === "Your cart is empty." ||
+      err.message.includes("Insufficient stock") ||
+      err.message.includes("Invalid voucher") ||
+      err.message.includes("Voucher out of stock") ||
+      err.message.includes("Min. purchase")
+    ) {
+      return sendResponse({
+        success: false,
+        message: err.message,
+        status: 400,
+      });
     }
 
     return handleApiError(err);

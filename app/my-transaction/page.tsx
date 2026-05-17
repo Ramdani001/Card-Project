@@ -256,7 +256,7 @@ const MyTransaction = () => {
                         <Group gap="sm">
                           <ThemeIconIconWrapper icon={<IconCreditCard size={16} />} color="gray" />
                           <Text size="xs" c="gray.7" fw={500}>
-                            {item.paymentMethod || "Standard Payment"}
+                            {item.paymentMethod || "-"}
                           </Text>
                         </Group>
                       </Stack>
