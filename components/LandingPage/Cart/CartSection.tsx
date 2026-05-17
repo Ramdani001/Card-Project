@@ -114,7 +114,7 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
   }, [isDrawerOpen]);
 
   useEffect(() => {
-    if (countryIsoCode) {
+    if (countryIsoCode && isDrawerOpen) {
       fetch(`/api/provincies?country.isoCode=${countryIsoCode}`)
         .then((res) => res.json())
         .then((json) => setProvinces(json.data.map((i: any) => ({ value: i.code, label: i.name }))));
@@ -122,10 +122,10 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
       setProvinces([]);
       setProvinceCode("");
     }
-  }, [countryIsoCode]);
+  }, [countryIsoCode, isDrawerOpen]);
 
   useEffect(() => {
-    if (provinceCode) {
+    if (provinceCode && isDrawerOpen) {
       fetch(`/api/cities?province.code=${provinceCode}`)
         .then((res) => res.json())
         .then((json) => setCities(json.data.map((i: any) => ({ value: i.code, label: i.name }))));
@@ -133,10 +133,10 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
       setCities([]);
       setCityCode("");
     }
-  }, [provinceCode]);
+  }, [provinceCode, isDrawerOpen]);
 
   useEffect(() => {
-    if (cityCode) {
+    if (cityCode && isDrawerOpen) {
       fetch(`/api/sub-districts?city.code=${cityCode}`)
         .then((res) => res.json())
         .then((json) => setSubDistricts(json.data.map((i: any) => ({ value: i.code, label: i.name }))));
@@ -144,10 +144,10 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
       setSubDistricts([]);
       setSubDistrictCode("");
     }
-  }, [cityCode]);
+  }, [cityCode, isDrawerOpen]);
 
   useEffect(() => {
-    if (subDistrictCode) {
+    if (subDistrictCode && isDrawerOpen) {
       fetch(`/api/villages?subDistrict.code=${subDistrictCode}`)
         .then((res) => res.json())
         .then((json) => setVillages(json.data.map((i: any) => ({ value: i.code, label: i.name }))));
@@ -155,7 +155,7 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
       setVillages([]);
       setVillageCode("");
     }
-  }, [subDistrictCode]);
+  }, [subDistrictCode, isDrawerOpen]);
 
   useEffect(() => {
     const calculateShipping = async () => {
@@ -178,7 +178,6 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
         const mainShop = shopJson.data[0];
 
         if (!mainShop.villageCode || mainShop.villageCode === "undefined") {
-          console.error("Main shop tidak memiliki kode kelurahan (villageCode)");
           setCouriers([]);
           return;
         }
@@ -201,8 +200,10 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
       }
     };
 
-    calculateShipping();
-  }, [deliveryMethod, villageCode, cartItems]);
+    if (isDrawerOpen) {
+      calculateShipping();
+    }
+  }, [deliveryMethod, villageCode, cartItems, isDrawerOpen]);
 
   const handleCheckout = async () => {
     const isShipping = deliveryMethod === DeliveryMethod.SHIP;
@@ -342,12 +343,10 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
       fullScreen={isMobile}
       radius={isMobile ? 0 : "lg"}
       overlayProps={{ backgroundOpacity: 0.3, blur: 8 }}
-      // Remove default modal body padding so we control it ourselves
       styles={{
         body: { padding: 0, overflow: "hidden" },
       }}
     >
-      {/* ── Empty / Loading state ── */}
       {(loadingCart || cartItems.length === 0) && (
         <Center py={80}>
           {loadingCart ? (
@@ -370,7 +369,6 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
         </Center>
       )}
 
-      {/* ── MOBILE: single scroll, items on top, form below ── */}
       {!loadingCart && cartItems.length > 0 && isMobile && (
         <ScrollArea h="calc(100dvh - 80px)" scrollbarSize={4}>
           <Stack gap="md" p="md">
@@ -381,14 +379,12 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
               handleUpdateQuantity={handleUpdateQuantity}
             />
           </Stack>
-          {/* CheckoutForm handles its own sticky top/bottom internally */}
           <Box style={{ borderTop: "1px solid #f1f3f5" }}>
             <CheckoutForm {...checkoutFormProps} />
           </Box>
         </ScrollArea>
       )}
 
-      {/* ── DESKTOP: two-column, each column scrolls independently ── */}
       {!loadingCart && cartItems.length > 0 && !isMobile && (
         <Box
           style={{
@@ -398,7 +394,6 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
             overflow: "hidden",
           }}
         >
-          {/* Left: cart items — scrollable */}
           <ScrollArea style={{ borderRight: "1px solid #f1f3f5", height: "80vh" }} p="xl" scrollbarSize={4}>
             <CartItemRows
               cartItems={cartItems}
@@ -408,8 +403,6 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
             />
           </ScrollArea>
 
-          {/* Right: checkout form — sticky top summary + internal scroll + sticky bottom button */}
-          {/* No ScrollArea wrapper here — CheckoutForm manages its own scroll internally */}
           <Box style={{ height: "80vh", overflow: "hidden" }}>
             <CheckoutForm {...checkoutFormProps} />
           </Box>

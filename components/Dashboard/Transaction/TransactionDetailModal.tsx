@@ -87,7 +87,7 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
       setCouriers([]);
       fetchNextStatusOptions(transaction.id);
 
-      if (transaction.deliveryMethod === DeliveryMethod.SHIP) {
+      if (transaction.deliveryMethod === DeliveryMethod.SHIP && status === TransactionStatus.SHIPPED) {
         fetchCouriers();
       }
     }
@@ -297,9 +297,9 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
                 </Text>
                 {transaction.deliveryMethod === "SHIP" ? (
                   <Text size="xs" c="dimmed" style={{ lineHeight: 1.5 }}>
-                    {transaction.transactionShipmentAddress[0]?.address}, {transaction.transactionShipmentAddress[0]?.villageName},{" "}
+                    {transaction.transactionShipmentAddress[0]?.address}, {transaction.transactionShipmentAddress[0]?.villageName},
                     {transaction.transactionShipmentAddress[0]?.subDistrictName},<br />
-                    {transaction.transactionShipmentAddress[0]?.cityName}, {transaction.transactionShipmentAddress[0]?.provinceName},{" "}
+                    {transaction.transactionShipmentAddress[0]?.cityName}, {transaction.transactionShipmentAddress[0]?.provinceName},
                     {transaction.transactionShipmentAddress[0]?.postalCode}
                   </Text>
                 ) : (
@@ -307,11 +307,12 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
                     <Text size="sm" fw={500}>
                       {transaction.shop?.name || "No Shop Selected"}
                     </Text>
-                    {transaction.shop?.address && (
-                      <Text size="xs" c="dimmed" mt={2}>
-                        {transaction.shop.address}
-                      </Text>
-                    )}
+
+                    <Text size="xs" c="dimmed" style={{ lineHeight: 1.5 }}>
+                      {transaction.shop?.address}, {transaction.shop?.villageName},{transaction.shop?.subDistrictName},
+                      <br />
+                      {transaction.shop?.cityName}, {transaction.shop?.provinceName},{transaction.shop?.postalCode}
+                    </Text>
                   </>
                 )}
               </Box>

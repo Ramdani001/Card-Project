@@ -50,8 +50,10 @@ export const MyTransactionDetailModal = ({ opened, onClose, transaction }: Props
             {isPickup ? (
               <>
                 <Text fw={600}>{transaction.shop?.name || "Pickup Shop"}</Text>
-                <Text size="xs" c="dimmed">
-                  {transaction.shop?.address || "No shop address"}
+                <Text size="xs" c="dimmed" style={{ lineHeight: 1.5 }}>
+                  {transaction.shop?.address}, {transaction.shop?.villageName}, {transaction.shop?.subDistrictName},
+                  <br />
+                  {transaction.shop?.cityName}, {transaction.shop?.provinceName}, {transaction.shop?.postalCode}
                 </Text>
               </>
             ) : (
