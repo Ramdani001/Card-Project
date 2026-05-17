@@ -26,14 +26,20 @@ export const GET = async (req: NextRequest) => {
 
 export const POST = async (req: NextRequest) => {
   try {
-    const formData = await req.formData();
+    const body = await req.json();
 
-    const name = formData.get("name") as string;
-    const address = formData.get("address") as string;
+    const { name, address, countryIsoCode, provinceCode, cityCode, subDistrictCode, villageCode, postalCode, isMainShop } = body;
 
     const newShop = await createShop({
       name,
       address,
+      countryIsoCode,
+      provinceCode,
+      cityCode,
+      subDistrictCode,
+      villageCode,
+      postalCode,
+      isMainShop,
     });
 
     return sendResponse({

@@ -159,8 +159,10 @@ const ListShop = () => {
       label: "Address",
       filterable: true,
       render: (item) => (
-        <Text size="xs" lineClamp={2} c={!item.address ? "dimmed" : undefined}>
-          {item.address || "-"}
+        <Text size="xs" c="dimmed" style={{ lineHeight: 1.5 }}>
+          {item.address}, {item.villageName}, {item.subDistrictName},
+          <br />
+          {item.cityName}, {item.provinceName}, {item.postalCode}
         </Text>
       ),
     },

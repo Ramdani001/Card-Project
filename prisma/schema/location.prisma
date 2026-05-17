@@ -7,6 +7,7 @@ model Country {
     provinces                    Province[]
     transactionShipmentAddresses TransactionShipmentAddress[]
     users                        User[]
+    shops                        Shop[]
 }
 
 model Province {
@@ -20,6 +21,7 @@ model Province {
     cities                       City[]
     transactionShipmentAddresses TransactionShipmentAddress[]
     users                        User[]
+    shops                        Shop[]
 
     @@unique([name, countryId])
 }
@@ -35,6 +37,7 @@ model City {
     subDistricts                 SubDistrict[]
     transactionShipmentAddresses TransactionShipmentAddress[]
     users                        User[]
+    shops                        Shop[]
 
     @@unique([name, provinceId])
 }
@@ -50,6 +53,7 @@ model SubDistrict {
     villages                     Village[]
     transactionShipmentAddresses TransactionShipmentAddress[]
     users                        User[]
+    shops                        Shop[]
 
     @@unique([name, cityId])
 }
@@ -64,6 +68,7 @@ model Village {
     subDistrict                  SubDistrict                  @relation(fields: [subDistrictId], references: [id])
     transactionShipmentAddresses TransactionShipmentAddress[]
     users                        User[]
+    shops                        Shop[]
 
     @@unique([name, subDistrictId])
 }

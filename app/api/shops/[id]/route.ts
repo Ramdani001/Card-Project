@@ -29,15 +29,21 @@ export const GET = async (_req: NextRequest, { params }: RouteParams) => {
 export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
   try {
     const { id } = await params;
-    const formData = await req.formData();
+    const body = await req.json();
 
-    const name = formData.get("name") as string | null;
-    const address = formData.get("address") as string | null;
+    const { name, address, countryIsoCode, provinceCode, cityCode, subDistrictCode, villageCode, postalCode, isMainShop } = body;
 
     const updatedShop = await updateShop({
       id,
       name: name ?? undefined,
       address: address ?? undefined,
+      countryIsoCode: countryIsoCode ?? undefined,
+      provinceCode: provinceCode ?? undefined,
+      cityCode: cityCode ?? undefined,
+      subDistrictCode: subDistrictCode ?? undefined,
+      villageCode: villageCode ?? undefined,
+      postalCode: postalCode ?? undefined,
+      isMainShop: isMainShop !== undefined ? isMainShop : undefined,
     });
 
     return sendResponse({

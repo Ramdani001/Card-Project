@@ -491,8 +491,10 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
                 <Text fw={600} size="sm">
                   {item.name}
                 </Text>
-                <Text size="xs" c="dimmed">
-                  {item.address || "No address"}
+                <Text size="xs" c="dimmed" style={{ lineHeight: 1.5 }}>
+                  {item.address}, {item.villageName}, {item.subDistrictName},
+                  <br />
+                  {item.cityName}, {item.provinceName}, {item.postalCode}
                 </Text>
               </Box>
             ))}

@@ -22,10 +22,28 @@ model Menu {
 }
 
 model Shop {
-    id           String        @id @default(uuid())
-    name         String
-    address      String
-    createdAt    DateTime      @default(now())
-    updatedAt    DateTime      @updatedAt
-    transactions Transaction[]
+    id              String        @id @default(uuid())
+    name            String
+    isMainShop      Boolean       @default(false)
+    countryIsoCode  String
+    countryName     String
+    provinceCode    String
+    provinceName    String
+    cityCode        String
+    cityName        String
+    subDistrictCode String
+    subDistrictName String
+    villageCode     String
+    villageName     String
+    postalCode      String
+    address         String
+    createdAt       DateTime      @default(now())
+    updatedAt       DateTime      @updatedAt
+    transactions    Transaction[]
+
+    country     Country     @relation(fields: [countryIsoCode], references: [isoCode])
+    province    Province    @relation(fields: [provinceCode], references: [code])
+    city        City        @relation(fields: [cityCode], references: [code])
+    subDistrict SubDistrict @relation(fields: [subDistrictCode], references: [code])
+    village     Village     @relation(fields: [villageCode], references: [code])
 }
