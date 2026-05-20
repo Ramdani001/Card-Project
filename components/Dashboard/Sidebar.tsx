@@ -1,7 +1,8 @@
 import { ICON_MAP } from "@/config/menuMapping";
 import { MenuDto } from "@/types/dtos/MenuDto";
-import { ActionIcon, Box, Group, NavLink, Stack, Text } from "@mantine/core";
+import { ActionIcon, Box, Group, Image, NavLink, Stack, Text } from "@mantine/core";
 import { IconX } from "@tabler/icons-react";
+import Link from "next/link";
 
 interface SidebarProps {
   menus?: MenuDto[];
@@ -95,18 +96,6 @@ const Sidebar = ({ menus = [], activeMenu, onMenuClick, onClose }: SidebarProps)
           margin-bottom: 8px;
         }
 
-        .logo-icon {
-          width: 36px;
-          height: 36px;
-          border-radius: 10px;
-          background: linear-gradient(135deg, #6366f1, #4f46e5);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 4px 12px rgba(99,102,241,0.4);
-          flex-shrink: 0;
-        }
-
         .sidebar-nav {
           flex: 1;
           overflow-y: auto;
@@ -140,14 +129,9 @@ const Sidebar = ({ menus = [], activeMenu, onMenuClick, onClose }: SidebarProps)
         <div className="sidebar-logo">
           <Group justify="space-between" align="center">
             <Group gap={12}>
-              <div className="logo-icon">
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <rect x="2" y="4" width="14" height="10" rx="2.5" stroke="white" strokeWidth="1.5" />
-                  <circle cx="6.5" cy="9" r="2" fill="rgba(255,255,255,0.8)" />
-                  <rect x="10" y="7.5" width="4" height="1.2" rx="0.6" fill="rgba(255,255,255,0.5)" />
-                  <rect x="10" y="9.8" width="2.5" height="1.2" rx="0.6" fill="rgba(255,255,255,0.3)" />
-                </svg>
-              </div>
+              <Link href="/" passHref style={{ textDecoration: "none", display: "inline-block" }}>
+                <Image src="/toko-kartu-logo.png" alt="Toko Kartu Logo" w={40} />
+              </Link>
               <Box>
                 <Text fw={800} size="sm" c="white" lh={1.2} style={{ letterSpacing: 0.5 }}>
                   TOKO KARTU
