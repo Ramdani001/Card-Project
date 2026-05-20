@@ -1,8 +1,8 @@
-import { NextRequest } from "next/server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { getCardById, updateCard, deleteCard } from "@/services/master/card.service";
-import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { deleteCard, getCardById, updateCard } from "@/services/master/card.service";
+import { getServerSession } from "next-auth";
+import { NextRequest } from "next/server";
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -49,9 +49,15 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
     const stock = getNumber("stock");
     const description = formData.get("description") as string | undefined;
     const sku = formData.get("sku") as string | undefined;
-    const file = formData.get("image") as File | null;
     const minQtyRaw = formData.get("minQtyPurchase");
     const maxQtyRaw = formData.get("maxQtyPurchase");
+
+    const files = formData.getAll("images") as File[];
+    const keepImageIds = formData.getAll("keepImageIds") as string[];
+
+    const primaryImageId = formData.get("primaryImageId") as string | undefined;
+    const primaryImageIndexRaw = formData.get("primaryImageIndex");
+    const primaryImageIndex = primaryImageIndexRaw !== null ? Number(primaryImageIndexRaw) : undefined;
 
     let categoryIds: string[] | undefined;
     if (formData.has("categoryIds")) {
@@ -71,13 +77,25 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
       return sendResponse({ success: false, message: "Stock cannot be negative", status: 400 });
     }
 
-    if (file && file.size > 0) {
+    if (files && files.length > 0 && files[0] instanceof File && files[0].size > 0) {
       const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
-      if (!allowedTypes.includes(file.type)) {
-        return sendResponse({ success: false, message: "Invalid image type", status: 400 });
-      }
-      if (file.size > 5 * 1024 * 1024) {
-        return sendResponse({ success: false, message: "Image too large (max 5MB)", status: 400 });
+      const maxSize = 5 * 1024 * 1024;
+
+      for (const file of files) {
+        if (!allowedTypes.includes(file.type)) {
+          return sendResponse({
+            success: false,
+            message: `Invalid image type for "${file.name}". Only JPG, PNG, and WEBP are allowed.`,
+            status: 400,
+          });
+        }
+        if (file.size > maxSize) {
+          return sendResponse({
+            success: false,
+            message: `Image "${file.name}" is too large (max 5MB)`,
+            status: 400,
+          });
+        }
       }
     }
 
@@ -93,7 +111,10 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
       discountId,
       description,
       sku,
-      file,
+      files: files.length > 0 && files[0].size > 0 ? files : undefined,
+      keepImageIds,
+      primaryImageId,
+      primaryImageIndex,
       userId: session.user.id,
       minQtyPurchase,
       maxQtyPurchase,

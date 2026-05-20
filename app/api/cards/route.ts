@@ -44,10 +44,14 @@ export const POST = async (req: NextRequest) => {
     const description = (formData.get("description") as string) || "";
     const sku = (formData.get("sku") as string) || undefined;
     const discountId = formData.get("discountId") as string | null;
-    const file = formData.get("image") as File | null;
+
+    const files = formData.getAll("images") as File[];
     const categoryIds = formData.getAll("categoryIds") as string[];
     const minQtyRaw = formData.get("minQtyPurchase");
     const maxQtyRaw = formData.get("maxQtyPurchase");
+
+    const primaryImageIndexRaw = formData.get("primaryImageIndex");
+    const primaryImageIndex = primaryImageIndexRaw !== null ? Number(primaryImageIndexRaw) : 0;
 
     if (!name?.trim()) {
       return sendResponse({ success: false, message: "Card Name is required", status: 400 });
@@ -65,23 +69,33 @@ export const POST = async (req: NextRequest) => {
       return sendResponse({ success: false, message: "At least one Category is required", status: 400 });
     }
 
-    if (!file || file.size === 0) {
-      return sendResponse({ success: false, message: "Image is required", status: 400 });
+    if (!files || files.length === 0 || files[0].size === 0) {
+      return sendResponse({ success: false, message: "At least one image is required", status: 400 });
     }
 
     const allowedTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
-    if (!allowedTypes.includes(file.type)) {
-      return sendResponse({ success: false, message: "File must be an image (JPG, PNG, WEBP)", status: 400 });
-    }
+    const maxSize = 5 * 1024 * 1024; // 5MB
 
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      return sendResponse({ success: false, message: "Image size must be less than 5MB", status: 400 });
+    for (const file of files) {
+      if (!allowedTypes.includes(file.type)) {
+        return sendResponse({
+          success: false,
+          message: `File "${file.name}" must be an image (JPG, PNG, WEBP)`,
+          status: 400,
+        });
+      }
+
+      if (file.size > maxSize) {
+        return sendResponse({
+          success: false,
+          message: `Image "${file.name}" size must be less than 5MB`,
+          status: 400,
+        });
+      }
     }
 
     const minQtyPurchase = minQtyRaw ? Number(minQtyRaw) : null;
     const maxQtyPurchase = maxQtyRaw ? Number(maxQtyRaw) : null;
-
     const cleanDiscountId = discountId === "null" || discountId === "" ? null : discountId;
 
     const newCard = await createCard({
@@ -92,7 +106,8 @@ export const POST = async (req: NextRequest) => {
       discountId: cleanDiscountId,
       description,
       sku,
-      file,
+      files,
+      primaryImageIndex,
       userId: session.user.id,
       minQtyPurchase,
       maxQtyPurchase,

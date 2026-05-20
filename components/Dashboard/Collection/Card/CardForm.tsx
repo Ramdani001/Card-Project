@@ -2,9 +2,25 @@
 
 import { CardDto } from "@/types/dtos/CardDto";
 import { SelectOption } from "@/types/SelectOption";
-import { Button, FileInput, Flex, Image, Modal, MultiSelect, NumberInput, Paper, Select, Text, Textarea, TextInput } from "@mantine/core";
+import {
+  ActionIcon,
+  Box,
+  Button,
+  FileInput,
+  Flex,
+  Image,
+  Modal,
+  MultiSelect,
+  NumberInput,
+  Paper,
+  Select,
+  SimpleGrid,
+  Text,
+  Textarea,
+  TextInput,
+} from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { IconCheck, IconUpload, IconX } from "@tabler/icons-react";
+import { IconCheck, IconTrash, IconUpload, IconX, IconStar, IconStarFilled } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 
 interface CardFormProps {
@@ -12,6 +28,18 @@ interface CardFormProps {
   onClose: () => void;
   cardToEdit: CardDto | null;
   onSuccess: () => void;
+}
+
+interface PreviewFile {
+  id: string;
+  url: string;
+  file: File;
+}
+
+interface ExistingImage {
+  id: string;
+  url: string;
+  isPrimary: boolean;
 }
 
 export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormProps) => {
@@ -28,9 +56,12 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [discountId, setDiscountId] = useState<string | null>(null);
 
-  const [file, setFile] = useState<File | null>(null);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [existingImage, setExistingImage] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [newPreviews, setNewPreviews] = useState<PreviewFile[]>([]);
+  const [existingImages, setExistingImages] = useState<ExistingImage[]>([]);
+  const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
+
+  const [primaryImageId, setPrimaryImageId] = useState<string | null>(null);
 
   const [categoryOptions, setCategoryOptions] = useState<SelectOption[]>([]);
   const [discountOptions, setDiscountOptions] = useState<SelectOption[]>([]);
@@ -66,6 +97,8 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
   }, [opened]);
 
   useEffect(() => {
+    newPreviews.forEach((p) => URL.revokeObjectURL(p.url));
+
     if (cardToEdit) {
       setName(cardToEdit.name);
       setSku(cardToEdit.sku || "");
@@ -73,18 +106,27 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
       setStock(cardToEdit.stock);
       setDescription(cardToEdit.description || "");
       setMinQtyPurchase(cardToEdit.minQtyPurchase ?? "");
-      setMaxQtyPurchase(cardToEdit.maxQtyPurchase ?? "");
+      if (cardToEdit.maxQtyPurchase !== undefined && cardToEdit.maxQtyPurchase !== null) {
+        setMaxQtyPurchase(cardToEdit.maxQtyPurchase);
+      }
 
       const selectedCats = cardToEdit.categories.map((c) => c.category.id);
       setCategoryIds(selectedCats);
-
       setDiscountId(cardToEdit.discountId || null);
 
-      const displayImg = cardToEdit.images.find((img) => img.isPrimary) || cardToEdit.images[0];
-      setExistingImage(displayImg?.url || null);
+      const mappedImages = cardToEdit.images.map((img) => ({
+        id: img.id,
+        url: img.url,
+        isPrimary: img.isPrimary,
+      }));
+      setExistingImages(mappedImages);
 
-      setFile(null);
-      setPreviewImage(null);
+      const primary = mappedImages.find((img) => img.isPrimary);
+      setPrimaryImageId(primary ? primary.id : mappedImages[0]?.id || null);
+
+      setFiles([]);
+      setNewPreviews([]);
+      setImagesToDelete([]);
     } else {
       setName("");
       setSku("");
@@ -93,13 +135,92 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
       setDescription("");
       setCategoryIds([]);
       setDiscountId(null);
-      setFile(null);
-      setPreviewImage(null);
-      setExistingImage(null);
+      setFiles([]);
+      setNewPreviews([]);
+      setExistingImages([]);
+      setImagesToDelete([]);
       setMinQtyPurchase("");
-      setMaxQtyPurchase("");
+      setPrimaryImageId(null);
+      if (maxQtyPurchase !== undefined && maxQtyPurchase !== null) {
+        setMaxQtyPurchase("");
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cardToEdit, opened]);
+
+  const handleFilesChange = (selectedFiles: File[]) => {
+    newPreviews.forEach((p) => URL.revokeObjectURL(p.url));
+
+    setFiles(selectedFiles);
+
+    if (selectedFiles.length > 0) {
+      const previews = selectedFiles.map((file, idx) => {
+        const generatedId = `new_file_${idx}_${Date.now()}`;
+        return {
+          id: generatedId,
+          file,
+          url: URL.createObjectURL(file),
+        };
+      });
+      setNewPreviews(previews);
+
+      if (!cardToEdit || existingImages.filter((img) => !imagesToDelete.includes(img.id)).length === 0) {
+        if (!primaryImageId || !previews.some((p) => p.id === primaryImageId)) {
+          setPrimaryImageId(previews[0].id);
+        }
+      }
+    } else {
+      setNewPreviews([]);
+      if (!cardToEdit) setPrimaryImageId(null);
+    }
+  };
+
+  const handleRemoveNewFile = (idToRemove: string) => {
+    const previewToRemove = newPreviews.find((p) => p.id === idToRemove);
+    if (previewToRemove) URL.revokeObjectURL(previewToRemove.url);
+
+    const updatedPreviews = newPreviews.filter((p) => p.id !== idToRemove);
+    setNewPreviews(updatedPreviews);
+    setFiles(updatedPreviews.map((p) => p.file));
+
+    if (primaryImageId === idToRemove) {
+      const remainingExisting = existingImages.filter((img) => !imagesToDelete.includes(img.id));
+      if (remainingExisting.length > 0) {
+        setPrimaryImageId(remainingExisting[0].id);
+      } else if (updatedPreviews.length > 0) {
+        setPrimaryImageId(updatedPreviews[0].id);
+      } else {
+        setPrimaryImageId(null);
+      }
+    }
+  };
+
+  const handleToggleDeleteExisting = (id: string) => {
+    let updatedDeleteList: string[];
+
+    if (imagesToDelete.includes(id)) {
+      updatedDeleteList = imagesToDelete.filter((item) => item !== id);
+    } else {
+      updatedDeleteList = [...imagesToDelete, id];
+    }
+
+    setImagesToDelete(updatedDeleteList);
+
+    if (primaryImageId === id && updatedDeleteList.includes(id)) {
+      const remainingExisting = existingImages.filter((img) => !updatedDeleteList.includes(img.id));
+      if (remainingExisting.length > 0) {
+        setPrimaryImageId(remainingExisting[0].id);
+      } else if (newPreviews.length > 0) {
+        setPrimaryImageId(newPreviews[0].id);
+      } else {
+        setPrimaryImageId(null);
+      }
+    }
+  };
+
+  const handleSetPrimary = (id: string) => {
+    setPrimaryImageId(id);
+  };
 
   const handleSubmit = async () => {
     if (!name) return notifications.show({ message: "Name required", color: "red" });
@@ -109,8 +230,10 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
 
     const isEditMode = !!cardToEdit;
 
-    if (!isEditMode && !file) {
-      return notifications.show({ message: "Image is required for new card", color: "red" });
+    const remainingExistingImagesCount = existingImages.filter((img) => !imagesToDelete.includes(img.id)).length;
+
+    if (files.length === 0 && remainingExistingImagesCount === 0) {
+      return notifications.show({ message: "At least one image is required for the card", color: "red" });
     }
 
     setLoading(true);
@@ -126,11 +249,25 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
       if (maxQtyPurchase !== "") formData.append("maxQtyPurchase", String(maxQtyPurchase));
 
       categoryIds.forEach((id) => formData.append("categoryIds", id));
-
       if (discountId) formData.append("discountId", discountId);
 
-      if (file) {
-        formData.append("image", file);
+      newPreviews.forEach((preview, index) => {
+        formData.append("images", preview.file);
+        if (primaryImageId === preview.id) {
+          formData.append("primaryImageIndex", String(index));
+        }
+      });
+
+      if (isEditMode) {
+        existingImages
+          .filter((img) => !imagesToDelete.includes(img.id))
+          .forEach((img) => {
+            formData.append("keepImageIds", img.id);
+          });
+
+        if (primaryImageId && !primaryImageId.startsWith("new_file_")) {
+          formData.append("primaryImageId", primaryImageId);
+        }
       }
 
       const url = isEditMode ? `/api/cards/${cardToEdit.id}` : "/api/cards";
@@ -155,16 +292,6 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
       notifications.show({ title: "Error", message: "Network error", color: "red" });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleFileChange = (file: File | null) => {
-    setFile(file);
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setPreviewImage(url);
-    } else {
-      setPreviewImage(null);
     }
   };
 
@@ -251,25 +378,95 @@ export const CardForm = ({ opened, onClose, cardToEdit, onSuccess }: CardFormPro
         />
 
         <FileInput
-          label="Card Image"
-          description="Max 5MB (JPG, PNG, WEBP)"
-          placeholder="Click to upload"
+          label="Card Images"
+          description="You can upload multiple files. Max 5MB per image (JPG, PNG, WEBP)"
+          placeholder="Click to upload images"
           accept="image/png,image/jpeg,image/webp"
           leftSection={<IconUpload size={16} />}
-          clearable
-          value={file}
-          onChange={handleFileChange}
+          multiple
+          value={files}
+          onChange={handleFilesChange}
           withAsterisk={!cardToEdit}
-          error={!file && !existingImage && !cardToEdit && "Image is required"}
         />
 
-        {(previewImage || existingImage) && (
-          <Paper p="xs" withBorder w={{ base: "100%", sm: "fit-content" }}>
-            <Text size="xs" c="dimmed" mb={5}>
-              {previewImage ? "New Image Preview" : "Current Image"}
+        {cardToEdit && existingImages.length > 0 && (
+          <Box>
+            <SimpleGrid cols={{ base: 2, sm: 4 }}>
+              {existingImages.map((img) => {
+                const isMarkedForDelete = imagesToDelete.includes(img.id);
+                const isPrimary = primaryImageId === img.id;
+                return (
+                  <Paper
+                    key={img.id}
+                    p="xs"
+                    withBorder
+                    style={{
+                      position: "relative",
+                      opacity: isMarkedForDelete ? 0.4 : 1,
+                      backgroundColor: isMarkedForDelete ? "#fff5f5" : isPrimary ? "#f0f7ff" : "transparent",
+                      borderColor: isPrimary ? "#3b5bdb" : "#e9ecef",
+                    }}
+                  >
+                    <Image src={img.url} h={90} fit="contain" radius="sm" alt="Existing Aset" />
+                    <Flex justify="space-between" align="center" mt={5}>
+                      <ActionIcon size="xs" variant="subtle" color="yellow" disabled={isMarkedForDelete} onClick={() => handleSetPrimary(img.id)}>
+                        {isPrimary ? <IconStarFilled size={14} /> : <IconStar size={14} />}
+                      </ActionIcon>
+                      <ActionIcon
+                        size="xs"
+                        color={isMarkedForDelete ? "blue" : "red"}
+                        variant="light"
+                        onClick={() => handleToggleDeleteExisting(img.id)}
+                      >
+                        {isMarkedForDelete ? (
+                          <Text size="10px" fw={600}>
+                            Keep
+                          </Text>
+                        ) : (
+                          <IconTrash size={12} />
+                        )}
+                      </ActionIcon>
+                    </Flex>
+                  </Paper>
+                );
+              })}
+            </SimpleGrid>
+          </Box>
+        )}
+
+        {newPreviews.length > 0 && (
+          <Box mt="xs">
+            <Text size="xs" fw={500} mb={5} c="teal">
+              New Images to Upload ({newPreviews.length}):
             </Text>
-            <Image src={previewImage || existingImage} w={{ base: "100%", sm: 200 }} h={120} fit="contain" radius="md" alt="Preview" />
-          </Paper>
+            <SimpleGrid cols={{ base: 2, sm: 4 }}>
+              {newPreviews.map((preview) => {
+                const isPrimary = primaryImageId === preview.id;
+                return (
+                  <Paper
+                    key={preview.id}
+                    p="xs"
+                    withBorder
+                    style={{
+                      position: "relative",
+                      backgroundColor: isPrimary ? "#f0f7ff" : "transparent",
+                      borderColor: isPrimary ? "#3b5bdb" : "#e9ecef",
+                    }}
+                  >
+                    <Image src={preview.url} h={90} fit="contain" radius="sm" alt="Preview Baru" />
+                    <Flex justify="space-between" align="center" mt={5}>
+                      <ActionIcon size="xs" variant="subtle" color="yellow" onClick={() => handleSetPrimary(preview.id)}>
+                        {isPrimary ? <IconStarFilled size={14} /> : <IconStar size={14} />}
+                      </ActionIcon>
+                      <ActionIcon size="xs" color="red" variant="subtle" onClick={() => handleRemoveNewFile(preview.id)}>
+                        <IconX size={14} />
+                      </ActionIcon>
+                    </Flex>
+                  </Paper>
+                );
+              })}
+            </SimpleGrid>
+          </Box>
         )}
       </Flex>
 

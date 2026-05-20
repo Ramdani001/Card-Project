@@ -154,7 +154,7 @@ export const getCardById = async (id: string) => {
 };
 
 export const createCard = async (params: CreateCardParams) => {
-  const { name, price, stock, categoryIds, discountId, description, sku, file, maxQtyPurchase, minQtyPurchase } = params;
+  const { name, price, stock, categoryIds, discountId, description, sku, files, maxQtyPurchase, minQtyPurchase, primaryImageIndex = 0 } = params;
 
   if (categoryIds.length > 0) {
     const count = await prisma.category.count({ where: { id: { in: categoryIds } } });
@@ -166,11 +166,20 @@ export const createCard = async (params: CreateCardParams) => {
     if (!disc) throw new Error("Invalid Discount ID");
   }
 
-  let uploadedFileUrl: string | null = null;
+  const uploadedFileUrls: string[] = [];
 
   try {
-    const fileData = await saveFile(file, "cards");
-    uploadedFileUrl = fileData.path;
+    const uploadedImagesData = await Promise.all(
+      files.map(async (file, index) => {
+        const fileData = await saveFile(file, "cards");
+        uploadedFileUrls.push(fileData.path);
+
+        return {
+          ...fileData,
+          isPrimary: index === primaryImageIndex,
+        };
+      })
+    );
 
     const slug = generateSlug(name);
 
@@ -190,10 +199,7 @@ export const createCard = async (params: CreateCardParams) => {
             create: categoryIds.map((id) => ({ categoryId: id })),
           },
           images: {
-            create: {
-              ...fileData,
-              isPrimary: true,
-            },
+            create: uploadedImagesData,
           },
         },
         include: {
@@ -216,8 +222,8 @@ export const createCard = async (params: CreateCardParams) => {
 
     return newCard;
   } catch (error) {
-    if (uploadedFileUrl) {
-      await deleteFile(uploadedFileUrl).catch(console.error);
+    if (uploadedFileUrls.length > 0) {
+      await Promise.all(uploadedFileUrls.map((url) => deleteFile(url).catch(console.error)));
     }
 
     logError("CardService.createCard", error);
@@ -226,7 +232,23 @@ export const createCard = async (params: CreateCardParams) => {
 };
 
 export const updateCard = async (params: UpdateCardParams) => {
-  const { id, name, price, stock, categoryIds, discountId, description, sku, file, userId, maxQtyPurchase, minQtyPurchase } = params;
+  const {
+    id,
+    name,
+    price,
+    stock,
+    categoryIds,
+    discountId,
+    description,
+    sku,
+    files,
+    keepImageIds = [],
+    userId,
+    maxQtyPurchase,
+    minQtyPurchase,
+    primaryImageId,
+    primaryImageIndex,
+  } = params;
 
   const existingCard = await prisma.card.findUnique({
     where: { id },
@@ -235,12 +257,20 @@ export const updateCard = async (params: UpdateCardParams) => {
 
   if (!existingCard) throw new Error("Card not found");
 
-  let fileData: any = null;
-  let newUploadedPath: string | null = null;
+  let uploadedImagesData: any[] = [];
+  const newUploadedPaths: string[] = [];
 
-  if (file && file.size > 0) {
-    fileData = await saveFile(file, "cards");
-    newUploadedPath = fileData.path;
+  if (files && files.length > 0) {
+    uploadedImagesData = await Promise.all(
+      files.map(async (file, index) => {
+        const fileData = await saveFile(file, "cards");
+        newUploadedPaths.push(fileData.path);
+        return {
+          ...fileData,
+          isPrimary: primaryImageIndex !== undefined && index === primaryImageIndex,
+        };
+      })
+    );
   }
 
   try {
@@ -289,16 +319,55 @@ export const updateCard = async (params: UpdateCardParams) => {
         }
       }
 
-      if (fileData) {
-        await tx.imageCard.deleteMany({ where: { cardId: id } });
+      await tx.imageCard.deleteMany({
+        where: {
+          cardId: id,
+          id: { notIn: keepImageIds },
+        },
+      });
 
-        await tx.imageCard.create({
-          data: {
-            ...fileData,
+      if (uploadedImagesData.length > 0) {
+        await tx.imageCard.createMany({
+          data: uploadedImagesData.map((img) => ({
+            ...img,
             cardId: id,
-            isPrimary: true,
+          })),
+        });
+      }
+
+      await tx.imageCard.updateMany({
+        where: { cardId: id },
+        data: { isPrimary: false },
+      });
+
+      if (primaryImageId && keepImageIds.includes(primaryImageId)) {
+        await tx.imageCard.update({
+          where: { id: primaryImageId },
+          data: { isPrimary: true },
+        });
+      } else if (primaryImageIndex !== undefined && uploadedImagesData.length > 0) {
+        const newlyInsertedPrimary = await tx.imageCard.findFirst({
+          where: {
+            cardId: id,
+            path: uploadedImagesData[primaryImageIndex].path,
           },
         });
+        if (newlyInsertedPrimary) {
+          await tx.imageCard.update({
+            where: { id: newlyInsertedPrimary.id },
+            data: { isPrimary: true },
+          });
+        }
+      } else {
+        const fallbackImage = await tx.imageCard.findFirst({
+          where: { cardId: id },
+        });
+        if (fallbackImage) {
+          await tx.imageCard.update({
+            where: { id: fallbackImage.id },
+            data: { isPrimary: true },
+          });
+        }
       }
 
       return await tx.card.findUnique({
@@ -311,8 +380,10 @@ export const updateCard = async (params: UpdateCardParams) => {
       });
     });
 
-    if (fileData && existingCard.images.length > 0) {
-      for (const img of existingCard.images) {
+    const imagesToDelete = existingCard.images.filter((img) => !keepImageIds.includes(img.id));
+
+    if (imagesToDelete.length > 0) {
+      for (const img of imagesToDelete) {
         await deleteFile(img.path).catch(console.error);
       }
     }
@@ -328,8 +399,8 @@ export const updateCard = async (params: UpdateCardParams) => {
 
     return updatedCard;
   } catch (error) {
-    if (newUploadedPath) {
-      await deleteFile(newUploadedPath).catch(console.error);
+    if (newUploadedPaths.length > 0) {
+      await Promise.all(newUploadedPaths.map((path) => deleteFile(path).catch(console.error)));
     }
 
     logError("CardService.updateCard", error);
@@ -536,33 +607,6 @@ export const exportCardsToExcel = async () => {
     });
 
     row.alignment = { vertical: "middle", horizontal: "left", wrapText: true };
-
-    // const primaryImg = card.images.find((img) => img.isPrimary) || card.images[0];
-
-    // if (primaryImg && primaryImg.path) {
-    //   try {
-    //     const filePath = path.join(process.cwd(), "public", "uploads/" + primaryImg.path);
-    //     const imageBuffer = await fs.readFile(filePath);
-
-    //     let extension = primaryImg.path.split(".").pop()?.toLowerCase() || "png";
-    //     if (!["jpeg", "png", "gif"].includes(extension)) {
-    //       extension = "png";
-    //     }
-    //     const imageId = workbook.addImage({
-    //       buffer: Buffer.from(imageBuffer) as any,
-    //       extension: extension as any,
-    //     });
-
-    //     worksheet.addImage(imageId, {
-    //       tl: { col: 6, row: i + 1 },
-    //       ext: { width: 100, height: 100 },
-    //       editAs: "oneCell",
-    //     });
-    //   } catch (error) {
-    //     console.error(`Gagal sematkan gambar untuk ${card.name}:`, error);
-    //     worksheet.getCell(`G${currentRow}`).value = "Gagal memuat gambar";
-    //   }
-    // }
   }
 
   worksheet.getColumn("price").numFmt = "#,##0";
@@ -573,7 +617,6 @@ export const exportCardsToExcel = async () => {
 export const generateCardTemplate = async () => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Template Import");
-  // const categories = await prisma.category.findMany({ select: { name: true } });
 
   worksheet.columns = [
     { header: "Card Name*", key: "name", width: 30 },
@@ -588,13 +631,6 @@ export const generateCardTemplate = async () => {
   const headerRow = worksheet.getRow(1);
   headerRow.font = { bold: true, color: { argb: "FFFFFF" } };
   headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "E67E22" } };
-
-  // if (categories.length > 0) {
-  //   const list = `"${categories.map((c) => c.name).join(",")}"`;
-  //   for (let i = 2; i <= 50; i++) {
-  //     worksheet.getCell(`E${i}`).dataValidation = { type: "list", formulae: [list] };
-  //   }
-  // }
 
   return await workbook.xlsx.writeBuffer();
 };

@@ -1,5 +1,6 @@
 import { CardDto } from "@/types/dtos/CardDto";
 import { formatRupiah } from "@/utils";
+import { Carousel } from "@mantine/carousel";
 import {
   ActionIcon,
   AspectRatio,
@@ -57,7 +58,6 @@ export const CardCatalogModal = ({ opened, onClose, product, handleAddToCart, lo
       transitionProps={{ transition: "fade", duration: 200 }}
     >
       <Grid overflow="hidden" style={{ borderRadius: rem(12) }}>
-        {/* Kolom Gambar - Visual Dominan */}
         <Grid.Col span={{ base: 12, md: 5.5 }} bg="gray.0">
           <Box p="xl" style={{ position: "relative", height: "100%", display: "flex", alignItems: "center" }}>
             <ActionIcon
@@ -70,18 +70,47 @@ export const CardCatalogModal = ({ opened, onClose, product, handleAddToCart, lo
               <IconX size={20} />
             </ActionIcon>
 
-            <AspectRatio ratio={1 / 1} w="100%" maw={450} mx="auto">
-              <Image
-                src={product.images?.[0]?.url || "https://placehold.co/600x600?text=No+Image"}
-                alt={product.name}
-                fit="contain"
-                fallbackSrc="https://placehold.co/600x600?text=No+Image"
-              />
-            </AspectRatio>
+            {product.images && product.images.length > 1 ? (
+              <Carousel
+                withIndicators
+                classNames={{
+                  root: "carousel-root",
+                }}
+                styles={{
+                  root: { maxWidth: 450, width: "100%", marginLeft: "auto", marginRight: "auto" },
+                }}
+                emblaOptions={{
+                  loop: true,
+                  dragFree: false,
+                  align: "center",
+                }}
+              >
+                {product.images.map((img, index) => (
+                  <Carousel.Slide key={img.id || index}>
+                    <AspectRatio ratio={1 / 1} w="100%">
+                      <Image
+                        src={img.url}
+                        alt={`${product.name} - ${index + 1}`}
+                        fit="contain"
+                        fallbackSrc="https://placehold.co/600x600?text=No+Image"
+                      />
+                    </AspectRatio>
+                  </Carousel.Slide>
+                ))}
+              </Carousel>
+            ) : (
+              <AspectRatio ratio={1 / 1} w="100%" maw={450} mx="auto">
+                <Image
+                  src={product.images?.[0]?.url || "https://placehold.co/600x600?text=No+Image"}
+                  alt={product.name}
+                  fit="contain"
+                  fallbackSrc="https://placehold.co/600x600?text=No+Image"
+                />
+              </AspectRatio>
+            )}
           </Box>
         </Grid.Col>
 
-        {/* Kolom Informasi */}
         <Grid.Col span={{ base: 12, md: 6.5 }}>
           <Stack p={{ base: "lg", md: rem(40) }} gap="xl">
             <Box>

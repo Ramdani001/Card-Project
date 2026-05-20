@@ -7,8 +7,9 @@ export interface CreateCardParams {
   description?: string;
   minQtyPurchase?: number | null;
   maxQtyPurchase?: number | null;
+  primaryImageIndex: number;
   sku?: string;
-  file: File;
+  files: File[];
   userId: string;
 }
 
@@ -23,6 +24,9 @@ export interface UpdateCardParams {
   minQtyPurchase?: number | null;
   maxQtyPurchase?: number | null;
   sku?: string;
-  file?: File | null;
+  keepImageIds: string[];
+  files?: File[] | null;
   userId: string;
+  primaryImageId?: string;
+  primaryImageIndex?: number;
 }

@@ -204,15 +204,39 @@ const ListCard = () => {
     },
     {
       key: "image",
-      label: "Image",
+      label: "Images",
       sortable: false,
-      width: 80,
+      width: 100,
       render: (item) => {
-        const displayImage = item.images.find((img) => img.isPrimary) || item.images[0];
+        const primaryImage = item.images?.find((img) => img.isPrimary) || item.images?.[0];
+
+        const totalImages = item.images?.length || 0;
+        const remainingCount = totalImages - 1;
+
         return (
-          <Avatar src={displayImage?.url || null} radius="sm" size="md" color="blue">
-            <IconCreditCard size={20} />
-          </Avatar>
+          <Group gap={4} wrap="nowrap">
+            {totalImages > 0 ? (
+              <Avatar.Group>
+                <Tooltip label={`Primary Image of ${item.name}`}>
+                  <Avatar src={primaryImage?.url} radius="sm" size="md" color="blue" />
+                </Tooltip>
+
+                {remainingCount > 0 && (
+                  <Tooltip label={`${remainingCount} more image(s) available`}>
+                    <Avatar radius="sm" size="md" variant="filled" color="gray">
+                      <Text size="xs" fw={600}>
+                        +{remainingCount}
+                      </Text>
+                    </Avatar>
+                  </Tooltip>
+                )}
+              </Avatar.Group>
+            ) : (
+              <Avatar radius="sm" size="md" color="gray" variant="light">
+                <IconCreditCard size={20} />
+              </Avatar>
+            )}
+          </Group>
         );
       },
     },
