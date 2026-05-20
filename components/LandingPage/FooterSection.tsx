@@ -8,8 +8,8 @@ export const FooterSection = () => {
   return (
     <Box component="footer" bg="#121212" c="gray.5" py={60}>
       <Container size="xl">
-        <Box mb={40}>
-          <Image src="/toko-kartu-logo.png" alt="Toko Kartu Logo" w={140} bg="white" p={8} radius="sm" />
+        <Box mb={20} ml={-20}>
+          <Image src="/toko-kartu-logo.png" alt="Toko Kartu Logo" w={140} />
         </Box>
 
         <Grid justify="space-between">

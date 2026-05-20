@@ -2,12 +2,13 @@
 
 import { CartItemDto } from "@/types/dtos/CartItemDto";
 import { MenuDto } from "@/types/dtos/MenuDto";
-import { ActionIcon, Box, Center, Container, Divider, Group, Indicator, Loader, Menu, rem, Text, Title, UnstyledButton } from "@mantine/core";
+import { ActionIcon, Box, Center, Container, Divider, Group, Image, Indicator, Loader, Menu, rem, Text, UnstyledButton } from "@mantine/core";
 import { IconChevronDown, IconChevronRight, IconShoppingCart } from "@tabler/icons-react";
 import { useRouter } from "next/navigation";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { ProfileTopbar } from "../layout/ProfileTopbar";
 import { CartSection } from "./Cart/CartSection";
+import Link from "next/link";
 
 interface RecursiveMenuItemProps {
   item: MenuDto;
@@ -150,16 +151,9 @@ export const HeaderSection = ({ cartItems, loadingCart, setCartItems }: HeaderSe
       >
         <Container fluid h={rem(70)} mx={20}>
           <Group justify="space-between" h="100%" wrap="nowrap">
-            <Title
-              order={3}
-              style={{ fontFamily: "Impact, sans-serif", letterSpacing: 1, cursor: "pointer", flexShrink: 0 }}
-              onClick={() => router.push("/")}
-            >
-              TOKO{" "}
-              <Text span c="blue.6" inherit>
-                KARTU
-              </Text>
-            </Title>
+            <Link href="/" passHref style={{ textDecoration: "none", display: "inline-block" }}>
+              <Image src="/toko-kartu-logo.png" alt="Toko Kartu Logo" w={60} />
+            </Link>
 
             <Group gap={0} visibleFrom="md" h="100%">
               {menus
