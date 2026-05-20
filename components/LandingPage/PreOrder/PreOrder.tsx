@@ -8,7 +8,6 @@ import { notifications } from "@mantine/notifications";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 
-// Pastikan import CSS untuk dates (Wajib di v7)
 import "@mantine/dates/styles.css";
 
 export const PreOrder = () => {

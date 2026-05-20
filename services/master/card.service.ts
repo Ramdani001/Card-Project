@@ -613,7 +613,22 @@ export const getTopThreeSellingCards = async () => {
     take: 3,
   });
 
-  const cardIds = topSellers.map((item) => item.cardId).filter((id): id is string => id !== null);
+  let cardIds = topSellers.map((item) => item.cardId).filter((id): id is string => id !== null);
+
+  if (cardIds.length < 3) {
+    const neededCount = 3 - cardIds.length;
+
+    const randomCards = await prisma.card.findMany({
+      where: {
+        id: { notIn: cardIds },
+      },
+      select: { id: true },
+      take: neededCount,
+    });
+
+    const randomIds = randomCards.map((c) => c.id);
+    cardIds = [...cardIds, ...randomIds];
+  }
 
   const cards = await prisma.card.findMany({
     where: {
@@ -631,6 +646,9 @@ export const getTopThreeSellingCards = async () => {
   return cards.sort((a, b) => {
     const qtyA = topSellers.find((item) => item.cardId === a.id)?._sum.quantity || 0;
     const qtyB = topSellers.find((item) => item.cardId === b.id)?._sum.quantity || 0;
-    return qtyB - qtyA;
+
+    if (qtyB !== qtyA) return qtyB - qtyA;
+
+    return cardIds.indexOf(a.id) - cardIds.indexOf(b.id);
   });
 };

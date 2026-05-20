@@ -37,6 +37,10 @@ export const CaseBoxCard = () => {
     fetchProducts();
   }, []);
 
+  if (!loadingProducts && products.length === 0) {
+    return null;
+  }
+
   const CardSkeleton = () => (
     <Box miw={350}>
       <Skeleton h={250} radius="md" mb="sm" />

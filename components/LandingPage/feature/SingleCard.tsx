@@ -37,6 +37,10 @@ export const SingleCard = () => {
     fetchProducts();
   }, []);
 
+  if (!loadingProducts && products.length === 0) {
+    return null;
+  }
+
   const CardSkeleton = () => (
     <Box miw={250}>
       <Skeleton h={350} radius="md" mb="sm" />

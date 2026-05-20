@@ -12,7 +12,7 @@ import { Box } from "@mantine/core";
 
 export default function TcgCornerClone() {
   return (
-    <Box style={{ backgroundColor: "#f7f8fb", color: "#1f2a44", minHeight: "100vh" }}>
+    <Box style={{ backgroundColor: "#f7f8fb", color: "#1f2a44", minHeight: "100vh", margin: 0 }}>
       <HeaderSection />
       <Box component="main">
         <HeroSection />

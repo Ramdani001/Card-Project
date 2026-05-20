@@ -56,8 +56,8 @@ export const SwiperCard = () => {
   };
 
   return (
-    <Container fluid my="md">
-      <Box w="100%" style={{ borderRadius: 8, overflow: "hidden" }}>
+    <Container fluid m={0} p={0}>
+      <Box w="100%" style={{ overflow: "hidden" }}>
         <Swiper
           grabCursor={true}
           effect="creative"

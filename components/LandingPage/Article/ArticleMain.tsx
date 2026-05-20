@@ -28,6 +28,10 @@ export const ArticleMain = () => {
     fetchArticles();
   }, []);
 
+  if (!loading && articles.length === 0) {
+    return null;
+  }
+
   const ArticleSkeleton = () => (
     <Card w={{ base: 280, md: 350 }} radius="md" p="md" withBorder>
       <Skeleton height={200} radius="md" mb="sm" />
