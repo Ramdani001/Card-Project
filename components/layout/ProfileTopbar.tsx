@@ -1,4 +1,6 @@
-import { Avatar, Box, Button, Group, Menu, rem, Text, UnstyledButton } from "@mantine/core";
+"use client";
+
+import { Avatar, Box, Group, Menu, Text, UnstyledButton } from "@mantine/core";
 import { IconLayoutDashboard, IconLogin, IconLogout, IconReceipt2, IconUser } from "@tabler/icons-react";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -6,21 +8,22 @@ import { useRouter } from "next/navigation";
 export const ProfileTopbar = () => {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const isAuthenticated = status === "authenticated";
 
-  return status === "authenticated" ? (
+  return (
     <Menu shadow="xl" width={240} position="bottom-end" transitionProps={{ transition: "pop-top-right" }}>
       <Menu.Target>
         <UnstyledButton>
           <Group gap={10}>
             <Avatar color="blue" radius="xl" size="md" src={session?.user?.avatar}>
-              {session?.user?.name?.[0].toUpperCase()}
+              {isAuthenticated ? session?.user?.name?.[0].toUpperCase() : <IconUser size={20} stroke={1.5} />}
             </Avatar>
             <Box visibleFrom="sm">
               <Text size="xs" fw={800} c="dark" lh={1}>
-                {session?.user?.name}
+                {isAuthenticated ? session?.user?.name : "Guest Menu"}
               </Text>
               <Text size="10px" c="dimmed">
-                Account Settings
+                {isAuthenticated ? "Account Settings" : "Click to view options"}
               </Text>
             </Box>
           </Group>
@@ -30,26 +33,32 @@ export const ProfileTopbar = () => {
       <Menu.Dropdown p="xs">
         <Box px="sm" py="xs">
           <Text size="xs" c="dimmed">
-            Signed in as
+            {isAuthenticated ? "Signed in as" : "Welcome to Toko Kartu"}
           </Text>
           <Text size="sm" fw={700} truncate>
-            {session?.user?.email}
+            {isAuthenticated ? session?.user?.email : "Guest Session"}
           </Text>
         </Box>
         <Menu.Divider />
 
-        <Menu.Label>My Account</Menu.Label>
-        <Menu.Item leftSection={<IconUser size={16} />} onClick={() => router.push("/profile")}>
-          Profile
-        </Menu.Item>
-        <Menu.Item leftSection={<IconReceipt2 size={16} />} onClick={() => router.push("/my-transaction")}>
-          My Transactions
-        </Menu.Item>
+        <Menu.Label>Menu</Menu.Label>
+
+        {isAuthenticated && (
+          <>
+            <Menu.Item leftSection={<IconUser size={16} />} onClick={() => router.push("/profile")}>
+              Profile
+            </Menu.Item>
+            <Menu.Item leftSection={<IconReceipt2 size={16} />} onClick={() => router.push("/my-transaction")}>
+              My Transactions
+            </Menu.Item>
+          </>
+        )}
+
         <Menu.Item leftSection={<IconLayoutDashboard size={16} />} onClick={() => router.push("/Catalog")}>
           Collections
         </Menu.Item>
 
-        {(session?.user as any)?.canAccessDashboard && (
+        {isAuthenticated && (session?.user as any)?.canAccessDashboard && (
           <>
             <Menu.Divider />
             <Menu.Label>Administration</Menu.Label>
@@ -60,29 +69,17 @@ export const ProfileTopbar = () => {
         )}
 
         <Menu.Divider />
-        <Menu.Item color="red" leftSection={<IconLogout size={16} />} onClick={() => signOut({ callbackUrl: "/" })}>
-          Logout
-        </Menu.Item>
+
+        {isAuthenticated ? (
+          <Menu.Item color="red" leftSection={<IconLogout size={16} />} onClick={() => signOut({ callbackUrl: "/" })}>
+            Logout
+          </Menu.Item>
+        ) : (
+          <Menu.Item color="blue" leftSection={<IconLogin size={16} />} onClick={() => router.push("/login")}>
+            Login
+          </Menu.Item>
+        )}
       </Menu.Dropdown>
     </Menu>
-  ) : (
-    <Button
-      variant="outline"
-      color="dark"
-      size="sm"
-      radius="xs"
-      styles={{
-        root: {
-          borderWidth: rem(1.5),
-          fontWeight: 600,
-          transition: "transform 0.2s ease",
-          "&:active": { transform: "scale(0.95)" },
-        },
-      }}
-      leftSection={<IconLogin size={18} />}
-      onClick={() => router.push("/login")}
-    >
-      Login
-    </Button>
   );
 };
