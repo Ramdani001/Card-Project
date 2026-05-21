@@ -3,7 +3,7 @@
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
 import { CardDto } from "@/types/dtos/CardDto";
 import { PaginationMetaDataDto } from "@/types/dtos/PaginationMetaDataDto";
-import { ActionIcon, Avatar, Badge, Button, FileButton, Flex, Group, Menu, Paper, Text, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Avatar, Badge, Button, Checkbox, FileButton, Flex, Group, Menu, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
@@ -29,6 +29,9 @@ const ListCard = () => {
   const [importFile, setImportFile] = useState<File | null>(null);
 
   const [cards, setCards] = useState<CardDto[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [deletingBatch, setDeletingBatch] = useState(false);
+
   const [metadata, setMetadata] = useState<PaginationMetaDataDto>({
     total: 0,
     page: 1,
@@ -119,6 +122,7 @@ const ListCard = () => {
       if (json.success) {
         setCards(json.data);
         setMetadata(json.metadata);
+        setSelectedIds([]);
       }
     } catch (error) {
       console.error("Error fetching cards:", error);
@@ -184,6 +188,71 @@ const ListCard = () => {
     });
   };
 
+  const handleBatchDelete = () => {
+    if (selectedIds.length === 0) return;
+
+    openConfirmModal({
+      title: "Delete Multiple Cards",
+      centered: true,
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete <b>{selectedIds.length}</b> selected cards? This action will permanently remove them from the system.
+        </Text>
+      ),
+      labels: { confirm: "Delete Selected", cancel: "Cancel" },
+      confirmProps: { color: "red" },
+      onConfirm: async () => {
+        setDeletingBatch(true);
+        try {
+          const res = await fetch("/api/cards/batch", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ids: selectedIds }),
+          });
+          const json = await res.json();
+
+          if (json.success) {
+            notifications.show({
+              title: "Batch Delete Success",
+              message: json.message || `${selectedIds.length} cards deleted successfully.`,
+              color: "teal",
+              icon: <IconCheck size={16} />,
+            });
+            fetchCards();
+          } else {
+            throw new Error(json.message || "Failed to delete cards");
+          }
+        } catch (error: any) {
+          notifications.show({
+            title: "Delete Error",
+            message: error.message,
+            color: "red",
+            icon: <IconX size={16} />,
+          });
+        } finally {
+          setDeletingBatch(false);
+        }
+      },
+    });
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = cards.map((card) => card.id);
+      setSelectedIds(allIds);
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((item) => item !== id));
+    }
+  };
+
   const handleOpenAdd = () => {
     setSelectedCard(null);
     open();
@@ -195,6 +264,21 @@ const ListCard = () => {
   };
 
   const columns: ColumnDef<CardDto>[] = [
+    {
+      key: "selection",
+      label: (
+        <Checkbox
+          checked={cards.length > 0 && selectedIds.length === cards.length}
+          indeterminate={selectedIds.length > 0 && selectedIds.length < cards.length}
+          onChange={(event) => handleSelectAll(event.currentTarget.checked)}
+        />
+      ),
+      sortable: false,
+      width: 45,
+      render: (item) => (
+        <Checkbox checked={selectedIds.includes(item.id)} onChange={(event) => handleSelectRow(item.id, event.currentTarget.checked)} />
+      ),
+    },
     {
       key: "no",
       label: "No",
@@ -209,7 +293,6 @@ const ListCard = () => {
       width: 100,
       render: (item) => {
         const primaryImage = item.images?.find((img) => img.isPrimary) || item.images?.[0];
-
         const totalImages = item.images?.length || 0;
         const remainingCount = totalImages - 1;
 
@@ -328,7 +411,14 @@ const ListCard = () => {
         gap={{ base: "md", sm: 0 }}
         mb="lg"
       >
-        <Title order={3}>Cards</Title>
+        <Group gap="md">
+          <Title order={3}>Cards</Title>
+          {selectedIds.length > 0 && (
+            <Button color="red" variant="light" size="xs" leftSection={<IconTrash size={14} />} onClick={handleBatchDelete} loading={deletingBatch}>
+              Delete Selected ({selectedIds.length})
+            </Button>
+          )}
+        </Group>
 
         <Flex gap="xs" wrap="wrap" justify={{ base: "flex-end", sm: "flex-start" }}>
           {isMobile ? (
@@ -418,7 +508,7 @@ const ListCard = () => {
         data={cards}
         columns={columns}
         metadata={metadata}
-        loading={loading || importing}
+        loading={loading || importing || deletingBatch}
         sortBy={queryParams.sortBy}
         sortOrder={queryParams.sortOrder}
         filterValues={queryParams.filters}

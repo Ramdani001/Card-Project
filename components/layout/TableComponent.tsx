@@ -1,13 +1,13 @@
 "use client";
 
-import { Table, ScrollArea, TextInput, Pagination, Group, Text, Select, Paper, ActionIcon, Center, Loader, CloseButton } from "@mantine/core";
-import { IconChevronUp, IconChevronDown, IconSearch, IconArrowsSort } from "@tabler/icons-react";
-import { useState, useEffect } from "react";
+import { ActionIcon, Center, CloseButton, Group, Loader, Pagination, Paper, ScrollArea, Select, Table, Text, TextInput } from "@mantine/core";
 import { useDebouncedCallback } from "@mantine/hooks";
+import { IconArrowsSort, IconChevronDown, IconChevronUp, IconSearch } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
 
 export interface ColumnDef<T> {
   key: string;
-  label: string;
+  label: React.ReactNode;
   sortable?: boolean;
   filterable?: boolean;
   render?: (item: T, index: number) => React.ReactNode;

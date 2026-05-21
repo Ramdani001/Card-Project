@@ -688,3 +688,64 @@ export const getTopThreeSellingCards = async () => {
     return cardIds.indexOf(a.id) - cardIds.indexOf(b.id);
   });
 };
+
+export const deleteBatchCards = async (ids: string[]) => {
+  if (!ids || ids.length === 0) {
+    throw new Error("Select at least one card to delete");
+  }
+
+  const cardsWithImages = await prisma.card.findMany({
+    where: {
+      id: { in: ids },
+    },
+    include: {
+      images: true,
+    },
+  });
+
+  if (cardsWithImages.length === 0) {
+    throw new Error("No cards found to delete");
+  }
+
+  const allImagePaths: string[] = [];
+  cardsWithImages.forEach((card) => {
+    card.images.forEach((img) => {
+      if (img.path) {
+        allImagePaths.push(img.path);
+      }
+    });
+  });
+
+  const deletedResult = await prisma.$transaction(async (tx) => {
+    await tx.imageCard.deleteMany({
+      where: { cardId: { in: ids } },
+    });
+
+    await tx.categoriesOnCards.deleteMany({
+      where: { cardId: { in: ids } },
+    });
+
+    const batchDeleteResult = await tx.card.deleteMany({
+      where: {
+        id: { in: ids },
+      },
+    });
+
+    return batchDeleteResult;
+  });
+
+  if (allImagePaths.length > 0) {
+    Promise.all(allImagePaths.map((path) => deleteFile(path).catch((err) => console.error(`Failed to delete physical file at path: ${path}`, err))));
+  }
+
+  await createNotificationByCode({
+    notificationCode: "PRODUCT_NOTIF",
+    title: "Batch Produk Dihapus",
+    message: `${deletedResult.count} product successfully deleted from the system at once`,
+    type: NotificationType.SYSTEM,
+    url: "",
+    metadata: { deletedIds: ids },
+  });
+
+  return deletedResult;
+};
