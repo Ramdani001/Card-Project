@@ -18,7 +18,7 @@ import { TransactionHistoryModal } from "./TransactionHistoryModal";
 
 const ListTransaction = () => {
   const [transactions, setTransactions] = useState<TransactionDto[]>([]);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]); // State penampung ID transaksi terpilih
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [cancellingBatch, setCancellingBatch] = useState(false);
 
   const [metadata, setMetadata] = useState<PaginationMetaDataDto>({ total: 0, page: 1, limit: 10, totalPages: 0 });
@@ -26,7 +26,7 @@ const ListTransaction = () => {
   const [dateRange, setDateRange] = useState<[Date | null | string, Date | null | string]>([null, null]);
 
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
-  const [searchInvoice, setSearchInvoice] = useState("");
+  const [searchGlobal, setSearchGlobal] = useState("");
 
   const [detailOpened, { open: openDetail, close: closeDetail }] = useDisclosure(false);
   const [selectedTrx, setSelectedTrx] = useState<TransactionDto>();
@@ -52,7 +52,8 @@ const ListTransaction = () => {
       });
 
       if (filterStatus) params.append("status", filterStatus);
-      if (searchInvoice) params.append("invoice", searchInvoice);
+
+      if (searchGlobal) params.append("search", searchGlobal);
 
       if (dateRange[0]) params.append("startDate", dayjs(dateRange[0]).startOf("day").toISOString());
       if (dateRange[1]) params.append("endDate", dayjs(dateRange[1]).endOf("day").toISOString());
@@ -282,11 +283,12 @@ const ListTransaction = () => {
       <Group mb="md" align="flex-end">
         <TextInput
           label="Search"
-          placeholder="Search Invoice..."
+          placeholder="Invoice, name, or email..."
           leftSection={<IconSearch size={16} />}
-          value={searchInvoice}
-          onChange={(e) => setSearchInvoice(e.target.value)}
+          value={searchGlobal}
+          onChange={(e) => setSearchGlobal(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+          miw={220}
         />
 
         <Select

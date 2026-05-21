@@ -17,7 +17,7 @@ export const GET = async (req: NextRequest) => {
 
     const searchParams = req.nextUrl.searchParams;
     const status = searchParams.get("status");
-    const invoice = searchParams.get("invoice");
+    const search = searchParams.get("search");
 
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
@@ -28,8 +28,31 @@ export const GET = async (req: NextRequest) => {
       additionalWhere.status = status as any;
     }
 
-    if (invoice) {
-      additionalWhere.invoice = { contains: invoice, mode: "insensitive" };
+    if (search) {
+      additionalWhere.OR = [
+        { invoice: { contains: search, mode: "insensitive" } },
+        { customerName: { contains: search, mode: "insensitive" } },
+        { customerEmail: { contains: search, mode: "insensitive" } },
+        {
+          user: {
+            name: { contains: search, mode: "insensitive" },
+          },
+        },
+        {
+          items: {
+            some: {
+              OR: [
+                { productName: { contains: search, mode: "insensitive" } },
+                {
+                  card: {
+                    name: { contains: search, mode: "insensitive" },
+                  },
+                },
+              ],
+            },
+          },
+        },
+      ];
     }
 
     if (startDate || endDate) {
