@@ -4,23 +4,23 @@ import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
 import { CONSTANT } from "@/constants";
 import { PaginationMetaDataDto } from "@/types/dtos/PaginationMetaDataDto";
 import { TransactionDto } from "@/types/dtos/TransactionDto";
-import { ActionIcon, Button, Flex, Group, Paper, Select, Text, TextInput, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Button, Checkbox, Flex, Group, Paper, Select, Text, TextInput, Title, Tooltip } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { useDisclosure } from "@mantine/hooks";
+import { openConfirmModal } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
-import { IconEye, IconHistory, IconRefresh, IconSearch } from "@tabler/icons-react";
+import { IconEye, IconHistory, IconRefresh, IconSearch, IconX } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { StatusBadge } from "../../layout/StatusBadge";
 import { TransactionDetailModal } from "./TransactionDetailModal";
 import { TransactionHistoryModal } from "./TransactionHistoryModal";
 
-interface ListTransactionProps {
-  isNonDashboard: boolean;
-}
-
-const ListTransaction = ({ isNonDashboard = false }: ListTransactionProps) => {
+const ListTransaction = () => {
   const [transactions, setTransactions] = useState<TransactionDto[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]); // State penampung ID transaksi terpilih
+  const [cancellingBatch, setCancellingBatch] = useState(false);
+
   const [metadata, setMetadata] = useState<PaginationMetaDataDto>({ total: 0, page: 1, limit: 10, totalPages: 0 });
   const [loading, setLoading] = useState(false);
   const [dateRange, setDateRange] = useState<[Date | null | string, Date | null | string]>([null, null]);
@@ -57,13 +57,14 @@ const ListTransaction = ({ isNonDashboard = false }: ListTransactionProps) => {
       if (dateRange[0]) params.append("startDate", dayjs(dateRange[0]).startOf("day").toISOString());
       if (dateRange[1]) params.append("endDate", dayjs(dateRange[1]).endOf("day").toISOString());
 
-      const urlListTransaction = isNonDashboard ? `/api/users/transactions?${params.toString()}` : `/api/transactions?${params.toString()}`;
+      const urlListTransaction = `/api/transactions?${params.toString()}`;
       const res = await fetch(urlListTransaction);
       const json = await res.json();
 
       if (json.success) {
         setTransactions(json.data);
         setMetadata(json.metadata);
+        setSelectedIds([]);
       }
     } catch (error) {
       console.error("Error fetching transactions:", error);
@@ -83,6 +84,71 @@ const ListTransaction = ({ isNonDashboard = false }: ListTransactionProps) => {
     fetchTransactions();
   };
 
+  const handleBatchCancel = () => {
+    if (selectedIds.length === 0) return;
+
+    openConfirmModal({
+      title: "Batch Cancel Transactions",
+      centered: true,
+      children: (
+        <Text size="sm">
+          Are you sure you want to cancel <b>{selectedIds.length}</b> selected transactions? This action will restore item stocks and revert voucher
+          usages.
+        </Text>
+      ),
+      labels: { confirm: "Cancel Transactions", cancel: "Back" },
+      confirmProps: { color: "red" },
+      onConfirm: async () => {
+        setCancellingBatch(true);
+        try {
+          const res = await fetch("/api/transactions/batch-cancel", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ids: selectedIds, note: "Cancelled via Admin Bulk Action" }),
+          });
+          const json = await res.json();
+
+          if (json.success) {
+            notifications.show({
+              title: "Success",
+              message: json.message || "Transactions cancelled successfully",
+              color: "teal",
+            });
+            fetchTransactions();
+          } else {
+            throw new Error(json.message || "Failed to cancel transactions");
+          }
+        } catch (error: any) {
+          notifications.show({
+            title: "Cancel Error",
+            message: error.message,
+            color: "red",
+            icon: <IconX size={16} />,
+          });
+        } finally {
+          setCancellingBatch(false);
+        }
+      },
+    });
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = transactions.map((trx) => trx.id);
+      setSelectedIds(allIds);
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((item) => item !== id));
+    }
+  };
+
   const handleOpenDetail = (item: TransactionDto) => {
     setSelectedTrx(item);
     openDetail();
@@ -94,6 +160,21 @@ const ListTransaction = ({ isNonDashboard = false }: ListTransactionProps) => {
   };
 
   const columns: ColumnDef<TransactionDto>[] = [
+    {
+      key: "selection",
+      label: (
+        <Checkbox
+          checked={transactions.length > 0 && selectedIds.length === transactions.length}
+          indeterminate={selectedIds.length > 0 && selectedIds.length < transactions.length}
+          onChange={(event) => handleSelectAll(event.currentTarget.checked)}
+        />
+      ),
+      sortable: false,
+      width: 45,
+      render: (item) => (
+        <Checkbox checked={selectedIds.includes(item.id)} onChange={(event) => handleSelectRow(item.id, event.currentTarget.checked)} />
+      ),
+    },
     {
       key: "no",
       label: "No",
@@ -183,7 +264,14 @@ const ListTransaction = ({ isNonDashboard = false }: ListTransactionProps) => {
   return (
     <Paper shadow="xs" p="md" radius="md">
       <Flex justify="space-between" align="center" mb="lg">
-        <Title order={3}>Transactions</Title>
+        <Group gap="md">
+          <Title order={3}>Transactions</Title>
+          {selectedIds.length > 0 && (
+            <Button color="red" variant="light" size="xs" leftSection={<IconX size={14} />} onClick={handleBatchCancel} loading={cancellingBatch}>
+              Cancel Selected ({selectedIds.length})
+            </Button>
+          )}
+        </Group>
         <Group>
           <ActionIcon variant="default" size="lg" onClick={fetchTransactions} loading={loading}>
             <IconRefresh size={18} />
@@ -221,7 +309,7 @@ const ListTransaction = ({ isNonDashboard = false }: ListTransactionProps) => {
         data={transactions}
         columns={columns}
         metadata={metadata}
-        loading={loading}
+        loading={loading || cancellingBatch}
         sortBy={queryParams.sortBy}
         sortOrder={queryParams.sortOrder}
         filterValues={{}}

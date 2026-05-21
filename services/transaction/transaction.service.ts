@@ -5,7 +5,7 @@ import { CreateTransactionParams, GetTransactionParams, ShipTransactionParams } 
 import { sendTransactionReceipt } from "../system/email.service";
 import { createNotificationByCode } from "./notification.service";
 import { createPaymentToken } from "./payment.service";
-import { FAILED_STATUSES } from "@/constants";
+import { ALLOWED_NEXT_STATUS, FAILED_STATUSES } from "@/constants";
 
 export const checkout = async (params: CreateTransactionParams) => {
   const {
@@ -506,4 +506,112 @@ export const getTransactionById = async (id: string) => {
   if (!transaction) return null;
 
   return transaction;
+};
+
+export const batchCancelTransactions = async (
+  transactionIds: string[],
+  options?: {
+    note?: string;
+    userId?: string;
+  }
+) => {
+  const { note, userId = "SYSTEM" } = options || {};
+
+  if (!transactionIds || transactionIds.length === 0) {
+    throw new Error("Select at least one transaction to cancel");
+  }
+
+  const result = await prisma.$transaction(
+    async (tx) => {
+      const transactions = await tx.transaction.findMany({
+        where: {
+          id: { in: transactionIds },
+        },
+        include: {
+          items: true,
+        },
+      });
+
+      if (transactions.length === 0) {
+        throw new Error("No transactions found");
+      }
+
+      const processedTransactions = [];
+
+      for (const transaction of transactions) {
+        const currentStatus = transaction.status;
+
+        const allowedNext = ALLOWED_NEXT_STATUS[currentStatus] || [];
+
+        if (!allowedNext.includes(TransactionStatus.CANCELLED)) {
+          throw new Error(`Transaksi ${transaction.invoice} cannot be cancelled because the current status is ${currentStatus}`);
+        }
+
+        const updatedTx = await tx.transaction.update({
+          where: { id: transaction.id },
+          data: { status: TransactionStatus.CANCELLED },
+          include: {
+            items: true,
+            user: true,
+            voucher: true,
+            shop: true,
+            transactionShipmentAddress: true,
+          },
+        });
+
+        await tx.transactionStatusLog.create({
+          data: {
+            transactionId: transaction.id,
+            status: TransactionStatus.CANCELLED,
+            previousStatus: currentStatus,
+            note: note || "Cancelled via batch system process",
+            createdBy: userId,
+          },
+        });
+
+        for (const item of transaction.items) {
+          if (item.cardId) {
+            await tx.card.update({
+              where: { id: item.cardId },
+              data: { stock: { increment: item.quantity } },
+            });
+          }
+        }
+
+        if (transaction.voucherId) {
+          await tx.voucher.update({
+            where: { id: transaction.voucherId },
+            data: { usedCount: { decrement: 1 } },
+          });
+        }
+
+        processedTransactions.push(updatedTx);
+      }
+
+      return processedTransactions;
+    },
+    { timeout: 60000 }
+  );
+
+  for (const tx of result) {
+    sendTransactionReceipt(tx);
+
+    await createNotificationByCode({
+      notificationCode: "TRANSACTION_NOTIF",
+      title: "Transaction Canceled",
+      message: `Transaction ${tx.invoice} has been cancelled`,
+      type: NotificationType.TRANSACTION,
+      url: null,
+      metadata: {
+        transactionId: tx.id,
+        status: TransactionStatus.CANCELLED,
+      },
+    }).catch((err) => console.error(`Failed to create notification for ${tx.id}:`, err));
+  }
+
+  return {
+    success: true,
+    message: `${result.length} transaction successfully canceled.`,
+    count: result.length,
+  };
 };
