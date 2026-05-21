@@ -65,7 +65,6 @@ const ListTransaction = () => {
       if (json.success) {
         setTransactions(json.data);
         setMetadata(json.metadata);
-        setSelectedIds([]);
       }
     } catch (error) {
       console.error("Error fetching transactions:", error);

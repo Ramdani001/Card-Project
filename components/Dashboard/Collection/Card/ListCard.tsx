@@ -122,7 +122,6 @@ const ListCard = () => {
       if (json.success) {
         setCards(json.data);
         setMetadata(json.metadata);
-        setSelectedIds([]);
       }
     } catch (error) {
       console.error("Error fetching cards:", error);
