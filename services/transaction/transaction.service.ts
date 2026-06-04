@@ -42,6 +42,10 @@ export const checkout = async (params: CreateTransactionParams) => {
     if (item.card.minQtyPurchase && item.quantity < item.card.minQtyPurchase) {
       throw new Error(`Minimum purchase for '${item.card.name}' is ${item.card.minQtyPurchase} pcs.`);
     }
+    
+    if(item.quantity <= 0) {
+      throw new Error(`Invalid quantity for '${item.card.name}'.`);
+    }
   }
 
   let subTotal = 0;
