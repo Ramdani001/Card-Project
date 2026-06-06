@@ -2,31 +2,30 @@ import prisma from "@/lib/prisma";
 import { AddToCartParams, UpdateCartItemParams } from "@/types/params/cartParams";
 
 export const getCartByUserId = async (userId: string) => {
-  const cart = await prisma.cart.findFirst({
-    where: { userId, isActive: true },
-    include: {
-      items: {
-        where: { isActive: true },
-        orderBy: { createdAt: "desc" },
-        include: {
-          card: {
-            where: { isActive: true },
-            include: {
-              images: { where: { isPrimary: true, isActive: true }, take: 1 },
-              discount: true,
-            },
+  const cartInclude = {
+    items: {
+      where: { isActive: true },
+      orderBy: { createdAt: "desc" as const },
+      include: {
+        card: {
+          include: {
+            images: { where: { isPrimary: true, isActive: true }, take: 1 },
+            discount: true,
           },
         },
       },
     },
+  };
+
+  let cart = await prisma.cart.findFirst({
+    where: { userId, isActive: true },
+    include: cartInclude,
   });
 
   if (!cart) {
-    return await prisma.cart.create({
+    cart = await prisma.cart.create({
       data: { userId },
-      include: {
-        items: { include: { card: true } },
-      },
+      include: cartInclude,
     });
   }
 
