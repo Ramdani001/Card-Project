@@ -7,6 +7,7 @@ export const getCountries = async (options: Prisma.CountryFindManyArgs) => {
     ...options,
     where: {
       ...options.where,
+      isActive: true,
     },
     orderBy: options.orderBy || { name: "asc" },
   };
@@ -60,8 +61,9 @@ export const deleteCountry = async (id: string) => {
 
   if (!country) throw new Error("Country not found");
 
-  const deletedCountry = await prisma.country.delete({
+  const deletedCountry = await prisma.country.update({
     where: { id },
+    data: { isActive: false },
   });
 
   return deletedCountry;

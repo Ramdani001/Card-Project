@@ -1,7 +1,8 @@
 model Country {
     id                           String                       @id @default(uuid())
-    name                         String                       @unique
+    name                         String
     isoCode                      String                       @unique
+    isActive                     Boolean                      @default(true)
     createdAt                    DateTime                     @default(now())
     updatedAt                    DateTime                     @updatedAt
     provinces                    Province[]
@@ -15,6 +16,7 @@ model Province {
     name                         String
     code                         String                       @unique
     countryId                    String
+    isActive                     Boolean                      @default(true)
     createdAt                    DateTime                     @default(now())
     updatedAt                    DateTime                     @updatedAt
     country                      Country                      @relation(fields: [countryId], references: [id])
@@ -22,8 +24,6 @@ model Province {
     transactionShipmentAddresses TransactionShipmentAddress[]
     users                        User[]
     shops                        Shop[]
-
-    @@unique([name, countryId])
 }
 
 model City {
@@ -31,6 +31,7 @@ model City {
     name                         String
     code                         String                       @unique
     provinceId                   String
+    isActive                     Boolean                      @default(true)
     createdAt                    DateTime                     @default(now())
     updatedAt                    DateTime                     @updatedAt
     province                     Province                     @relation(fields: [provinceId], references: [id])
@@ -38,8 +39,6 @@ model City {
     transactionShipmentAddresses TransactionShipmentAddress[]
     users                        User[]
     shops                        Shop[]
-
-    @@unique([name, provinceId])
 }
 
 model SubDistrict {
@@ -47,6 +46,7 @@ model SubDistrict {
     name                         String
     code                         String                       @unique
     cityId                       String
+    isActive                     Boolean                      @default(true)
     createdAt                    DateTime                     @default(now())
     updatedAt                    DateTime                     @updatedAt
     city                         City                         @relation(fields: [cityId], references: [id])
@@ -55,7 +55,7 @@ model SubDistrict {
     users                        User[]
     shops                        Shop[]
 
-    @@unique([name, cityId])
+    @@unique([code, isActive])
 }
 
 model Village {
@@ -63,6 +63,7 @@ model Village {
     name                         String
     code                         String                       @unique
     subDistrictId                String
+    isActive                     Boolean                      @default(true)
     createdAt                    DateTime                     @default(now())
     updatedAt                    DateTime                     @updatedAt
     subDistrict                  SubDistrict                  @relation(fields: [subDistrictId], references: [id])
@@ -70,5 +71,5 @@ model Village {
     users                        User[]
     shops                        Shop[]
 
-    @@unique([name, subDistrictId])
+    @@unique([code, isActive])
 }

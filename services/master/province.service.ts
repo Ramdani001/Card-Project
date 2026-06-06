@@ -8,6 +8,7 @@ export const getProvincies = async (options: Prisma.ProvinceFindManyArgs) => {
     ...options,
     where: {
       ...options.where,
+      isActive: true,
     },
     orderBy: options.orderBy || { name: "asc" },
     include: {
@@ -80,8 +81,9 @@ export const deleteProvince = async (id: string) => {
 
   if (!province) throw new Error("Province not found");
 
-  const deletedProvince = await prisma.province.delete({
+  const deletedProvince = await prisma.province.update({
     where: { id },
+    data: { isActive: false },
   });
 
   return deletedProvince;
@@ -127,6 +129,7 @@ export const syncProvincesFromApi = async () => {
         prisma.province.upsert({
           where: {
             code: province.code,
+            isActive: true,
           },
           update: {
             name: province.name,

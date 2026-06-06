@@ -6,12 +6,17 @@ import { CreateRoleParams, UpdateRoleParams } from "@/types/params/roleParams";
 export const getRoles = async (options: Prisma.RoleFindManyArgs) => {
   const finalOptions: Prisma.RoleFindManyArgs = {
     ...options,
+    where: {
+      ...options.where,
+      isActive: true,
+    },
     include: {
       _count: { select: { users: true } },
-      cardCategoryRoleAccesses: { select: { categoryId: true, category: true } },
-      roleMenuAccesses: { include: { menu: true } },
+      cardCategoryRoleAccesses: { select: { categoryId: true, category: true }, where: { isActive: true } },
+      roleMenuAccesses: { include: { menu: true }, where: { isActive: true } },
       roleApiAccesses: {
         include: { apiEndpoint: true },
+        where: { isActive: true },
       },
     },
     orderBy: options.orderBy || { createdAt: "desc" },
@@ -35,7 +40,7 @@ export const getRoleById = async (id: string) => {
 };
 
 export const createRole = async ({ name, canAccessDashboard, categoryIds = [], menuIds = [], apiAccesses = [] }: CreateRoleParams) => {
-  const existingRole = await prisma.role.findUnique({ where: { name } });
+  const existingRole = await prisma.role.findFirst({ where: { name, isActive: true } });
   if (existingRole) throw new Error("Role name already exists");
 
   return await prisma.$transaction(async (tx) => {
@@ -54,7 +59,12 @@ export const createRole = async ({ name, canAccessDashboard, categoryIds = [], m
 
     for (const api of apiAccesses) {
       const endpoint = await tx.apiEndpoint.upsert({
-        where: { url: api.url },
+        where: {
+          url_isActive: {
+            url: api.url,
+            isActive: true,
+          },
+        },
         update: {},
         create: { url: api.url, description: api.description || "" },
       });
@@ -82,7 +92,7 @@ export const updateRole = async ({ id, name, categoryIds, menuIds, apiAccesses, 
   if (!existingRole) throw new Error("Role not found");
 
   if (name && name !== existingRole.name) {
-    const nameExists = await prisma.role.findUnique({ where: { name } });
+    const nameExists = await prisma.role.findFirst({ where: { name, isActive: true } });
     if (nameExists) throw new Error("Role name already exists");
   }
 
@@ -115,7 +125,7 @@ export const updateRole = async ({ id, name, categoryIds, menuIds, apiAccesses, 
 
       for (const api of apiAccesses) {
         const endpoint = await tx.apiEndpoint.upsert({
-          where: { url: api.url },
+          where: { url_isActive: { url: api.url, isActive: true } },
           update: {},
           create: { url: api.url, description: api.description || "" },
         });
@@ -138,9 +148,9 @@ export const updateRole = async ({ id, name, categoryIds, menuIds, apiAccesses, 
     return await tx.role.findUnique({
       where: { id },
       include: {
-        cardCategoryRoleAccesses: { include: { category: true } },
-        roleMenuAccesses: { include: { menu: true } },
-        roleApiAccesses: { include: { apiEndpoint: true } },
+        cardCategoryRoleAccesses: { include: { category: true }, where: { isActive: true } },
+        roleMenuAccesses: { include: { menu: true }, where: { isActive: true } },
+        roleApiAccesses: { include: { apiEndpoint: true }, where: { isActive: true } },
       },
     });
   });

@@ -130,8 +130,10 @@ export const getCategoryStats = async () => {
     },
     include: {
       card: {
+        where: { isActive: true },
         include: {
           categories: {
+            where: { isActive: true },
             include: { category: true },
           },
         },

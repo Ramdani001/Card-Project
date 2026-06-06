@@ -9,6 +9,7 @@ export const getVillages = async (options: Prisma.VillageFindManyArgs) => {
     ...options,
     where: {
       ...options.where,
+      isActive: true,
     },
     orderBy: options.orderBy || { name: "asc" },
     include: { subDistrict: true },
@@ -76,8 +77,9 @@ export const deleteVillage = async (id: string) => {
 
   if (!village) throw new Error("Village not found");
 
-  const deletedVillage = await prisma.village.delete({
+  const deletedVillage = await prisma.village.update({
     where: { id },
+    data: { isActive: false },
   });
 
   return deletedVillage;
@@ -121,7 +123,7 @@ export const syncVillagesFromApi = async () => {
 
         if (!subDistrictId) {
           const subDistrict = await prisma.subDistrict.findUnique({
-            where: { code: village.district_code },
+            where: { code: village.district_code, isActive: true },
             select: { id: true },
           });
 

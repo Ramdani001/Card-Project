@@ -7,6 +7,7 @@ import { CreateBannerParams, UpdateBannerParams } from "@/types/params/bannerPar
 export const getBanners = async (options: Prisma.BannerImageFindManyArgs) => {
   const finalOptions: Prisma.BannerImageFindManyArgs = {
     ...options,
+    where: { ...options.where, isActive: true },
   };
 
   const [banners, total] = await Promise.all([prisma.bannerImage.findMany(finalOptions), prisma.bannerImage.count({ where: finalOptions.where })]);
@@ -20,6 +21,7 @@ export const getActiveBanners = async () => {
     where: {
       startDate: { lte: now },
       endDate: { gte: now },
+      isActive: true,
     },
     orderBy: { createdAt: "desc" },
   });
@@ -106,7 +108,7 @@ export const deleteBanner = async (id: string) => {
   const banner = await prisma.bannerImage.findUnique({ where: { id } });
   if (!banner) throw new Error("Banner not found");
 
-  await prisma.bannerImage.delete({ where: { id } });
+  await prisma.bannerImage.update({ where: { id }, data: { isActive: false } });
 
   if (banner.path) {
     await deleteFile(banner.path).catch(console.error);

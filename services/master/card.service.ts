@@ -14,10 +14,11 @@ export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string
     discount: true,
     categories: {
       include: { category: true },
+      where: { isActive: true },
     },
   };
 
-  const baseWhere: Prisma.CardWhereInput = { ...options.where };
+  const baseWhere: Prisma.CardWhereInput = { ...options.where, isActive: true };
 
   let categorySearchFilter: Prisma.CardWhereInput = {};
   const filterStock: Prisma.CardWhereInput = {};
@@ -95,8 +96,8 @@ export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string
       };
     }
   } else {
-    const guestRole = await prisma.role.findUnique({
-      where: { name: CONSTANT.ROLE_GUEST_NAME },
+    const guestRole = await prisma.role.findFirst({
+      where: { name: CONSTANT.ROLE_GUEST_NAME, isActive: true },
       include: { cardCategoryRoleAccesses: true },
     });
 
@@ -416,8 +417,9 @@ export const deleteCard = async (id: string) => {
 
   if (!card) throw new Error("Card not found");
 
-  const deleted = await prisma.card.delete({
+  const deleted = await prisma.card.update({
     where: { id },
+    data: { isActive: false },
   });
 
   if (card.images.length > 0) {
@@ -575,6 +577,7 @@ export const exportCardsToExcel = async () => {
       categories: { include: { category: true } },
       images: true,
     },
+    where: { isActive: true },
     orderBy: { createdAt: "desc" },
   });
 
@@ -657,6 +660,7 @@ export const getTopThreeSellingCards = async () => {
     const randomCards = await prisma.card.findMany({
       where: {
         id: { notIn: cardIds },
+        isActive: true,
       },
       select: { id: true },
       take: neededCount,
@@ -669,6 +673,7 @@ export const getTopThreeSellingCards = async () => {
   const cards = await prisma.card.findMany({
     where: {
       id: { in: cardIds },
+      isActive: true,
     },
     include: {
       images: true,
@@ -695,57 +700,37 @@ export const deleteBatchCards = async (ids: string[]) => {
   }
 
   const cardsWithImages = await prisma.card.findMany({
-    where: {
-      id: { in: ids },
-    },
-    include: {
-      images: true,
-    },
+    where: { id: { in: ids }, isActive: true },
+    include: { images: true },
   });
 
   if (cardsWithImages.length === 0) {
-    throw new Error("No cards found to delete");
+    throw new Error("No active cards found to delete");
   }
 
-  const allImagePaths: string[] = [];
-  cardsWithImages.forEach((card) => {
-    card.images.forEach((img) => {
-      if (img.path) {
-        allImagePaths.push(img.path);
-      }
-    });
-  });
+  const allImagePaths = cardsWithImages.flatMap((c) => c.images.map((i) => i.path)).filter(Boolean) as string[];
 
-  const deletedResult = await prisma.$transaction(async (tx) => {
-    await tx.imageCard.deleteMany({
-      where: { cardId: { in: ids } },
+  const updateResult = await prisma.$transaction(async (tx) => {
+    const result = await tx.card.updateMany({
+      where: { id: { in: ids } },
+      data: { isActive: false },
     });
 
-    await tx.categoriesOnCards.deleteMany({
-      where: { cardId: { in: ids } },
-    });
-
-    const batchDeleteResult = await tx.card.deleteMany({
-      where: {
-        id: { in: ids },
-      },
-    });
-
-    return batchDeleteResult;
+    return result;
   });
 
   if (allImagePaths.length > 0) {
-    Promise.all(allImagePaths.map((path) => deleteFile(path).catch((err) => console.error(`Failed to delete physical file at path: ${path}`, err))));
+    Promise.all(allImagePaths.map((path) => deleteFile(path.replace(/^\/uploads\//, "")).catch(console.error)));
   }
 
   await createNotificationByCode({
     notificationCode: "PRODUCT_NOTIF",
-    title: "Batch Produk Dihapus",
-    message: `${deletedResult.count} product successfully deleted from the system at once`,
+    title: "Batch Produk Dinonaktifkan",
+    message: `${updateResult.count} product successfully deactivated`,
     type: NotificationType.SYSTEM,
     url: "",
     metadata: { deletedIds: ids },
   });
 
-  return deletedResult;
+  return updateResult;
 };

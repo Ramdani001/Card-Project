@@ -14,6 +14,7 @@ model EmailHistory {
   provider      String?     @default("SMTP")
   transactionId String?     @db.Uuid
 
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

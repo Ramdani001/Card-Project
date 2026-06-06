@@ -1,26 +1,30 @@
 model Event {
   id        String       @id @default(uuid())
   title     String
-  slug      String       @unique
+  slug      String
   content   String
   startDate DateTime
   endDate   DateTime
+  isActive  Boolean      @default(true)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
   images    EventImage[]
+
+  @@unique([slug, isActive])
 }
 
 model EventImage {
   id           String   @id @default(uuid())
   url          String
   eventId      String
-  createdAt    DateTime @default(now())
   isPrimary    Boolean  @default(false)
   fileName     String
   mimeType     String
   originalName String
   path         String
   size         Int
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   event        Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
 }
@@ -35,6 +39,7 @@ model BannerImage {
   fileName     String
   mimeType     String
   size         Int
+  isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   link         String?
@@ -44,10 +49,13 @@ model Article {
   id        String         @id @default(uuid())
   title     String
   content   String
+  isActive  Boolean        @default(true)
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
-  slug      String         @unique
+  slug      String
   images    ArticleImage[]
+
+  @@unique([slug, isActive])
 }
 
 model ArticleImage {
@@ -60,6 +68,7 @@ model ArticleImage {
   fileName     String
   mimeType     String
   size         Int
+  isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   article      Article  @relation(fields: [articleId], references: [id], onDelete: Cascade)
@@ -70,6 +79,7 @@ model Discount {
   name          String
   value         Decimal       @db.Decimal(10, 2)
   type          DiscountType
+  isActive      Boolean       @default(true)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   cards         Card[]
@@ -78,7 +88,7 @@ model Discount {
 
 model Voucher {
   id                    String                @id @default(uuid())
-  code                  String                @unique
+  code                  String
   name                  String
   description           String?
   type                  DiscountType
@@ -89,6 +99,7 @@ model Voucher {
   usedCount             Int                   @default(0)
   startDate             DateTime
   endDate               DateTime
+  isActive              Boolean               @default(true)
   createdAt             DateTime              @default(now())
   updatedAt             DateTime              @updatedAt
   transactions          Transaction[]
@@ -96,6 +107,7 @@ model Voucher {
   voucherCards          VoucherCard[]
   voucherRoles          VoucherRole[]
 
+  @@unique([code, isActive])
   @@index([code])
   @@index([startDate, endDate])
 }
@@ -108,6 +120,7 @@ model VoucherCardCategory {
   voucher      Voucher  @relation(fields: [voucherId], references: [id], onDelete: Cascade)
   cardCategory Category @relation(fields: [cardCategoryId], references: [id], onDelete: Cascade)
 
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -120,6 +133,7 @@ model VoucherCard {
   voucher Voucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
   card    Card    @relation(fields: [cardId], references: [id], onDelete: Cascade)
 
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -132,6 +146,7 @@ model VoucherRole {
   voucher Voucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
   role    Role    @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

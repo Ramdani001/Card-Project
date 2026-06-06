@@ -7,6 +7,7 @@ export const getVouchers = async (options: Prisma.VoucherFindManyArgs) => {
     ...options,
     where: {
       ...options.where,
+      isActive: true,
     },
     include: {
       voucherCardCategories: true,
@@ -34,8 +35,8 @@ export const getVoucherById = async (id: string) => {
 };
 
 export const getVoucherByCode = async (code: string) => {
-  return await prisma.voucher.findUnique({
-    where: { code },
+  return await prisma.voucher.findFirst({
+    where: { code, isActive: true },
   });
 };
 
@@ -172,7 +173,8 @@ export const deleteVoucher = async (id: string) => {
   const existing = await prisma.voucher.findUnique({ where: { id } });
   if (!existing) throw new Error("Voucher not found");
 
-  return await prisma.voucher.delete({
+  return await prisma.voucher.update({
     where: { id },
+    data: { isActive: false },
   });
 };

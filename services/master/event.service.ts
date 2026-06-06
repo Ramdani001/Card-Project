@@ -9,6 +9,7 @@ export const getEvents = async (options: Prisma.EventFindManyArgs) => {
   const finalOptions: Prisma.EventFindManyArgs = {
     where: {
       ...options.where,
+      isActive: true,
     },
     include: {
       images: true,
@@ -33,7 +34,7 @@ export const createEvent = async (params: CreateEventParams) => {
 
   const slug = generateSlug(title);
 
-  const existingSlug = await prisma.event.findUnique({ where: { slug } });
+  const existingSlug = await prisma.event.findFirst({ where: { slug, isActive: true } });
   if (existingSlug) throw new Error("Event title already exists (Slug conflict)");
   const uploadedFiles: any[] = [];
 
@@ -100,7 +101,7 @@ export const updateEvent = async (params: UpdateEventParams) => {
     let slug = undefined;
     if (title && title !== event.title) {
       slug = generateSlug(title);
-      const exist = await prisma.event.findUnique({ where: { slug } });
+      const exist = await prisma.event.findFirst({ where: { slug, isActive: true } });
       if (exist && exist.id !== id) throw new Error("Event title already exists");
     }
 
@@ -160,7 +161,7 @@ export const deleteEvent = async (id: string) => {
   const event = await prisma.event.findUnique({ where: { id }, include: { images: true } });
   if (!event) throw new Error("Event not found");
 
-  await prisma.event.delete({ where: { id } });
+  await prisma.event.update({ where: { id }, data: { isActive: false } });
 
   for (const img of event.images) {
     await deleteFile(img.path);

@@ -8,6 +8,7 @@ model Notification {
   url      String?
   metadata Json?
 
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -23,6 +24,7 @@ model RoleNotification {
 
   toRole Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

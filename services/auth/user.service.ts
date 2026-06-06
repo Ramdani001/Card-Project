@@ -38,6 +38,7 @@ export const getUserById = async (id: string) => {
 export const getUsers = async (options: Prisma.UserFindManyArgs) => {
   const finalOptions: Prisma.UserFindManyArgs = {
     ...options,
+    where: { ...options.where, isActive: true },
     select: userSelectScope,
   };
 
@@ -66,7 +67,7 @@ export const createUser = async (data: CreateUserParams) => {
     postalCode,
   } = data;
 
-  const existingUser = await prisma.user.findUnique({ where: { email } });
+  const existingUser = await prisma.user.findFirst({ where: { email, isActive: true } });
   if (existingUser) {
     throw new Error("Email already registered");
   }
@@ -196,13 +197,18 @@ export const deleteUser = async (id: string) => {
   const existingUser = await prisma.user.findUnique({ where: { id } });
   if (!existingUser) throw new Error("User not found");
 
-  const deletedUser = await prisma.user.delete({
+  const deletedUser = await prisma.user.update({
     where: { id },
+    data: { isActive: false },
   });
 
   if (existingUser.avatar) {
-    const oldPath = existingUser.avatar.replace(/^\/uploads\//, "");
-    await deleteFile(oldPath).catch(console.error);
+    try {
+      const oldPath = existingUser.avatar.replace(/^\/uploads\//, "");
+      await deleteFile(oldPath);
+    } catch (error) {
+      throw error;
+    }
   }
 
   return deletedUser;

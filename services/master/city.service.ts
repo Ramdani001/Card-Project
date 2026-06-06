@@ -9,6 +9,7 @@ export const getCities = async (options: Prisma.CityFindManyArgs) => {
     ...options,
     where: {
       ...options.where,
+      isActive: true,
     },
     orderBy: options.orderBy || { name: "asc" },
     include: { province: true },
@@ -80,8 +81,9 @@ export const deleteCity = async (id: string) => {
 
   if (!city) throw new Error("City not found");
 
-  const deletedCity = await prisma.city.delete({
+  const deletedCity = await prisma.city.update({
     where: { id },
+    data: { isActive: false },
   });
 
   return deletedCity;

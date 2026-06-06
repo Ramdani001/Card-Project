@@ -25,12 +25,14 @@ export const authOptions: NextAuthOptions = {
         }
 
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email_isActive: { email: credentials.email, isActive: true } },
           include: {
             role: {
+              where: { isActive: true },
               include: {
                 roleApiAccesses: {
                   include: { apiEndpoint: true },
+                  where: { isActive: true },
                 },
               },
             },

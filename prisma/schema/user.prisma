@@ -1,7 +1,8 @@
 model Role {
   id                       String                   @id @default(uuid())
-  name                     String                   @unique
+  name                     String
   canAccessDashboard       Boolean                  @default(false)
+  isActive                 Boolean                  @default(true)
   createdAt                DateTime                 @default(now())
   updatedAt                DateTime                 @updatedAt
   cardCategoryRoleAccesses CardCategoryRoleAccess[]
@@ -10,36 +11,41 @@ model Role {
   users                    User[]
   roleNotifications        RoleNotification[]
   voucherRoles             VoucherRole[]
+
+  @@unique([name, isActive])
 }
 
 model CardCategoryRoleAccess {
   id         String   @id @default(uuid())
   roleId     String
   categoryId String
+  isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   category   Category @relation(fields: [categoryId], references: [id])
   role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
-  @@unique([roleId, categoryId])
+  @@unique([roleId, categoryId, isActive])
 }
 
 model RoleMenuAccess {
   id        String   @id @default(uuid())
   roleId    String
   menuId    String
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   menu      Menu     @relation(fields: [menuId], references: [id])
   role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
-  @@unique([roleId, menuId])
+  @@unique([roleId, menuId, isActive])
 }
 
 model RoleApiAccess {
   id            String      @id @default(uuid())
   roleId        String
   apiEndpointId String
+  isActive      Boolean     @default(true)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   canCreate     Boolean     @default(false)
@@ -49,22 +55,25 @@ model RoleApiAccess {
   apiEndpoint   ApiEndpoint @relation(fields: [apiEndpointId], references: [id])
   role          Role        @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
-  @@unique([roleId, apiEndpointId])
+  @@unique([roleId, apiEndpointId, isActive])
   @@index([roleId])
 }
 
 model ApiEndpoint {
   id              String          @id @default(uuid())
-  url             String          @unique
+  url             String
   description     String?
+  isActive        Boolean         @default(true)
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   roleApiAccesses RoleApiAccess[]
+
+  @@unique([url, isActive])
 }
 
 model User {
   id              String         @id @default(uuid())
-  email           String         @unique
+  email           String
   password        String
   name            String?
   phone           String?
@@ -81,6 +90,7 @@ model User {
   postalCode      String?
   address         String?
   isVerified      Boolean        @default(false)
+  isActive        Boolean        @default(true)
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   cardHistories   CardHistory[]
@@ -94,6 +104,8 @@ model User {
   city            City?          @relation(fields: [cityCode], references: [code])
   subDistrict     SubDistrict?   @relation(fields: [subDistrictCode], references: [code])
   village         Village?       @relation(fields: [villageCode], references: [code])
+
+  @@unique([email, isActive])
 }
 
 model Otp {
@@ -104,7 +116,9 @@ model Otp {
   type   OtpType @default(REGISTRATION)
 
   expiresAt DateTime
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([code])

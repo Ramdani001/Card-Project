@@ -8,8 +8,8 @@ import { OtpType } from "@/prisma/generated/prisma/enums";
 import { RegisterParams, UpdateProfileParams } from "@/types/params/authParams";
 
 export const register = async ({ email, password, name, phone, address, file, facebookUrl, instagramUrl, twitterUrl }: RegisterParams) => {
-  const existingUser = await prisma.user.findUnique({
-    where: { email },
+  const existingUser = await prisma.user.findFirst({
+    where: { email, isActive: true },
     include: {
       otps: {
         where: { type: OtpType.REGISTRATION },
@@ -40,7 +40,7 @@ export const register = async ({ email, password, name, phone, address, file, fa
 
   if (phone) {
     const existingPhone = await prisma.user.findFirst({
-      where: { phone: phone },
+      where: { phone: phone, isActive: true },
     });
 
     if (existingPhone) {
@@ -48,7 +48,7 @@ export const register = async ({ email, password, name, phone, address, file, fa
     }
   }
 
-  let defaultRole = await prisma.role.findUnique({ where: { name: "B2C" } });
+  let defaultRole = await prisma.role.findFirst({ where: { name: "B2C", isActive: true } });
   if (!defaultRole) {
     const anyRole = await prisma.role.findFirst();
     if (!anyRole) throw new Error("No roles found in system. Please seed database.");
@@ -109,8 +109,8 @@ export const register = async ({ email, password, name, phone, address, file, fa
 };
 
 export const verifyRegistrationOtp = async (email: string, code: string) => {
-  const user = await prisma.user.findUnique({
-    where: { email },
+  const user = await prisma.user.findFirst({
+    where: { email, isActive: true },
     include: {
       otps: {
         where: { code, type: OtpType.REGISTRATION },
@@ -143,8 +143,8 @@ export const verifyRegistrationOtp = async (email: string, code: string) => {
 };
 
 export const resendOtp = async (email: string) => {
-  const user = await prisma.user.findUnique({
-    where: { email },
+  const user = await prisma.user.findFirst({
+    where: { email, isActive: true },
     include: {
       otps: {
         where: { type: OtpType.REGISTRATION },
@@ -219,8 +219,8 @@ export const updateProfile = async ({
   if (!user) throw new Error("User tidak ditemukan");
 
   if (email && email !== user.email) {
-    const emailExists = await prisma.user.findUnique({ where: { email } });
-    if (emailExists) throw new Error("Email sudah digunakan oleh akun lain");
+    const emailExists = await prisma.user.findFirst({ where: { email, isActive: true } });
+    if (emailExists) throw new Error("Email already used by another account");
   }
 
   let newAvatarUrl: string | null = null;

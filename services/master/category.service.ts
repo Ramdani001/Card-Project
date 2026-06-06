@@ -31,8 +31,8 @@ export const getCategories = async (options: Prisma.CategoryFindManyArgs, userId
       }
     }
   } else {
-    const guestRole = await prisma.role.findUnique({
-      where: { name: CONSTANT.ROLE_GUEST_NAME },
+    const guestRole = await prisma.role.findFirst({
+      where: { name: CONSTANT.ROLE_GUEST_NAME, isActive: true },
       include: { cardCategoryRoleAccesses: true },
     });
 
@@ -50,6 +50,7 @@ export const getCategories = async (options: Prisma.CategoryFindManyArgs, userId
     where: {
       ...options.where,
       ...roleSecurityFilter,
+      isActive: true,
     },
     include: {
       _count: {
@@ -78,8 +79,8 @@ export const createCategory = async (params: CreateCategoryParams) => {
   const { name, note, file } = params;
   const slug = generateSlug(name);
 
-  const existingSlug = await prisma.category.findUnique({
-    where: { slug },
+  const existingSlug = await prisma.category.findFirst({
+    where: { slug, isActive: true },
   });
 
   if (existingSlug) {
@@ -123,7 +124,7 @@ export const updateCategory = async (params: UpdateCategoryParams) => {
   let slug = undefined;
   if (name && name !== existingCategory.name) {
     slug = generateSlug(name);
-    const slugExist = await prisma.category.findUnique({ where: { slug } });
+    const slugExist = await prisma.category.findFirst({ where: { slug, isActive: true } });
     if (slugExist && slugExist.id !== id) {
       throw new Error("Category name already taken");
     }
@@ -166,8 +167,9 @@ export const deleteCategory = async (id: string) => {
     throw new Error("Category not found");
   }
 
-  const deletedCategory = await prisma.category.delete({
+  const deletedCategory = await prisma.category.update({
     where: { id },
+    data: { isActive: false },
   });
 
   if (deletedCategory.pathImage) {

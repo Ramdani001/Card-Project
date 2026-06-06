@@ -6,6 +6,7 @@ export const getRoleCategoryAccesses = async (options: Prisma.CardCategoryRoleAc
     ...options,
     where: {
       ...options.where,
+      isActive: true,
     },
     include: {
       role: { select: { id: true, name: true } },
@@ -59,7 +60,7 @@ export const syncRoleCategoryAccess = async (roleId: string, categoryIds: string
 
     for (const categoryId of categoryIds) {
       const existingAccess = await tx.cardCategoryRoleAccess.findFirst({
-        where: { roleId, categoryId },
+        where: { roleId, categoryId, isActive: true },
       });
 
       if (existingAccess) {
@@ -86,6 +87,7 @@ export const updateRoleCategoryAccess = async (id: string, data: { roleId?: stri
         roleId: data.roleId || existingAccess.roleId,
         categoryId: data.categoryId || existingAccess.categoryId,
         id: { not: id },
+        isActive: true,
       },
     });
 

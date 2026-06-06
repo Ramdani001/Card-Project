@@ -7,24 +7,25 @@ export const getAllConfigs = async () => {
 };
 
 export const getConfigByKey = async (key: string) => {
-  return await prisma.appConfig.findUnique({
-    where: { key },
+  return await prisma.appConfig.findFirst({
+    where: { key, isActive: true },
   });
 };
 
 export const setConfig = async (key: string, value: string) => {
   return await prisma.appConfig.upsert({
-    where: { key },
+    where: { key_isActive: { key, isActive: true } },
     update: { value },
     create: { key, value },
   });
 };
 
 export const deleteConfig = async (key: string) => {
-  const existing = await prisma.appConfig.findUnique({ where: { key } });
+  const existing = await prisma.appConfig.findFirst({ where: { key, isActive: true } });
   if (!existing) throw new Error("Config not found");
 
-  return await prisma.appConfig.delete({
-    where: { key },
+  return await prisma.appConfig.update({
+    where: { key_isActive: { key, isActive: true } },
+    data: { isActive: false },
   });
 };

@@ -21,9 +21,9 @@ export default withAuth(
       permissions = (token.permissions as any) || {};
     } else {
       const guestRoleData = await prisma.role.findUnique({
-        where: { name: CONSTANT.ROLE_GUEST_NAME },
+        where: { name_isActive: { name: CONSTANT.ROLE_GUEST_NAME, isActive: true } },
         include: {
-          roleApiAccesses: { include: { apiEndpoint: true } },
+          roleApiAccesses: { include: { apiEndpoint: true }, where: { isActive: true } },
         },
       });
 

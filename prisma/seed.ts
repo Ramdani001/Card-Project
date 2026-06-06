@@ -79,7 +79,7 @@ export async function main() {
 
   for (const r of roleData) {
     const existingRole = await prisma.role.findUnique({
-      where: { name: r.name },
+      where: { name_isActive: { name: r.name, isActive: true } },
     });
 
     if (!existingRole) {
@@ -92,7 +92,7 @@ export async function main() {
 
   for (const u of userData) {
     const role = await prisma.role.findUnique({
-      where: { name: u.roleName },
+      where: { name_isActive: { name: u.roleName, isActive: true } },
     });
 
     if (!role) {
@@ -103,7 +103,7 @@ export async function main() {
     const hashedPassword = await bcrypt.hash(u.password, saltRounds);
 
     const existingUser = await prisma.user.findUnique({
-      where: { email: u.email },
+      where: { email_isActive: { email: u.email, isActive: true } },
     });
 
     if (!existingUser) {
@@ -117,7 +117,7 @@ export async function main() {
       });
     } else {
       await prisma.user.update({
-        where: { email: u.email },
+        where: { email_isActive: { email: u.email, isActive: true } },
         data: {
           password: hashedPassword,
           roleId: role.id,

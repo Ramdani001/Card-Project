@@ -1,9 +1,12 @@
 model AppConfig {
     id        String   @id @default(uuid())
-    key       String   @unique
+    key       String
     value     String
+    isActive  Boolean  @default(true)
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+
+    @@unique([key, isActive])
 }
 
 model Menu {
@@ -13,6 +16,7 @@ model Menu {
     icon             String?
     order            Int              @default(0)
     parentId         String?
+    isActive         Boolean          @default(true)
     createdAt        DateTime         @default(now())
     updatedAt        DateTime         @updatedAt
     isDashboardMenu  Boolean          @default(true)
@@ -37,6 +41,7 @@ model Shop {
     villageName     String
     postalCode      String
     address         String
+    isActive        Boolean       @default(true)
     createdAt       DateTime      @default(now())
     updatedAt       DateTime      @updatedAt
     transactions    Transaction[]

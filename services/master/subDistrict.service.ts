@@ -9,6 +9,7 @@ export const getSubDistricts = async (options: Prisma.SubDistrictFindManyArgs) =
     ...options,
     where: {
       ...options.where,
+      isActive: true,
     },
     orderBy: options.orderBy || { name: "asc" },
     include: { city: true },
@@ -83,8 +84,9 @@ export const deleteSubDistrict = async (id: string) => {
 
   if (!subDistrict) throw new Error("SubDistrict not found");
 
-  const deletedSubDistrict = await prisma.subDistrict.delete({
+  const deletedSubDistrict = await prisma.subDistrict.update({
     where: { id },
+    data: { isActive: false },
   });
 
   return deletedSubDistrict;
@@ -94,6 +96,7 @@ export const syncSubDistrictsFromApi = async () => {
   try {
     const cities = await prisma.city.findMany({
       select: { id: true, code: true },
+      where: { isActive: true },
     });
 
     const cityMap = new Map<string, string>(cities.map((p) => [p.code, p.id]));

@@ -7,6 +7,7 @@ export const getApiEndpoints = async (options: Prisma.ApiEndpointFindManyArgs) =
     ...options,
     where: {
       ...options.where,
+      isActive: true,
     },
     orderBy: { url: "asc" },
   };
@@ -55,8 +56,9 @@ export const deleteApiEndpoint = async (id: string) => {
   const existing = await prisma.apiEndpoint.findUnique({ where: { id } });
   if (!existing) throw new Error("Api Endpoint not found");
 
-  return await prisma.apiEndpoint.delete({
+  return await prisma.apiEndpoint.update({
     where: { id },
+    data: { isActive: false },
   });
 };
 

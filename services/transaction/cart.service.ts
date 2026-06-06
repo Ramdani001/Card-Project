@@ -3,14 +3,16 @@ import { AddToCartParams, UpdateCartItemParams } from "@/types/params/cartParams
 
 export const getCartByUserId = async (userId: string) => {
   const cart = await prisma.cart.findFirst({
-    where: { userId },
+    where: { userId, isActive: true },
     include: {
       items: {
+        where: { isActive: true },
         orderBy: { createdAt: "desc" },
         include: {
           card: {
+            where: { isActive: true },
             include: {
-              images: { where: { isPrimary: true }, take: 1 },
+              images: { where: { isPrimary: true, isActive: true }, take: 1 },
               discount: true,
             },
           },
@@ -53,9 +55,10 @@ export const addToCart = async (params: AddToCartParams) => {
 
   const existingItem = await prisma.cartItem.findUnique({
     where: {
-      cartId_cardId: {
+      cartId_cardId_isActive: {
         cartId: cart.id,
         cardId: cardId,
+        isActive: true,
       },
     },
   });

@@ -8,6 +8,7 @@ export const getShops = async (options: Prisma.ShopFindManyArgs) => {
     ...options,
     where: {
       ...options.where,
+      isActive: true,
     },
     orderBy: options.orderBy || { createdAt: "desc" },
     include: {
@@ -40,11 +41,11 @@ export const createShop = async (params: CreateShopParams) => {
 
   try {
     const [country, province, city, subDistrict, village] = await Promise.all([
-      prisma.country.findFirst({ where: { isoCode: countryIsoCode } }),
-      prisma.province.findFirst({ where: { code: provinceCode } }),
-      prisma.city.findFirst({ where: { code: cityCode } }),
-      prisma.subDistrict.findFirst({ where: { code: subDistrictCode } }),
-      villageCode ? prisma.village.findFirst({ where: { code: villageCode } }) : null,
+      prisma.country.findFirst({ where: { isoCode: countryIsoCode, isActive: true } }),
+      prisma.province.findFirst({ where: { code: provinceCode, isActive: true } }),
+      prisma.city.findFirst({ where: { code: cityCode, isActive: true } }),
+      prisma.subDistrict.findFirst({ where: { code: subDistrictCode, isActive: true } }),
+      villageCode ? prisma.village.findFirst({ where: { code: villageCode, isActive: true } }) : null,
     ]);
 
     return await prisma.$transaction(async (tx) => {
@@ -98,11 +99,11 @@ export const updateShop = async (params: UpdateShopParams) => {
 
   try {
     const [country, province, city, subDistrict, village] = await Promise.all([
-      countryIsoCode ? prisma.country.findFirst({ where: { isoCode: countryIsoCode } }) : null,
-      provinceCode ? prisma.province.findFirst({ where: { code: provinceCode } }) : null,
-      cityCode ? prisma.city.findFirst({ where: { code: cityCode } }) : null,
-      subDistrictCode ? prisma.subDistrict.findFirst({ where: { code: subDistrictCode } }) : null,
-      villageCode && villageCode.trim() !== "" ? prisma.village.findFirst({ where: { code: villageCode } }) : null,
+      countryIsoCode ? prisma.country.findFirst({ where: { isoCode: countryIsoCode, isActive: true } }) : null,
+      provinceCode ? prisma.province.findFirst({ where: { code: provinceCode, isActive: true } }) : null,
+      cityCode ? prisma.city.findFirst({ where: { code: cityCode, isActive: true } }) : null,
+      subDistrictCode ? prisma.subDistrict.findFirst({ where: { code: subDistrictCode, isActive: true } }) : null,
+      villageCode && villageCode.trim() !== "" ? prisma.village.findFirst({ where: { code: villageCode, isActive: true } }) : null,
     ]);
 
     return await prisma.$transaction(async (tx) => {
@@ -153,8 +154,9 @@ export const deleteShop = async (id: string) => {
     throw new Error("Shop not found");
   }
 
-  const deletedShop = await prisma.shop.delete({
+  const deletedShop = await prisma.shop.update({
     where: { id },
+    data: { isActive: false },
   });
 
   return deletedShop;

@@ -9,6 +9,7 @@ export const getArticles = async (options: Prisma.ArticleFindManyArgs) => {
   const finalOptions: Prisma.ArticleFindManyArgs = {
     where: {
       ...options.where,
+      isActive: true,
     },
     include: {
       images: true,
@@ -33,8 +34,8 @@ export const createArticle = async (params: CreateArticleParams) => {
 
   const slug = generateSlug(title);
 
-  const existingSlug = await prisma.article.findUnique({ where: { slug } });
-  if (existingSlug) throw new Error("Judul artikel sudah digunakan (Slug conflict)");
+  const existingSlug = await prisma.article.findFirst({ where: { slug, isActive: true } });
+  if (existingSlug) throw new Error("Article title already in use");
 
   const uploadedFiles: any[] = [];
 
@@ -102,7 +103,7 @@ export const updateArticle = async (params: UpdateArticleParams) => {
     let slug = undefined;
     if (title && title !== article.title) {
       slug = generateSlug(title);
-      const exist = await prisma.article.findUnique({ where: { slug } });
+      const exist = await prisma.article.findFirst({ where: { slug, isActive: true } });
       if (exist && exist.id !== id) throw new Error("Article title already exists");
     }
 
@@ -165,8 +166,9 @@ export const deleteArticle = async (id: string) => {
   if (!article) throw new Error("Article not found");
 
   try {
-    await prisma.article.delete({
+    await prisma.article.update({
       where: { id },
+      data: { isActive: false },
     });
 
     if (article.images.length > 0) {

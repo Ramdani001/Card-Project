@@ -7,6 +7,7 @@ export const getDiscounts = async (options: Prisma.DiscountFindManyArgs) => {
     ...options,
     where: {
       ...options.where,
+      isActive: true,
     },
     orderBy: options.orderBy || { createdAt: "desc" },
   };
@@ -66,7 +67,8 @@ export const deleteDiscount = async (id: string) => {
   const existing = await prisma.discount.findUnique({ where: { id } });
   if (!existing) throw new Error("Discount not found");
 
-  return await prisma.discount.delete({
+  return await prisma.discount.update({
     where: { id },
+    data: { isActive: false },
   });
 };

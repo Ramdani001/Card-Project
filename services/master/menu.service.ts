@@ -7,12 +7,15 @@ export const getMenus = async (options: Prisma.MenuFindManyArgs) => {
   const defaultInclude: Prisma.MenuInclude = {
     parent: true,
     subMenus: {
+      where: { isActive: true },
       orderBy: { order: "asc" },
       include: {
         subMenus: {
+          where: { isActive: true },
           orderBy: { order: "asc" },
           include: {
             subMenus: {
+              where: { isActive: true },
               orderBy: { order: "asc" },
             },
           },
@@ -23,6 +26,7 @@ export const getMenus = async (options: Prisma.MenuFindManyArgs) => {
 
   const whereClause: Prisma.MenuWhereInput = {
     ...options.where,
+    isActive: true,
   };
 
   if (whereClause.parent) {
@@ -75,6 +79,7 @@ export const getUserMenus = async (userId: string) => {
     where: { id: userId },
     select: {
       role: {
+        where: { isActive: true },
         select: {
           id: true,
           name: true,
@@ -90,15 +95,15 @@ export const getUserMenus = async (userId: string) => {
 
   const subMenuIncludeAdmin = {
     orderBy: { order: "asc" as const },
-    where: { isDashboardMenu: true },
+    where: { isDashboardMenu: true, isActive: true },
     include: {
       subMenus: {
         orderBy: { order: "asc" as const },
-        where: { isDashboardMenu: true },
+        where: { isDashboardMenu: true, isActive: true },
         include: {
           subMenus: {
             orderBy: { order: "asc" as const },
-            where: { isDashboardMenu: true },
+            where: { isDashboardMenu: true, isActive: true },
           },
         },
       },
@@ -110,7 +115,9 @@ export const getUserMenus = async (userId: string) => {
     where: {
       roleMenuAccesses: {
         some: { roleId },
+        isActive: true,
       },
+      isActive: true,
     },
     include: {
       subMenus: {
@@ -118,14 +125,17 @@ export const getUserMenus = async (userId: string) => {
         where: {
           roleMenuAccesses: {
             some: { roleId },
+            isActive: true,
           },
         },
         include: {
           subMenus: {
             orderBy: { order: "asc" as const },
             where: {
+              isActive: true,
               roleMenuAccesses: {
                 some: { roleId },
+                isActive: true,
               },
             },
           },
@@ -139,6 +149,7 @@ export const getUserMenus = async (userId: string) => {
       where: {
         parentId: null,
         isDashboardMenu: true,
+        isActive: true,
       },
       orderBy: { order: "asc" },
       include: {
@@ -149,9 +160,11 @@ export const getUserMenus = async (userId: string) => {
 
   return prisma.menu.findMany({
     where: {
+      isActive: true,
       parentId: null,
       roleMenuAccesses: {
         some: { roleId },
+        isActive: true,
       },
     },
     orderBy: { order: "asc" },
@@ -167,6 +180,7 @@ export const getMenuById = async (id: string) => {
     include: {
       subMenus: {
         orderBy: { order: "asc" },
+        where: { isActive: true },
       },
       parent: true,
     },
@@ -177,7 +191,7 @@ export const createMenu = async (params: CreateMenuParams) => {
   const { label, url, icon, order, parentId, isDashboardMenu } = params;
 
   if (parentId) {
-    const parentExists = await prisma.menu.findUnique({ where: { id: parentId } });
+    const parentExists = await prisma.menu.findUnique({ where: { id: parentId, isActive: true } });
     if (!parentExists) throw new Error("Parent menu not found");
   }
 
@@ -201,7 +215,7 @@ export const updateMenu = async (params: UpdateMenuParams) => {
 
   if (parentId) {
     if (parentId === id) throw new Error("Menu cannot be its own parent");
-    const parentExists = await prisma.menu.findUnique({ where: { id: parentId } });
+    const parentExists = await prisma.menu.findUnique({ where: { id: parentId, isActive: true } });
     if (!parentExists) throw new Error("Parent menu not found");
   }
 

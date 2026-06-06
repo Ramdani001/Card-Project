@@ -28,7 +28,7 @@ export const checkout = async (params: CreateTransactionParams) => {
 
   const cart = await prisma.cart.findFirst({
     where: { userId },
-    include: { items: { include: { card: { include: { categories: true } } } } },
+    include: { items: { include: { card: { include: { categories: true }, where: { isActive: true } } } } },
   });
 
   if (!cart || cart.items.length === 0) throw new Error("Your cart is empty.");
@@ -42,8 +42,8 @@ export const checkout = async (params: CreateTransactionParams) => {
     if (item.card.minQtyPurchase && item.quantity < item.card.minQtyPurchase) {
       throw new Error(`Minimum purchase for '${item.card.name}' is ${item.card.minQtyPurchase} pcs.`);
     }
-    
-    if(item.quantity <= 0) {
+
+    if (item.quantity <= 0) {
       throw new Error(`Invalid quantity for '${item.card.name}'.`);
     }
   }
@@ -83,7 +83,7 @@ export const checkout = async (params: CreateTransactionParams) => {
 
     if (voucherCode) {
       const voucher = await tx.voucher.findUnique({
-        where: { code: voucherCode },
+        where: { code_isActive: { code: voucherCode, isActive: true } },
         include: {
           voucherRoles: true,
           voucherCards: true,
