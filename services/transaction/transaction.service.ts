@@ -28,7 +28,7 @@ export const checkout = async (params: CreateTransactionParams) => {
 
   const cart = await prisma.cart.findFirst({
     where: { userId },
-    include: { items: { include: { card: { include: { categories: true }, where: { isActive: true } } } } },
+    include: { items: { include: { card: { include: { categories: true } } } } },
   });
 
   if (!cart || cart.items.length === 0) throw new Error("Your cart is empty.");
