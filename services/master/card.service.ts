@@ -520,6 +520,7 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
               where: { id: existingCard.id },
               data: {
                 ...commonData,
+                isActive: true,
                 categories: {
                   deleteMany: {},
                   create: matchedCategoryIds.map((id) => ({ categoryId: id })),
