@@ -5,8 +5,14 @@ import { Box, Center, Container, em, Loader, SimpleGrid } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { useEffect, useState } from "react";
 import { CardComp } from "./Card/CardComp";
+import { CardDto } from "@/types/dtos/CardDto";
 
-export const HeroSection = () => {
+interface HeroSectionProps {
+  handleAddToCart: (product: CardDto, quantity: number) => Promise<void>;
+  loadingCart: string | null;
+}
+
+export const HeroSection = ({ handleAddToCart, loadingCart }: HeroSectionProps) => {
   const [cards, setCards] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const isMobile = useMediaQuery(`(max-width: ${em(768)})`);
@@ -57,10 +63,9 @@ export const HeroSection = () => {
             }}
           >
             {cards.map((card) => {
-              const displayImage = card.images?.find((img: any) => img.isPrimary)?.url || card.images?.[0]?.url || "";
               return (
                 <Carousel.Slide key={card.id} pb={40}>
-                  <CardComp name={card.name} image={displayImage} />
+                  <CardComp data={card} handleAddToCart={handleAddToCart} loadingCart={loadingCart} />
                 </Carousel.Slide>
               );
             })}
@@ -68,10 +73,9 @@ export const HeroSection = () => {
         ) : (
           <SimpleGrid cols={3} spacing={30}>
             {cards.map((card) => {
-              const displayImage = card.images?.find((img: any) => img.isPrimary)?.url || card.images?.[0]?.url || "";
               return (
                 <Box key={card.id}>
-                  <CardComp name={card.name} image={displayImage} />
+                  <CardComp data={card} handleAddToCart={handleAddToCart} loadingCart={loadingCart} />
                 </Box>
               );
             })}

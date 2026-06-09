@@ -9,7 +9,12 @@ import { useEffect, useRef, useState } from "react";
 import { CardSingle } from "../Card/CardSingle";
 import Autoplay from "embla-carousel-autoplay";
 
-export const SingleCard = () => {
+interface SingleCardProps {
+  handleAddToCart: (product: CardDto, quantity: number) => Promise<void>;
+  loadingCart: string | null;
+}
+
+export const SingleCard = ({ handleAddToCart, loadingCart }: SingleCardProps) => {
   const router = useRouter();
   const [products, setProducts] = useState<CardDto[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -84,7 +89,7 @@ export const SingleCard = () => {
             ))
           : products.map((item) => (
               <Carousel.Slide key={item.id}>
-                <CardSingle data={item} />
+                <CardSingle data={item} handleAddToCart={handleAddToCart} loadingCart={loadingCart} />
               </Carousel.Slide>
             ))}
       </Carousel>

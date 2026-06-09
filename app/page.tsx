@@ -1,5 +1,6 @@
 "use client";
 
+import { useCart } from "@/components/hooks/useCart";
 import { ArticleMain } from "@/components/LandingPage/Article/ArticleMain";
 import { CaseBoxCard } from "@/components/LandingPage/feature/CaseBoxCard";
 import { SingleCard } from "@/components/LandingPage/feature/SingleCard";
@@ -11,15 +12,17 @@ import { SwiperCard } from "@/components/LandingPage/swiper/SwiperCard";
 import { Box } from "@mantine/core";
 
 export default function TcgCornerClone() {
+  const { cartItems, handleAddToCart, loadingAction, loadingCart, setCartItems } = useCart();
+
   return (
     <Box style={{ backgroundColor: "#f7f8fb", color: "#1f2a44", minHeight: "100vh", margin: 0 }}>
-      <HeaderSection />
+      <HeaderSection cartItems={cartItems} loadingCart={loadingCart} setCartItems={setCartItems} />
       <Box component="main">
-        <HeroSection />
+        <HeroSection handleAddToCart={handleAddToCart} loadingCart={loadingAction} />
         <SwiperCard />
-        <SingleCard />
+        <SingleCard handleAddToCart={handleAddToCart} loadingCart={loadingAction} />
         <PreOrder />
-        <CaseBoxCard />
+        <CaseBoxCard handleAddToCart={handleAddToCart} loadingCart={loadingAction} />
         <ArticleMain />
       </Box>
       <FooterSection />

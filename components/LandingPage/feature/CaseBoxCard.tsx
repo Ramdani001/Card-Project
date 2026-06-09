@@ -8,7 +8,12 @@ import Autoplay from "embla-carousel-autoplay";
 import { useEffect, useRef, useState } from "react";
 import { CardSingle } from "../Card/CardSingle";
 
-export const CaseBoxCard = () => {
+interface CaseBoxCardProps {
+  handleAddToCart: (product: CardDto, quantity: number) => Promise<void>;
+  loadingCart: string | null;
+}
+
+export const CaseBoxCard = ({ handleAddToCart, loadingCart }: CaseBoxCardProps) => {
   const [products, setProducts] = useState<CardDto[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const autoplay = useRef(Autoplay({ delay: 3000 }));
@@ -85,7 +90,7 @@ export const CaseBoxCard = () => {
             ))
           : products.map((item) => (
               <Carousel.Slide key={item.id}>
-                <CardSingle data={item} />
+                <CardSingle data={item} handleAddToCart={handleAddToCart} loadingCart={loadingCart} />
               </Carousel.Slide>
             ))}
       </Carousel>
