@@ -21,7 +21,7 @@ export const CaseBoxCard = () => {
           page: "1",
           limit: "20",
           sortBy: "price",
-          sortOrder: "asc",
+          sortOrder: "desc",
         });
         const res = await fetch(`/api/cards?${params.toString()}`);
         const json = await res.json();
