@@ -120,7 +120,6 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
         .then((json) => setProvinces(json.data.map((i: any) => ({ value: i.code, label: i.name }))));
     } else {
       setProvinces([]);
-      setProvinceCode("");
     }
   }, [countryIsoCode, isDrawerOpen]);
 
@@ -131,7 +130,6 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
         .then((json) => setCities(json.data.map((i: any) => ({ value: i.code, label: i.name }))));
     } else {
       setCities([]);
-      setCityCode("");
     }
   }, [provinceCode, isDrawerOpen]);
 
@@ -142,7 +140,6 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
         .then((json) => setSubDistricts(json.data.map((i: any) => ({ value: i.code, label: i.name }))));
     } else {
       setSubDistricts([]);
-      setSubDistrictCode("");
     }
   }, [cityCode, isDrawerOpen]);
 
@@ -153,7 +150,6 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
         .then((json) => setVillages(json.data.map((i: any) => ({ value: i.code, label: i.name }))));
     } else {
       setVillages([]);
-      setVillageCode("");
     }
   }, [subDistrictCode, isDrawerOpen]);
 
