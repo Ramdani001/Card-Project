@@ -238,6 +238,7 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
             data={cardOptions}
             value={selectedCards}
             onChange={setSelectedCards}
+            searchable
             style={{ flex: 1 }}
           />
           <MultiSelect
@@ -246,6 +247,7 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
             data={categoryOptions}
             value={selectedCategories}
             onChange={setSelectedCategories}
+            searchable
             style={{ flex: 1 }}
           />
         </Flex>
