@@ -18,7 +18,14 @@ export const SingleCard = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch("/api/cards?categories=Single Card");
+        const params = new URLSearchParams({
+          categories: "Single Card",
+          page: "1",
+          limit: "20",
+          sortBy: "price",
+          sortOrder: "asc",
+        });
+        const res = await fetch(`/api/cards?${params.toString()}`);
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
           setProducts(json.data);

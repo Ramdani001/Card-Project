@@ -16,7 +16,13 @@ export const CaseBoxCard = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const params = new URLSearchParams({ categories: "Case & Box" });
+        const params = new URLSearchParams({
+          categories: "Case & Box",
+          page: "1",
+          limit: "20",
+          sortBy: "price",
+          sortOrder: "asc",
+        });
         const res = await fetch(`/api/cards?${params.toString()}`);
         const json = await res.json();
 
