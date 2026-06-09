@@ -51,6 +51,7 @@ export const CardCatalogModal = ({ opened, onClose, product, handleAddToCart, lo
       padding={0}
       radius="md"
       withCloseButton={false}
+      zIndex={10000}
       overlayProps={{
         backgroundOpacity: 0.6,
         blur: 4,
