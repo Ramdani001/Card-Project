@@ -10,9 +10,21 @@ export const getVouchers = async (options: Prisma.VoucherFindManyArgs) => {
       isActive: true,
     },
     include: {
-      voucherCardCategories: true,
-      voucherCards: true,
-      voucherRoles: true,
+      voucherCardCategories: {
+        include: {
+          cardCategory: true,
+        },
+      },
+      voucherCards: {
+        include: {
+          card: true,
+        },
+      },
+      voucherRoles: {
+        include: {
+          role: true,
+        },
+      },
     },
     orderBy: options.orderBy || { createdAt: "desc" },
   };

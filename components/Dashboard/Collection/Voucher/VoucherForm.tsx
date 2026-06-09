@@ -1,9 +1,13 @@
 "use client";
 
+import RemoteMultiSelect from "@/components/layout/RemoteMultiSelect";
 import { DiscountTypeDto } from "@/types/dtos/DiscountDto";
+import { VoucherCardCategoryDto } from "@/types/dtos/VoucherCardCategoryDto";
+import { VoucherCardDto } from "@/types/dtos/VoucherCardDto";
 import { VoucherDto } from "@/types/dtos/VoucherDto";
+import { VoucherRoleDto } from "@/types/dtos/VoucherRoleDto";
 import { SelectOption } from "@/types/SelectOption";
-import { Button, Flex, Modal, MultiSelect, NumberInput, SegmentedControl, Text, Textarea, TextInput } from "@mantine/core";
+import { Button, Flex, Modal, NumberInput, SegmentedControl, Text, Textarea, TextInput } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
@@ -30,13 +34,9 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
   const [startDate, setStartDate] = useState<Date | null | string>(new Date());
   const [endDate, setEndDate] = useState<Date | null | string>(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
 
-  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
-  const [selectedCards, setSelectedCards] = useState<string[]>([]);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-
-  const [categoryOptions, setCategoryOptions] = useState<SelectOption[]>([]);
-  const [roleOptions, setRoleOptions] = useState<SelectOption[]>([]);
-  const [cardOptions, setCardOptions] = useState<SelectOption[]>([]);
+  const [selectedRoles, setSelectedRoles] = useState<SelectOption[]>([]);
+  const [selectedCards, setSelectedCards] = useState<SelectOption[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<SelectOption[]>([]);
 
   useEffect(() => {
     if (voucherToEdit) {
@@ -51,9 +51,26 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
       setStartDate(new Date(voucherToEdit.startDate));
       setEndDate(new Date(voucherToEdit.endDate));
 
-      setSelectedRoles(voucherToEdit.voucherRoles?.map((r: any) => r.roleId) || []);
-      setSelectedCards(voucherToEdit.voucherCards?.map((c: any) => c.cardId) || []);
-      setSelectedCategories(voucherToEdit.voucherCardCategories?.map((cat: any) => cat.cardCategoryId) || []);
+      setSelectedRoles(
+        voucherToEdit.voucherRoles?.map((r: VoucherRoleDto) => ({
+          value: r.roleId,
+          label: r.role.name,
+        })) || []
+      );
+
+      setSelectedCards(
+        voucherToEdit.voucherCards?.map((c: VoucherCardDto) => ({
+          value: c.cardId,
+          label: c.card.name,
+        })) || []
+      );
+
+      setSelectedCategories(
+        voucherToEdit.voucherCardCategories?.map((cat: VoucherCardCategoryDto) => ({
+          value: cat.cardCategoryId,
+          label: cat.cardCategory.name,
+        })) || []
+      );
     } else {
       resetForm();
     }
@@ -75,45 +92,6 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
     setSelectedCategories([]);
   };
 
-  useEffect(() => {
-    const fetchMasters = async () => {
-      try {
-        const [resCats, resCards, resRoles] = await Promise.all([
-          fetch("/api/categories").then((res) => res.json()),
-          fetch("/api/cards").then((res) => res.json()),
-          fetch("/api/roles").then((res) => res.json()),
-        ]);
-
-        if (resCats.success) {
-          setCategoryOptions(resCats.data.map((c: any) => ({ value: c.id, label: c.name })));
-        }
-        if (resCards.success) {
-          setCardOptions(
-            resCards.data.map((d: any) => ({
-              value: d.id,
-              label: d.name,
-            }))
-          );
-        }
-        if (resRoles.success) {
-          setRoleOptions(
-            resRoles.data.map((d: any) => ({
-              value: d.id,
-              label: d.name,
-            }))
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching master data", error);
-        notifications.show({ title: "Error", message: "Failed to load options", color: "red" });
-      }
-    };
-
-    if (opened) {
-      fetchMasters();
-    }
-  }, [opened]);
-
   const handleSubmit = async () => {
     if (!code || !name || !startDate || !endDate || !value) {
       return notifications.show({ message: "Please fill required fields", color: "red" });
@@ -132,9 +110,15 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
         stock: stock ? Number(stock) : undefined,
         startDate,
         endDate,
-        voucherRoles: selectedRoles.map((id) => ({ roleId: id })),
-        voucherCards: selectedCards.map((id) => ({ cardId: id })),
-        voucherCardCategories: selectedCategories.map((id) => ({ cardCategoryId: id })),
+        voucherRoles: selectedRoles.map((role) => ({
+          roleId: role.value,
+        })),
+        voucherCards: selectedCards.map((card) => ({
+          cardId: card.value,
+        })),
+        voucherCardCategories: selectedCategories.map((category) => ({
+          cardCategoryId: category.value,
+        })),
       };
 
       const url = voucherToEdit ? `/api/vouchers/${voucherToEdit.id}` : "/api/vouchers";
@@ -221,36 +205,31 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
           />
         </Flex>
 
-        <MultiSelect
+        <RemoteMultiSelect
           label="Limit to Roles"
           placeholder="Select roles"
-          data={roleOptions}
+          fetchUrl="/api/roles"
           value={selectedRoles}
           onChange={setSelectedRoles}
-          searchable
-          clearable
+          searchKeys={["name"]}
         />
 
-        <Flex gap="md" direction={{ base: "column", sm: "row" }}>
-          <MultiSelect
-            label="Specific Cards"
-            placeholder="Select cards"
-            data={cardOptions}
-            value={selectedCards}
-            onChange={setSelectedCards}
-            searchable
-            style={{ flex: 1 }}
-          />
-          <MultiSelect
-            label="Specific Categories"
-            placeholder="Select categories"
-            data={categoryOptions}
-            value={selectedCategories}
-            onChange={setSelectedCategories}
-            searchable
-            style={{ flex: 1 }}
-          />
-        </Flex>
+        <RemoteMultiSelect
+          label="Limit to Cards"
+          placeholder="Select cards"
+          fetchUrl="/api/cards"
+          value={selectedCards}
+          onChange={setSelectedCards}
+          searchKeys={["name"]}
+        />
+        <RemoteMultiSelect
+          label="Limit to Categories"
+          placeholder="Select categories"
+          fetchUrl="/api/categories"
+          value={selectedCategories}
+          onChange={setSelectedCategories}
+          searchKeys={["name"]}
+        />
 
         <Flex gap="md" direction={{ base: "column", sm: "row" }}>
           <NumberInput label="Min. Purchase" value={minPurchase} onChange={setMinPurchase} min={0} style={{ flex: 1 }} leftSection="Rp" />
