@@ -288,6 +288,14 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
                       {transaction.customerEmail || transaction.user?.email}
                     </Text>
                   </Group>
+                  <Group justify="space-between">
+                    <Text size="xs" c="dimmed">
+                      Phone Number
+                    </Text>
+                    <Text size="xs" fw={500}>
+                      {transaction.user?.phone}
+                    </Text>
+                  </Group>
                 </Stack>
               </Box>
 

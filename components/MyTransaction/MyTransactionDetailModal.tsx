@@ -61,6 +61,9 @@ export const MyTransactionDetailModal = ({ opened, onClose, transaction }: Props
                 <Box>
                   <Text fw={600}>{transaction.customerName}</Text>
                   <Text size="xs" c="dimmed" style={{ lineHeight: 1.5 }}>
+                    {transaction.user?.phone}
+                  </Text>
+                  <Text size="xs" c="dimmed" style={{ lineHeight: 1.5 }}>
                     {transaction.transactionShipmentAddress[0]?.address}, {transaction.transactionShipmentAddress[0]?.villageName},{" "}
                     {transaction.transactionShipmentAddress[0]?.subDistrictName},
                     <br />

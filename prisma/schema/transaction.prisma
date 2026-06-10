@@ -131,8 +131,8 @@ model ErrorLog {
   stack   String? @db.Text
   context Json?
 
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
   updatedAt DateTime? @updatedAt
 }
 

@@ -1,6 +1,7 @@
 import { DeliveryMethod, TransactionStatus } from "@/prisma/generated/prisma/enums";
 import { VoucherDto } from "./VoucherDto";
 import { ShopDto } from "./ShopDto";
+import { UserDto } from "./UserDto";
 
 export interface TransactionItemDto {
   id: string;
@@ -72,9 +73,6 @@ export interface TransactionDto {
 
   items: TransactionItemDto[];
   statusLogs?: StatusLogDto[];
-  user: {
-    name: string;
-    email: string;
-  } | null;
+  user: UserDto;
   voucher?: VoucherDto | null;
 }

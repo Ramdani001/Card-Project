@@ -46,6 +46,10 @@ export const generateReceiptHtml = (transaction: TransactionWithDetails): string
               <td style="padding-bottom: 5px;"><strong>${transaction.resi || "-"}</strong></td>
             </tr>
             <tr>
+              <td style="color: #666; padding-bottom: 5px;">Phone Number:</td>
+              <td style="padding-bottom: 5px;"><strong>${transaction.user?.phone || "-"}</strong></td>
+            </tr>
+            <tr>
               <td style="color: #666; vertical-align: top;">Shipping Address:</td>
               <td style="line-height: 1.5;">
                 ${

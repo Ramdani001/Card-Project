@@ -283,7 +283,7 @@ export const updateTransactionStatus = async (
   const result = await prisma.$transaction(async (tx) => {
     const oldTransaction = await tx.transaction.findUnique({
       where: { id: transactionId },
-      select: { status: true, voucherId: true, subTotal: true, voucherAmount: true },
+      select: { status: true, voucherId: true, subTotal: true, voucherAmount: true, user: true },
     });
 
     if (!oldTransaction) throw new Error("Transaction not found");
@@ -392,7 +392,7 @@ export const getTransactions = async (params: GetTransactionParams) => {
         items: true,
         voucher: true,
         statusLogs: { orderBy: { createdAt: "desc" }, take: 1 },
-        user: { select: { email: true, name: true } },
+        user: { select: { email: true, name: true, phone: true } },
         shop: true,
         transactionShipmentAddress: true,
       },
@@ -421,7 +421,7 @@ export const getUserTransactions = async (userId: string, params: GetTransaction
         items: true,
         voucher: true,
         statusLogs: { orderBy: { createdAt: "desc" }, take: 1 },
-        user: { select: { email: true, name: true } },
+        user: { select: { email: true, name: true, phone: true } },
         shop: true,
         transactionShipmentAddress: true,
       },
@@ -533,6 +533,7 @@ export const batchCancelTransactions = async (
         },
         include: {
           items: true,
+          user: true,
         },
       });
 
