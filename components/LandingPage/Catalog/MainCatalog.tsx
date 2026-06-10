@@ -40,6 +40,7 @@ const SORT_OPTIONS = [
 export default function MainCatalog() {
   const searchParams = useSearchParams();
 
+  const searchNameParams = searchParams.get("search");
   const nameParams = searchParams.get("name");
   const categoryParams = searchParams.get("category");
   const sortParams = searchParams.get("sort");
@@ -50,7 +51,7 @@ export default function MainCatalog() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchNameParams || "");
   const [debouncedSearch] = useDebouncedValue(search, 500);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(categoryParams ? categoryParams.split(";") : []);
   const [selectedFilterStock, setSelectedFilterStock] = useState<string | null>(null);
@@ -167,6 +168,10 @@ export default function MainCatalog() {
       setSortValue(sort);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    setSearch(searchNameParams || "");
+  }, [searchNameParams]);
 
   return (
     <Box bg="#f8f9fa" mih="100vh">
