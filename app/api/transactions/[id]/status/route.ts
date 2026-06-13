@@ -20,9 +20,9 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
     const userId = session.user.id;
 
     const body = await req.json();
-    const { status, resi, expedition, shippingCost, reason } = body;
+    const { status, resi, expedition, shippingCost, reason, deliveryMethod } = body;
 
-    if (status === "SHIPPED") {
+    if (status === "SHIPPED" && deliveryMethod === "SHIP") {
       if (!resi || !expedition) {
         return sendResponse({
           success: false,

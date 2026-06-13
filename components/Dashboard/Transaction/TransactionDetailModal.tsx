@@ -173,7 +173,7 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
 
   const handleUpdateStatus = async () => {
     if (!status) return;
-    if (status === "SHIPPED" && !resi) {
+    if (status === "SHIPPED" && !resi && transaction.deliveryMethod === "SHIP") {
       notifications.show({ message: "Please fill in the Receipt Number for SHIPPED status", color: "orange" });
       return;
     }
@@ -183,7 +183,7 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
       const res = await fetch(`/api/transactions/${transaction.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, resi, expedition, shippingCost: Number(shippingCost), reason }),
+        body: JSON.stringify({ status, resi, expedition, shippingCost: Number(shippingCost), reason, deliveryMethod: transaction.deliveryMethod }),
       });
 
       const json = await res.json();
