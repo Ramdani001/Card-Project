@@ -127,6 +127,9 @@ export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string
 
   const finalOptions: Prisma.CardFindManyArgs = {
     ...options,
+    orderBy: options.orderBy || {
+      name: "asc",
+    },
     where: finalWhereClause,
     include: {
       ...defaultInclude,
