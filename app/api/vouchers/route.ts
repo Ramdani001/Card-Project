@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { getQueryPaginationOptions } from "@/helpers/pagination.helper";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
-import { DiscountType } from "@/prisma/generated/prisma/client";
+import { DiscountType, VoucherUsageCategory } from "@/prisma/generated/prisma/client";
 import { createVoucher, getVouchers } from "@/services/master/voucher.service";
 
 export const GET = async (req: NextRequest) => {
@@ -30,7 +30,7 @@ export const POST = async (req: NextRequest) => {
   try {
     const body = await req.json();
 
-    if (!body.code || !body.name || !body.type || !body.value || !body.startDate || !body.endDate) {
+    if (!body.code || !body.name || !body.type || !body.value || !body.startDate || !body.endDate || !body.usageCategory) {
       return sendResponse({
         success: false,
         message: "Missing required fields",
@@ -43,6 +43,7 @@ export const POST = async (req: NextRequest) => {
       name: body.name,
       description: body.description,
       type: body.type as DiscountType,
+      usageCategory: body.usageCategory as VoucherUsageCategory,
       value: Number(body.value),
       minPurchase: body.minPurchase ? Number(body.minPurchase) : undefined,
       maxDiscount: body.maxDiscount ? Number(body.maxDiscount) : undefined,

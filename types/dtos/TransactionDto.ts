@@ -51,6 +51,7 @@ export interface TransactionDto {
   userId: string;
   subTotal: string | number;
   voucherAmount: string | number;
+  shippingVoucherAmount: string | number;
   totalPrice: string | number;
   status: TransactionStatus;
   paymentMethod: string | null;

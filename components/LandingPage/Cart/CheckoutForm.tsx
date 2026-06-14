@@ -14,6 +14,7 @@ import {
   Select,
   SimpleGrid,
   Stack,
+  TagsInput,
   Text,
   TextInput,
   Textarea,
@@ -21,11 +22,12 @@ import {
   rem,
 } from "@mantine/core";
 import { IconMapPin, IconTicket, IconTruckDelivery } from "@tabler/icons-react";
+import { Dispatch, SetStateAction } from "react";
 
 interface CheckoutFormProps {
   totalAmount: number;
-  voucherCode: string;
-  setVoucherCode: (val: string) => void;
+  voucherCodes: string[];
+  setVoucherCodes: Dispatch<SetStateAction<string[]>>;
   deliveryMethod: DeliveryMethod;
   setDeliveryMethod: (method: DeliveryMethod) => void;
   address: string;
@@ -67,8 +69,8 @@ interface CheckoutFormProps {
 
 export const CheckoutForm = ({
   totalAmount,
-  voucherCode,
-  setVoucherCode,
+  voucherCodes,
+  setVoucherCodes,
   deliveryMethod,
   setDeliveryMethod,
   address,
@@ -141,13 +143,16 @@ export const CheckoutForm = ({
             <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="sm" style={{ letterSpacing: "0.06em" }}>
               Promo / Voucher
             </Text>
-            <TextInput
-              placeholder="Enter voucher code"
+
+            <TagsInput
+              placeholder="Enter voucher codes (press enter)"
               leftSection={<IconTicket size={16} stroke={1.5} />}
-              value={voucherCode}
-              onChange={(e) => setVoucherCode(e.currentTarget.value)}
+              value={voucherCodes}
+              onChange={setVoucherCodes}
               radius="md"
               size="md"
+              splitChars={[",", " "]}
+              clearable
             />
           </Box>
 

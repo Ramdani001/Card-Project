@@ -1,10 +1,11 @@
-import { DiscountType, VoucherCard, VoucherCardCategory, VoucherRole } from "@/prisma/generated/prisma/client";
+import { DiscountType, VoucherCard, VoucherCardCategory, VoucherRole, VoucherUsageCategory } from "@/prisma/generated/prisma/client";
 
 export interface CreateVoucherParams {
   code: string;
   name: string;
   description?: string;
   type: DiscountType;
+  usageCategory: VoucherUsageCategory;
   value: number;
   minPurchase?: number;
   maxDiscount?: number;
@@ -22,6 +23,7 @@ export interface UpdateVoucherParams {
   name?: string;
   description?: string;
   type?: DiscountType;
+  usageCategory?: VoucherUsageCategory;
   value?: number;
   minPurchase?: number;
   maxDiscount?: number;

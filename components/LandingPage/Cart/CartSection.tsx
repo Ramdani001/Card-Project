@@ -36,7 +36,7 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
   const isMobile = useMediaQuery("(max-width: 768px)");
   const userId = session?.user?.id;
 
-  const [voucherCode, setVoucherCode] = useState("");
+  const [voucherCodes, setVoucherCodes] = useState<string[]>([]);
   const [address, setAddress] = useState("");
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -215,7 +215,7 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
     try {
       const payload = {
         deliveryMethod,
-        voucherCode: voucherCode || null,
+        voucherCodes: voucherCodes,
         countryIsoCode: isShipping ? countryIsoCode : null,
         provinceCode: isShipping ? provinceCode : null,
         cityCode: isShipping ? cityCode : null,
@@ -289,8 +289,8 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
     setSelectedCourierCode,
     shippingFee,
     totalAmount,
-    voucherCode,
-    setVoucherCode,
+    voucherCodes,
+    setVoucherCodes,
     deliveryMethod,
     setDeliveryMethod,
     address,

@@ -21,7 +21,7 @@ export const POST = async (req: NextRequest) => {
 
     const {
       address,
-      voucherCode,
+      voucherCodes,
       customerEmailGuest,
       customerNameGuest,
       deliveryMethod,
@@ -66,9 +66,7 @@ export const POST = async (req: NextRequest) => {
       deliveryMethod,
       customerName: session.user.name || customerNameGuest,
       customerEmail: session.user.email || customerEmailGuest,
-
-      voucherCode: voucherCode || null,
-
+      voucherCodes: voucherCodes,
       address: deliveryMethod === DeliveryMethod.SHIP ? address : null,
       countryIsoCode: deliveryMethod === DeliveryMethod.SHIP ? countryIsoCode : null,
       provinceCode: deliveryMethod === DeliveryMethod.SHIP ? provinceCode : null,

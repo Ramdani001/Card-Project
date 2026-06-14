@@ -4,7 +4,7 @@ import RemoteMultiSelect from "@/components/layout/RemoteMultiSelect";
 import { DiscountTypeDto } from "@/types/dtos/DiscountDto";
 import { VoucherCardCategoryDto } from "@/types/dtos/VoucherCardCategoryDto";
 import { VoucherCardDto } from "@/types/dtos/VoucherCardDto";
-import { VoucherDto } from "@/types/dtos/VoucherDto";
+import { VoucherDto, VoucherUsageCategoryDto } from "@/types/dtos/VoucherDto";
 import { VoucherRoleDto } from "@/types/dtos/VoucherRoleDto";
 import { SelectOption } from "@/types/SelectOption";
 import { Button, Flex, Modal, NumberInput, SegmentedControl, Text, Textarea, TextInput } from "@mantine/core";
@@ -27,6 +27,7 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [type, setType] = useState<DiscountTypeDto>("NOMINAL");
+  const [usageCategory, setUsageCategory] = useState<VoucherUsageCategoryDto>("CARD");
   const [value, setValue] = useState<number | string>(0);
   const [minPurchase, setMinPurchase] = useState<number | string>("");
   const [maxDiscount, setMaxDiscount] = useState<number | string>("");
@@ -44,6 +45,7 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
       setName(voucherToEdit.name);
       setDescription(voucherToEdit.description || "");
       setType(voucherToEdit.type);
+      setUsageCategory(voucherToEdit.usageCategory);
       setValue(Number(voucherToEdit.value));
       setMinPurchase(voucherToEdit.minPurchase ? Number(voucherToEdit.minPurchase) : "");
       setMaxDiscount(voucherToEdit.maxDiscount ? Number(voucherToEdit.maxDiscount) : "");
@@ -81,6 +83,7 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
     setName("");
     setDescription("");
     setType("NOMINAL");
+    setUsageCategory("CARD");
     setValue(0);
     setMinPurchase("");
     setMaxDiscount("");
@@ -104,6 +107,7 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
         name,
         description,
         type,
+        usageCategory,
         value: Number(value),
         minPurchase: minPurchase ? Number(minPurchase) : undefined,
         maxDiscount: maxDiscount ? Number(maxDiscount) : undefined,
@@ -176,6 +180,21 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
           onChange={(e) => setDescription(e.target.value)}
           minRows={2}
         />
+
+        <div>
+          <Text size="sm" fw={500} mb={3}>
+            Usage Category
+          </Text>
+          <SegmentedControl
+            value={usageCategory}
+            onChange={(v) => setUsageCategory(v as VoucherUsageCategoryDto)}
+            data={[
+              { label: "Card", value: "CARD" },
+              { label: "Shipping Cost", value: "SHIPPING_COST" },
+            ]}
+            fullWidth
+          />
+        </div>
 
         <Flex gap="md" direction={{ base: "column", sm: "row" }} align={{ base: "stretch", sm: "flex-end" }}>
           <div style={{ flex: 1, minWidth: 0 }}>

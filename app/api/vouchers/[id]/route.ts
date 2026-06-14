@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
 import { deleteVoucher, getVoucherById, updateVoucher } from "@/services/master/voucher.service";
-import { DiscountType } from "@/prisma/generated/prisma/enums";
+import { DiscountType, VoucherUsageCategory } from "@/prisma/generated/prisma/enums";
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -39,6 +39,7 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
       ...(body.startDate && { startDate: new Date(body.startDate) }),
       ...(body.endDate && { endDate: new Date(body.endDate) }),
       ...(body.type && { type: body.type as DiscountType }),
+      ...(body.usageCategory && { usageCategory: body.usageCategory as VoucherUsageCategory }),
       ...(body.voucherCardCategories && { voucherCardCategories: body.voucherCardCategories }),
       ...(body.voucherCards && { voucherCards: body.voucherCards }),
       ...(body.voucherRoles && { voucherRoles: body.voucherRoles }),

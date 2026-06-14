@@ -92,6 +92,7 @@ model Voucher {
   name                  String
   description           String?
   type                  DiscountType
+  usageCategory         VoucherUsageCategory  @default(CARD)
   value                 Decimal               @db.Decimal(10, 2)
   minPurchase           Decimal?              @db.Decimal(15, 2)
   maxDiscount           Decimal?              @db.Decimal(15, 2)
@@ -106,6 +107,7 @@ model Voucher {
   voucherCardCategories VoucherCardCategory[]
   voucherCards          VoucherCard[]
   voucherRoles          VoucherRole[]
+  transactionVouchers   TransactionVoucher[]
 
   @@unique([code, isActive])
   @@index([code])
@@ -154,4 +156,9 @@ model VoucherRole {
 enum DiscountType {
   NOMINAL
   PERCENTAGE
+}
+
+enum VoucherUsageCategory {
+  CARD
+  SHIPPING_COST
 }

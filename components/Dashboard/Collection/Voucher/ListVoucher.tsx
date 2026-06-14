@@ -1,7 +1,7 @@
 "use client";
 
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
-import { VoucherDto } from "@/types/dtos/VoucherDto";
+import { VoucherDto, VoucherUsageCategoryDto } from "@/types/dtos/VoucherDto";
 import { PaginationMetaDataDto } from "@/types/dtos/PaginationMetaDataDto";
 import { ActionIcon, Badge, Button, Code, CopyButton, Flex, Group, Paper, Progress, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
@@ -10,6 +10,11 @@ import { notifications } from "@mantine/notifications";
 import { IconCheck, IconCoin, IconCopy, IconPencil, IconPercentage, IconPlus, IconRefresh, IconTrash, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
 import { VoucherForm } from "./VoucherForm";
+
+const usageCategoryLabel: Record<VoucherUsageCategoryDto, string> = {
+  CARD: "Card",
+  SHIPPING_COST: "Shipping Cost",
+};
 
 const ListVoucher = () => {
   const [vouchers, setVouchers] = useState<VoucherDto[]>([]);
@@ -152,6 +157,16 @@ const ListVoucher = () => {
             </Text>
           )}
         </Flex>
+      ),
+    },
+    {
+      key: "usageCategory",
+      label: "Category",
+      sortable: true,
+      render: (item) => (
+        <Badge variant="light" color={item.usageCategory === "CARD" ? "blue" : "green"}>
+          {usageCategoryLabel[item.usageCategory]}
+        </Badge>
       ),
     },
     {

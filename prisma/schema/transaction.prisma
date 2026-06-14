@@ -4,6 +4,7 @@ model Transaction {
   userId                     String
   subTotal                   Decimal                      @db.Decimal(15, 2)
   voucherAmount              Decimal                      @default(0) @db.Decimal(15, 2)
+  shippingVoucherAmount      Decimal                      @default(0) @db.Decimal(15, 2)
   totalPrice                 Decimal                      @db.Decimal(15, 2)
   status                     TransactionStatus            @default(PENDING)
   paymentMethod              String?
@@ -27,6 +28,23 @@ model Transaction {
   items                      TransactionItem[]
   statusLogs                 TransactionStatusLog[]
   transactionShipmentAddress TransactionShipmentAddress[]
+  transactionVouchers        TransactionVoucher[]
+}
+
+model TransactionVoucher {
+  id            String               @id @default(uuid())
+  transactionId String
+  voucherId     String
+  voucherCode   String
+  voucherAmount Decimal              @default(0) @db.Decimal(15, 2)
+  usageCategory VoucherUsageCategory @default(CARD)
+
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+
+  voucher     Voucher?    @relation(fields: [voucherId], references: [id])
+  transaction Transaction @relation(fields: [transactionId], references: [id])
 }
 
 model TransactionShipmentAddress {

@@ -143,7 +143,7 @@ export const MyTransactionDetailModal = ({ opened, onClose, transaction }: Props
             </Text>
           </Group>
 
-          <Stack gap={4}>
+          <Stack gap={6}>
             <Flex justify="space-between">
               <Text size="sm" c="dimmed">
                 Subtotal
@@ -163,7 +163,7 @@ export const MyTransactionDetailModal = ({ opened, onClose, transaction }: Props
             {Number(transaction.voucherAmount) > 0 && (
               <Flex justify="space-between">
                 <Text size="sm" c="green" fw={600}>
-                  Voucher
+                  Product Discount
                 </Text>
                 <Text size="sm" c="green" fw={600}>
                   -{formatRupiah(Number(transaction.voucherAmount))}
@@ -171,9 +171,20 @@ export const MyTransactionDetailModal = ({ opened, onClose, transaction }: Props
               </Flex>
             )}
 
+            {Number(transaction.shippingVoucherAmount) > 0 && (
+              <Flex justify="space-between">
+                <Text size="sm" c="blue" fw={600}>
+                  Shipping Discount
+                </Text>
+                <Text size="sm" c="blue" fw={600}>
+                  -{formatRupiah(Number(transaction.shippingVoucherAmount))}
+                </Text>
+              </Flex>
+            )}
+
             <Divider />
 
-            <Flex justify="space-between">
+            <Flex justify="space-between" align="center">
               <Text fw={800}>Total</Text>
               <Text fw={800} size="lg">
                 {formatRupiah(Number(transaction.totalPrice))}

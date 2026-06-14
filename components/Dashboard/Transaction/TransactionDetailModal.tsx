@@ -409,33 +409,48 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
               {formatRupiah(Number(transaction.subTotal))}
             </Text>
           </Group>
-          {Number(shippingCost) > 0 && (
+
+          {transaction.deliveryMethod === DeliveryMethod.SHIP && (
             <Group w={250} justify="space-between">
               <Text size="sm" c="dimmed">
                 Shipping Cost
               </Text>
               <Text size="sm" fw={500}>
-                {formatRupiah(Number(shippingCost))}
+                {formatRupiah(Number(transaction.shippingCost))}
               </Text>
             </Group>
           )}
+
           {Number(transaction.voucherAmount) > 0 && (
             <Group w={250} justify="space-between">
               <Text size="sm" c="red">
-                Discount
+                Product Discount
               </Text>
               <Text size="sm" c="red">
                 - {formatRupiah(Number(transaction.voucherAmount))}
               </Text>
             </Group>
           )}
+
+          {Number(transaction.shippingVoucherAmount) > 0 && (
+            <Group w={250} justify="space-between">
+              <Text size="sm" c="blue">
+                Shipping Discount
+              </Text>
+              <Text size="sm" c="blue">
+                - {formatRupiah(Number(transaction.shippingVoucherAmount))}
+              </Text>
+            </Group>
+          )}
+
           <Divider w={250} my={5} />
+
           <Group w={250} justify="space-between">
             <Text size="lg" fw={700}>
               Total
             </Text>
             <Text size="lg" fw={700} c="blue">
-              {formatRupiah(Number(transaction.totalPrice) + (Number(shippingCost) - (Number(transaction.shippingCost) || 0)))}
+              {formatRupiah(Number(transaction.totalPrice))}
             </Text>
           </Group>
         </Stack>

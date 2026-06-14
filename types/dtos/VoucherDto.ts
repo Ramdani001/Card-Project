@@ -9,6 +9,7 @@ export interface VoucherDto {
   name: string;
   description?: string;
   type: DiscountTypeDto;
+  usageCategory: VoucherUsageCategoryDto;
   value: number;
   minPurchase?: number;
   maxDiscount?: number;
@@ -22,3 +23,5 @@ export interface VoucherDto {
   createdAt: string | Date;
   updatedAt: string | Date;
 }
+
+export type VoucherUsageCategoryDto = "CARD" | "SHIPPING_COST";

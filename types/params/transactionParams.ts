@@ -5,7 +5,7 @@ export interface CreateTransactionParams {
   userId: string;
   customerName?: string;
   customerEmail?: string;
-  voucherCode?: string;
+  voucherCodes?: string[];
   shopId?: string;
   deliveryMethod: DeliveryMethod;
   address: string;
