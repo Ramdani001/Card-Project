@@ -181,3 +181,35 @@ export const deleteArticle = async (id: string) => {
     throw new Error("Failed to delete article and its resources");
   }
 };
+
+export const deleteBatchArticles = async (ids: string[]) => {
+  if (!ids || ids.length === 0) {
+    throw new Error("Select at least one article to delete");
+  }
+
+  const articleWithImages = await prisma.article.findMany({
+    where: { id: { in: ids }, isActive: true },
+    include: { images: true },
+  });
+
+  if (articleWithImages.length === 0) {
+    throw new Error("No active articles found to delete");
+  }
+
+  const allImagePaths = articleWithImages.flatMap((c) => c.images.map((i) => i.path)).filter(Boolean) as string[];
+
+  const updateResult = await prisma.$transaction(async (tx) => {
+    const result = await tx.article.updateMany({
+      where: { id: { in: ids } },
+      data: { isActive: false },
+    });
+
+    return result;
+  });
+
+  if (allImagePaths.length > 0) {
+    Promise.all(allImagePaths.map((path) => deleteFile(path.replace(/^\/uploads\//, "")).catch(console.error)));
+  }
+
+  return updateResult;
+};

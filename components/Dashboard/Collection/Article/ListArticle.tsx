@@ -3,7 +3,7 @@
 import { ColumnDef, TableComponent } from "@/components/layout/TableComponent";
 import { ArticleDto } from "@/types/dtos/ArticleDto";
 import { PaginationMetaDataDto } from "@/types/dtos/PaginationMetaDataDto";
-import { ActionIcon, Avatar, Badge, Box, Button, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Avatar, Badge, Box, Button, Checkbox, Flex, Group, Paper, Text, Title, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { openConfirmModal } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
@@ -13,6 +13,9 @@ import { ArticleForm } from "./ArticleForm";
 
 const ListArticle = () => {
   const [articles, setArticles] = useState<ArticleDto[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [deletingBatch, setDeletingBatch] = useState(false);
+
   const [metadata, setMetadata] = useState<PaginationMetaDataDto>({
     total: 0,
     page: 1,
@@ -118,7 +121,87 @@ const ListArticle = () => {
     open();
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const allIds = articles.map((article) => article.id);
+      setSelectedIds(allIds);
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, id]);
+    } else {
+      setSelectedIds((prev) => prev.filter((item) => item !== id));
+    }
+  };
+
+  const handleBatchDelete = () => {
+    if (selectedIds.length === 0) return;
+
+    openConfirmModal({
+      title: "Delete Multiple Articles",
+      centered: true,
+      children: (
+        <Text size="sm">
+          Are you sure you want to delete <b>{selectedIds.length}</b> selected articles? This action will permanently remove them from the system.
+        </Text>
+      ),
+      labels: { confirm: "Delete Selected", cancel: "Cancel" },
+      confirmProps: { color: "red" },
+      onConfirm: async () => {
+        setDeletingBatch(true);
+        try {
+          const res = await fetch("/api/articles/batch", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ids: selectedIds }),
+          });
+          const json = await res.json();
+
+          if (json.success) {
+            notifications.show({
+              title: "Batch Delete Success",
+              message: json.message || `${selectedIds.length} articles deleted successfully.`,
+              color: "teal",
+              icon: <IconCheck size={16} />,
+            });
+            fetchArticles();
+          } else {
+            throw new Error(json.message || "Failed to delete articles");
+          }
+        } catch (error: any) {
+          notifications.show({
+            title: "Delete Error",
+            message: error.message,
+            color: "red",
+            icon: <IconX size={16} />,
+          });
+        } finally {
+          setDeletingBatch(false);
+        }
+      },
+    });
+  };
+
   const columns: ColumnDef<ArticleDto>[] = [
+    {
+      key: "selection",
+      label: (
+        <Checkbox
+          checked={articles.length > 0 && selectedIds.length === articles.length}
+          indeterminate={selectedIds.length > 0 && selectedIds.length < articles.length}
+          onChange={(event) => handleSelectAll(event.currentTarget.checked)}
+        />
+      ),
+      sortable: false,
+      width: 45,
+      render: (item) => (
+        <Checkbox checked={selectedIds.includes(item.id)} onChange={(event) => handleSelectRow(item.id, event.currentTarget.checked)} />
+      ),
+    },
     {
       key: "no",
       label: "No",
@@ -187,7 +270,14 @@ const ListArticle = () => {
   return (
     <Paper shadow="xs" p="md" radius="md">
       <Flex justify="space-between" align="center" mb="lg">
-        <Title order={3}>Articles</Title>
+        <Group gap="md">
+          <Title order={3}>Articles</Title>
+          {selectedIds.length > 0 && (
+            <Button color="red" variant="light" size="xs" leftSection={<IconTrash size={14} />} onClick={handleBatchDelete} loading={deletingBatch}>
+              Delete Selected ({selectedIds.length})
+            </Button>
+          )}
+        </Group>
 
         <Group>
           <ActionIcon variant="default" size="lg" onClick={fetchArticles} loading={loading}>
