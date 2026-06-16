@@ -304,7 +304,7 @@ const MyTransaction = () => {
                           <IconHistory size={18} />
                         </ActionIcon>
                         {item.status === "PENDING" && item.snapRedirect && (
-                          <Button color="orange" radius="md" size="sm" onClick={() => window.open(item.snapRedirect!, "_blank")}>
+                          <Button id="PAY" color="orange" radius="md" size="sm" onClick={() => window.open(item.snapRedirect!, "_blank")}>
                             Pay Now
                           </Button>
                         )}

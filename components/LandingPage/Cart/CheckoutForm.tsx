@@ -429,6 +429,7 @@ export const CheckoutForm = ({
       <Divider />
       <Box px="md" pt="sm" pb="md" style={{ flexShrink: 0 }}>
         <Button
+          id="CO"
           fullWidth
           color="dark"
           radius="md"
