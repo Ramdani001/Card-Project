@@ -100,11 +100,29 @@ export const updateArticle = async (params: UpdateArticleParams) => {
   }
 
   try {
-    let slug = undefined;
+    let slug: string | undefined;
+
     if (title && title !== article.title) {
       slug = generateSlug(title);
-      const exist = await prisma.article.findFirst({ where: { slug, isActive: true } });
-      if (exist && exist.id !== id) throw new Error("Article title already exists");
+
+      const activeArticle = await prisma.article.findFirst({
+        where: {
+          slug,
+          isActive: true,
+          NOT: { id },
+        },
+      });
+
+      if (activeArticle) {
+        throw new Error("Article title already exists");
+      }
+
+      await prisma.article.deleteMany({
+        where: {
+          slug,
+          isActive: false,
+        },
+      });
     }
 
     const updatedArticle = await prisma.$transaction(async (tx) => {

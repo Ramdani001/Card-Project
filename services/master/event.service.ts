@@ -129,6 +129,13 @@ export const updateEvent = async (params: UpdateEventParams) => {
         });
       }
 
+      await tx.event.deleteMany({
+        where: {
+          isActive: false,
+          slug: slug,
+        },
+      });
+
       return await tx.event.update({
         where: { id },
         data: {

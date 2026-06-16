@@ -38,7 +38,8 @@ model Card {
   transactionItems TransactionItem[]
   voucherCards     VoucherCard[]
 
-  @@unique([slug, sku, isActive])
+  @@unique([slug, isActive])
+  @@unique([sku, isActive])
 }
 
 model CardHistory {

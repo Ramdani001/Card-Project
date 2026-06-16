@@ -298,6 +298,13 @@ export const updateCard = async (params: UpdateCardParams) => {
 
       const slug = name ? generateSlug(name) : undefined;
 
+      await tx.card.deleteMany({
+        where: {
+          isActive: false,
+          OR: [...(slug ? [{ slug }] : []), ...(sku ? [{ sku }] : [])],
+        },
+      });
+
       await tx.card.update({
         where: { id },
         data: {

@@ -96,6 +96,14 @@ export const updateRoleCategoryAccess = async (id: string, data: { roleId?: stri
     }
   }
 
+  await prisma.cardCategoryRoleAccess.deleteMany({
+    where: {
+      isActive: false,
+      roleId: data.roleId,
+      categoryId: data.categoryId,
+    },
+  });
+
   return await prisma.cardCategoryRoleAccess.update({
     where: { id },
     data,

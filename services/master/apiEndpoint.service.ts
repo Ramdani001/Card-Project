@@ -43,6 +43,13 @@ export const updateApiEndpoint = async (params: UpdateApiEndpointParams) => {
   const existing = await prisma.apiEndpoint.findUnique({ where: { id } });
   if (!existing) throw new Error("Api Endpoint not found");
 
+  await prisma.apiEndpoint.deleteMany({
+    where: {
+      url,
+      isActive: false,
+    },
+  });
+
   return await prisma.apiEndpoint.update({
     where: { id },
     data: {

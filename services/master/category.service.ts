@@ -136,6 +136,13 @@ export const updateCategory = async (params: UpdateCategoryParams) => {
   }
 
   try {
+    await prisma.category.deleteMany({
+      where: {
+        isActive: false,
+        slug: slug,
+      },
+    });
+
     const updated = await prisma.category.update({
       where: { id },
       data: {

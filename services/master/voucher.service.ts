@@ -148,6 +148,13 @@ export const updateVoucher = async (params: UpdateVoucherParams) => {
   const finalEnd = endDate ? new Date(endDate) : existing.endDate;
   if (finalEnd < finalStart) throw new Error("End date must be after start date");
 
+  await prisma.voucher.deleteMany({
+    where: {
+      isActive: false,
+      code,
+    },
+  });
+
   return await prisma.voucher.update({
     where: { id },
     data: {
