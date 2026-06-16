@@ -238,6 +238,7 @@ export const CardCatalogModal = ({ opened, onClose, product, handleAddToCart, lo
                   </Text>
                 </Group>
                 <Button
+                  id="ATC"
                   fullWidth
                   leftSection={<IconShoppingCart size={20} />}
                   size="lg"
