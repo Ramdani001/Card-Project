@@ -26,6 +26,13 @@ export const checkout = async (params: CreateTransactionParams) => {
     shippingFee,
   } = params;
 
+  if (voucherCodes && voucherCodes.length > 0) {
+    const uniqueVouchers = new Set(voucherCodes);
+    if (uniqueVouchers.size !== voucherCodes.length) {
+      throw new Error("You cannot use the same voucher code more than once.");
+    }
+  }
+
   const cart = await prisma.cart.findFirst({
     where: { userId },
     include: {
