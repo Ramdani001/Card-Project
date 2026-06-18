@@ -111,7 +111,7 @@ export const VoucherForm = ({ opened, onClose, voucherToEdit, onSuccess }: Vouch
         value: Number(value),
         minPurchase: minPurchase ? Number(minPurchase) : undefined,
         maxDiscount: maxDiscount ? Number(maxDiscount) : undefined,
-        stock: stock ? Number(stock) : undefined,
+        stock: stock ? Number(stock) : null,
         startDate,
         endDate,
         voucherRoles: selectedRoles.map((role) => ({
