@@ -234,7 +234,12 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
         body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error("An error occurred during checkout.");
+      if (!res.ok) {
+        const errorData = await res.json();
+        const errorMessage = errorData.message || "An error occurred during checkout.";
+
+        throw new Error(errorMessage);
+      }
 
       notifications.show({ title: "Order Placed Successfully!", message: "Redirecting...", color: "green" });
       setIsDrawerOpen(false);
