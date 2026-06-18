@@ -35,7 +35,9 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
       ...(body.value && { value: Number(body.value) }),
       ...(body.minPurchase !== undefined && { minPurchase: Number(body.minPurchase) }),
       ...(body.maxDiscount !== undefined && { maxDiscount: Number(body.maxDiscount) }),
-      ...(body.stock !== undefined && { stock: Number(body.stock) }),
+      ...(body.stock !== undefined && {
+        stock: body.stock === null ? null : Number(body.stock),
+      }),
       ...(body.startDate && { startDate: new Date(body.startDate) }),
       ...(body.endDate && { endDate: new Date(body.endDate) }),
       ...(body.type && { type: body.type as DiscountType }),
