@@ -10,7 +10,6 @@ async function main() {
     where: {
       url: { contains: "imgur.com" },
     },
-    take: 10,
   });
 
   console.log(`[${getTimestamp()}] Found ${images.length} images to migrate...`);

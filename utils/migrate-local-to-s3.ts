@@ -10,7 +10,6 @@ async function main() {
     where: {
       path: { not: { contains: "http" } },
     },
-    take: 10,
   });
 
   console.log(`[${getTimestamp()}] Found ${images.length} local images to move to S3...`);

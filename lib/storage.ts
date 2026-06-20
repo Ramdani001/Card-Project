@@ -1,6 +1,7 @@
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import fs from "fs/promises";
 import path from "path";
+import sharp from "sharp";
 
 const s3Client = new S3Client({
   endpoint: process.env.IDCLOUDHOST_ENDPOINT,
@@ -20,23 +21,35 @@ const sanitizeFolder = (folder: string) => folder.replace(/[^a-zA-Z0-9_-]/g, "")
 export const saveFile = async (file: File, folder: string = "") => {
   if (!BUCKET_NAME) throw new Error("S3 Bucket Name is not configured");
 
-  const fileExt = file.name.split(".").pop() || "bin";
+  let buffer = Buffer.from(await file.arrayBuffer());
+  let contentType = file.type;
+  let fileName = file.name;
+
+  const isImage = file.type.startsWith("image/");
+  const isGif = file.type === "image/gif";
+
+  if (isImage && !isGif) {
+    buffer = (await sharp(buffer).resize({ width: 1200, withoutEnlargement: true }).jpeg({ quality: 80, progressive: true }).toBuffer()) as any;
+
+    contentType = "image/jpeg";
+
+    fileName = file.name.replace(/\.[^/.]+$/, ".jpg");
+  }
+
+  const fileExt = fileName.split(".").pop() || "bin";
   const uniqueFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
 
   const root = getRootFolder();
   const sanitizedFolder = sanitizeFolder(folder);
-
   const key = sanitizedFolder ? `${root}/${sanitizedFolder}/${uniqueFileName}` : `${root}/${uniqueFileName}`;
 
   try {
-    const buffer = Buffer.from(await file.arrayBuffer());
-
     await s3Client.send(
       new PutObjectCommand({
         Bucket: BUCKET_NAME,
         Key: key,
         Body: buffer,
-        ContentType: file.type,
+        ContentType: contentType,
         ACL: "public-read",
       })
     );
@@ -44,10 +57,10 @@ export const saveFile = async (file: File, folder: string = "") => {
     return {
       url: `${process.env.IDCLOUDHOST_ENDPOINT}/${BUCKET_NAME}/${key}`,
       path: key,
-      originalName: file.name,
+      originalName: fileName,
       fileName: uniqueFileName,
-      mimeType: file.type,
-      size: file.size,
+      mimeType: contentType,
+      size: buffer.length,
     };
   } catch (error) {
     console.error("Failed to upload to S3:", error);
