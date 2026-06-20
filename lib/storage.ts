@@ -29,7 +29,10 @@ export const saveFile = async (file: File, folder: string = "") => {
   const isGif = file.type === "image/gif";
 
   if (isImage && !isGif) {
-    buffer = (await sharp(buffer).resize({ width: 1200, withoutEnlargement: true }).jpeg({ quality: 80, progressive: true }).toBuffer()) as any;
+    buffer = (await sharp(buffer)
+      .resize({ withoutEnlargement: true })
+      .jpeg({ quality: 80, progressive: true, optimizeScans: true })
+      .toBuffer()) as any;
 
     contentType = "image/jpeg";
 
