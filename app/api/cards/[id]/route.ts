@@ -135,9 +135,14 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
 
 export const DELETE = async (_req: NextRequest, { params }: RouteParams) => {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user) {
+      return sendResponse({ success: false, message: "Unauthorized", status: 401 });
+    }
+    
     const { id } = await params;
 
-    await deleteCard(id);
+    await deleteCard(id, session.user.id);
 
     return sendResponse({
       success: true,

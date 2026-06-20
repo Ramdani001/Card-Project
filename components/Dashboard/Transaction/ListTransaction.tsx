@@ -15,11 +15,13 @@ import { useEffect, useState } from "react";
 import { StatusBadge } from "../../layout/StatusBadge";
 import { TransactionDetailModal } from "./TransactionDetailModal";
 import { TransactionHistoryModal } from "./TransactionHistoryModal";
+import { TransactionStatus } from "@/prisma/generated/prisma/enums";
 
 const ListTransaction = () => {
   const [transactions, setTransactions] = useState<TransactionDto[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [cancellingBatch, setCancellingBatch] = useState(false);
+  const statusOptions = Object.values(TransactionStatus);
 
   const [metadata, setMetadata] = useState<PaginationMetaDataDto>({ total: 0, page: 1, limit: 10, totalPages: 0 });
   const [loading, setLoading] = useState(false);
@@ -290,14 +292,7 @@ const ListTransaction = () => {
           miw={220}
         />
 
-        <Select
-          label="Status"
-          placeholder="All Status"
-          data={["PENDING", "PAID", "PROCESSED", "SHIPPED", "COMPLETED", "CANCELLED", "FAILED"]}
-          value={filterStatus}
-          onChange={setFilterStatus}
-          clearable
-        />
+        <Select label="Status" placeholder="All Status" data={statusOptions} value={filterStatus} onChange={setFilterStatus} clearable />
 
         <DatePickerInput label="Date Range" type="range" placeholder="Payment Date" value={dateRange} onChange={setDateRange} clearable miw={240} />
 

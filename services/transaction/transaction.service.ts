@@ -260,6 +260,12 @@ export const checkout = async (params: CreateTransactionParams) => {
     }
 
     for (const item of cart.items) {
+      const card = await tx.card.findUnique({
+        where: { id: item.cardId },
+      });
+
+      if (!card) throw new Error("Card not found");
+
       const updated = await tx.card.updateMany({
         where: {
           id: item.cardId,
@@ -271,8 +277,24 @@ export const checkout = async (params: CreateTransactionParams) => {
       });
 
       if (!updated.count) {
-        throw new Error(`Insufficient stock for '${item.card!.name}'`);
+        throw new Error(`Insufficient stock for '${card.name}'`);
       }
+
+      await tx.cardHistory.create({
+        data: {
+          cardId: card.id,
+          name: card.name,
+          price: card.price,
+          stock: card.stock - item.quantity,
+          sku: card.sku,
+          description: card.description,
+          maxQtyPurchase: card.maxQtyPurchase,
+          minQtyPurchase: card.minQtyPurchase,
+          discountId: card.discountId,
+          changeType: "ORDER_CHECKOUT",
+          changedBy: userId,
+        },
+      });
     }
 
     await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
@@ -406,9 +428,31 @@ export const updateTransactionStatus = async (
 
       for (const item of items) {
         if (item.cardId) {
+          const card = await tx.card.findUnique({
+            where: { id: item.cardId },
+          });
+
+          if (!card) continue;
+
           await tx.card.update({
             where: { id: item.cardId },
             data: { stock: { increment: item.quantity } },
+          });
+
+          await tx.cardHistory.create({
+            data: {
+              cardId: card.id,
+              name: card.name,
+              price: card.price,
+              stock: card.stock + item.quantity,
+              maxQtyPurchase: card.maxQtyPurchase || null,
+              minQtyPurchase: card.minQtyPurchase || null,
+              description: card.description,
+              sku: card.sku,
+              discountId: card.discountId,
+              changeType: "RESTOCK_FROM_CANCEL",
+              changedBy: userId,
+            },
           });
         }
       }
@@ -650,11 +694,36 @@ export const batchCancelTransactions = async (
           },
         });
 
+        const cardIds = transaction.items.map((i) => i.cardId).filter((id): id is string => !!id);
+
+        const cards = await tx.card.findMany({
+          where: { id: { in: cardIds } },
+        });
+
         for (const item of transaction.items) {
           if (item.cardId) {
+            const card = cards.find((c) => c.id === item.cardId);
+            if (!card) continue;
+
             await tx.card.update({
               where: { id: item.cardId },
               data: { stock: { increment: item.quantity } },
+            });
+
+            await tx.cardHistory.create({
+              data: {
+                cardId: card.id,
+                name: card.name,
+                price: card.price,
+                stock: card.stock + item.quantity,
+                sku: card.sku,
+                description: card.description,
+                maxQtyPurchase: card.maxQtyPurchase,
+                minQtyPurchase: card.minQtyPurchase,
+                discountId: card.discountId,
+                changeType: "RESTOCK_FROM_CANCEL",
+                changedBy: userId,
+              },
             });
           }
         }

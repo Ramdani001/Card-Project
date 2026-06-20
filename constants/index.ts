@@ -16,4 +16,9 @@ export const ALLOWED_NEXT_STATUS: Record<string, string[]> = {
   REFUNDED: [],
 };
 
-export const FAILED_STATUSES: TransactionStatus[] = [TransactionStatus.CANCELLED, TransactionStatus.FAILED, TransactionStatus.EXPIRED];
+export const FAILED_STATUSES: TransactionStatus[] = [
+  TransactionStatus.CANCELLED,
+  TransactionStatus.FAILED,
+  TransactionStatus.EXPIRED,
+  TransactionStatus.REFUNDED,
+];

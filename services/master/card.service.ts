@@ -305,17 +305,33 @@ export const updateCard = async (params: UpdateCardParams) => {
         },
       });
 
-      await tx.card.update({
+      const updatedCard = await tx.card.update({
         where: { id },
         data: {
           ...(name && { name, slug }),
           ...(price !== undefined && { price: new Prisma.Decimal(price) }),
           ...(stock !== undefined && { stock }),
           ...(description && { description }),
-          ...(maxQtyPurchase && { maxQtyPurchase }),
-          ...(minQtyPurchase && { minQtyPurchase }),
-          ...(sku && { sku }),
+          ...(maxQtyPurchase !== undefined && { maxQtyPurchase }),
+          ...(minQtyPurchase !== undefined && { minQtyPurchase }),
+          ...(sku !== undefined && { sku }),
           discountId: discountId === undefined ? undefined : discountId,
+        },
+      });
+
+      await tx.cardHistory.create({
+        data: {
+          cardId: updatedCard.id,
+          name: updatedCard.name,
+          price: updatedCard.price,
+          stock: updatedCard.stock,
+          maxQtyPurchase: updatedCard.maxQtyPurchase,
+          minQtyPurchase: updatedCard.minQtyPurchase,
+          description: updatedCard.description,
+          sku: updatedCard.sku,
+          discountId: updatedCard.discountId,
+          changeType: "UPDATE",
+          changedBy: userId,
         },
       });
 
@@ -420,7 +436,7 @@ export const updateCard = async (params: UpdateCardParams) => {
   }
 };
 
-export const deleteCard = async (id: string) => {
+export const deleteCard = async (id: string, userId: string) => {
   const card = await prisma.card.findUnique({
     where: { id },
     include: { images: true },
@@ -428,9 +444,25 @@ export const deleteCard = async (id: string) => {
 
   if (!card) throw new Error("Card not found");
 
-  const deleted = await prisma.card.update({
+  const updatedCard = await prisma.card.update({
     where: { id },
     data: { isActive: false },
+  });
+
+  await prisma.cardHistory.create({
+    data: {
+      cardId: updatedCard.id,
+      name: updatedCard.name,
+      price: updatedCard.price,
+      stock: updatedCard.stock,
+      maxQtyPurchase: updatedCard.maxQtyPurchase,
+      minQtyPurchase: updatedCard.minQtyPurchase,
+      description: updatedCard.description,
+      sku: updatedCard.sku,
+      discountId: updatedCard.discountId,
+      changeType: "DEACTIVATE",
+      changedBy: userId,
+    },
   });
 
   if (card.images.length > 0) {
@@ -448,7 +480,7 @@ export const deleteCard = async (id: string) => {
     metadata: { cardId: card.id },
   });
 
-  return deleted;
+  return updatedCard;
 };
 
 export const importCardsFromExcel = async (file: File, userId: string) => {
@@ -706,7 +738,7 @@ export const getTopThreeSellingCards = async () => {
   });
 };
 
-export const deleteBatchCards = async (ids: string[]) => {
+export const deleteBatchCards = async (ids: string[], userId: string) => {
   if (!ids || ids.length === 0) {
     throw new Error("Select at least one card to delete");
   }
@@ -723,10 +755,31 @@ export const deleteBatchCards = async (ids: string[]) => {
   const allImagePaths = cardsWithImages.flatMap((c) => c.images.map((i) => i.path)).filter(Boolean) as string[];
 
   const updateResult = await prisma.$transaction(async (tx) => {
+    const cardsToDeactivate = await tx.card.findMany({
+      where: { id: { in: ids } },
+    });
+
     const result = await tx.card.updateMany({
       where: { id: { in: ids } },
       data: { isActive: false },
     });
+
+    await Promise.all(
+      cardsToDeactivate.map((card) =>
+        tx.cardHistory.create({
+          data: {
+            cardId: card.id,
+            name: card.name,
+            price: card.price,
+            stock: card.stock,
+            sku: card.sku,
+            description: card.description,
+            changeType: "DEACTIVATE",
+            changedBy: userId,
+          },
+        })
+      )
+    );
 
     return result;
   });
