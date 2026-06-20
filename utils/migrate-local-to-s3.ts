@@ -8,7 +8,14 @@ const getTimestamp = () => new Date().toLocaleTimeString();
 async function main() {
   const images = await prisma.imageCard.findMany({
     where: {
-      path: { not: { contains: "http" } },
+      url: {
+        not: { contains: "imgur" },
+      },
+      AND: {
+        url: {
+          not: { contains: "is3.cloudhost.id" },
+        },
+      },
     },
   });
 
