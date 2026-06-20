@@ -544,6 +544,22 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
             imageUrl = imageCell.value?.toString() || "";
           }
 
+          let fileData = null;
+
+          if (imageUrl) {
+            const response = await fetch(imageUrl);
+            if (!response.ok) throw new Error(`Failed to download: ${response.statusText}`);
+
+            const buffer = Buffer.from(await response.arrayBuffer());
+            const mimeType = response.headers.get("content-type") || "image/jpeg";
+
+            const file = new File([new Uint8Array(buffer)], "migrated-image.jpg", {
+              type: mimeType,
+            });
+
+            fileData = await saveFile(file, "cards");
+          }
+
           const existingCard = await tx.card.findFirst({
             where: {
               OR: [...(sku ? [{ sku }] : []), { slug }],
@@ -568,10 +584,10 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
                   deleteMany: {},
                   create: matchedCategoryIds.map((id) => ({ categoryId: id })),
                 },
-                images: imageUrl
+                images: fileData
                   ? {
                       deleteMany: {},
-                      create: { url: imageUrl, isPrimary: true },
+                      create: [{ ...fileData, isPrimary: true }],
                     }
                   : undefined,
                 histories: {
@@ -594,9 +610,9 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
                 categories: {
                   create: matchedCategoryIds.map((id) => ({ categoryId: id })),
                 },
-                images: imageUrl
+                images: fileData
                   ? {
-                      create: { url: imageUrl, isPrimary: true },
+                      create: [{ ...fileData, isPrimary: true }],
                     }
                   : undefined,
               },
