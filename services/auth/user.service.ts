@@ -1,9 +1,9 @@
 import prisma from "@/lib/prisma";
 import { hashPassword } from "@/helpers/auth.helper";
 import { Prisma } from "@/prisma/generated/prisma/client";
-import { deleteFile, saveFile } from "@/helpers/file.helper";
 import { logError } from "@/lib/logger";
 import { CreateUserParams, UpdateUserParams } from "@/types/params/userParams";
+import { deleteFile, saveFile } from "@/lib/storage";
 
 const userSelectScope = {
   id: true,

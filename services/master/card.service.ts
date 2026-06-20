@@ -1,4 +1,3 @@
-import { deleteFile, saveFile } from "@/helpers/file.helper";
 import prisma from "@/lib/prisma";
 import { NotificationType, Prisma } from "@/prisma/generated/prisma/client";
 import { generateSlug } from "@/utils";
@@ -7,6 +6,7 @@ import { createNotificationByCode } from "../transaction/notification.service";
 import { CONSTANT } from "@/constants";
 import { logError } from "@/lib/logger";
 import { CreateCardParams, UpdateCardParams } from "@/types/params/cardParams";
+import { deleteFile, saveFile } from "@/lib/storage";
 
 export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string) => {
   const defaultInclude: Prisma.CardInclude = {

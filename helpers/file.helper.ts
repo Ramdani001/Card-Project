@@ -4,7 +4,7 @@ import path from "path";
 const LOCAL_UPLOAD_DIR = path.join(process.cwd(), "public/uploads");
 
 const generateFileName = (file: File) => {
-  const fileExt = path.extname(file.name); // Lebih aman daripada split pop
+  const fileExt = path.extname(file.name);
   return `${Date.now()}-${Math.random().toString(36).substring(7)}${fileExt}`;
 };
 

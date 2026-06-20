@@ -1,11 +1,11 @@
 import prisma from "@/lib/prisma";
 import { hashPassword } from "@/helpers/auth.helper";
-import { saveFile, deleteFile } from "@/helpers/file.helper";
 import { logError } from "@/lib/logger";
 import { generateOtpCode } from "@/utils";
 import { sendOtpEmail } from "../system/email.service";
 import { OtpType } from "@/prisma/generated/prisma/enums";
 import { RegisterParams, UpdateProfileParams } from "@/types/params/authParams";
+import { deleteFile, saveFile } from "@/lib/storage";
 
 export const register = async ({ email, password, name, phone, address, file, facebookUrl, instagramUrl, twitterUrl }: RegisterParams) => {
   const existingUser = await prisma.user.findFirst({

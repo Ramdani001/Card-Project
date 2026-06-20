@@ -1,7 +1,7 @@
 import { CONSTANT } from "@/constants";
-import { deleteFile, saveFile } from "@/helpers/file.helper";
 import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
+import { deleteFile, saveFile } from "@/lib/storage";
 import { Prisma } from "@/prisma/generated/prisma/client";
 import { CreateCategoryParams, UpdateCategoryParams } from "@/types/params/categoryParams";
 import { generateSlug } from "@/utils";
