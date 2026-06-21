@@ -130,7 +130,7 @@ const Sidebar = ({ menus = [], activeMenu, onMenuClick, onClose }: SidebarProps)
           <Group justify="space-between" align="center">
             <Group gap={12}>
               <Link href="/" passHref style={{ textDecoration: "none", display: "inline-block" }}>
-                <Image src="/toko-kartu-logo.png" alt="Toko Kartu Logo" w={40} />
+                <Image src="https://is3.cloudhost.id/tokokartu/Production/toko-kartu-logo.png" alt="Toko Kartu Logo" w={40} />
               </Link>
               <Box>
                 <Text fw={800} size="sm" c="white" lh={1.2} style={{ letterSpacing: 0.5 }}>

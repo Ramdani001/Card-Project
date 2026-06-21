@@ -9,7 +9,7 @@ export const FooterSection = () => {
     <Box component="footer" bg="#121212" c="gray.5" py={60}>
       <Container size="xl">
         <Box mb={20} ml={-20}>
-          <Image src="/toko-kartu-logo.png" alt="Toko Kartu Logo" w={140} />
+          <Image src="https://is3.cloudhost.id/tokokartu/Production/toko-kartu-logo.png" alt="Toko Kartu Logo" w={140} />
         </Box>
 
         <Grid justify="space-between">

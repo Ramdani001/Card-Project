@@ -315,7 +315,7 @@ export const HeaderSection = ({ cartItems, loadingCart, setCartItems }: HeaderSe
           }}
         >
           <Link href="/" passHref style={{ textDecoration: "none", display: "inline-block" }} onClick={closeDrawer}>
-            <Image src="/toko-kartu-logo.png" alt="Toko Kartu Logo" w={48} />
+            <Image src="https://is3.cloudhost.id/tokokartu/Production/toko-kartu-logo.png" alt="Toko Kartu Logo" w={48} />
           </Link>
           <ActionIcon variant="subtle" color="gray" size="lg" onClick={closeDrawer} aria-label="Tutup menu">
             <IconX size={18} stroke={1.5} />
@@ -365,7 +365,7 @@ export const HeaderSection = ({ cartItems, loadingCart, setCartItems }: HeaderSe
               </ActionIcon>
 
               <Link href="/" passHref style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
-                <Image src="/toko-kartu-logo.png" alt="Toko Kartu Logo" w={{ base: 48, sm: 56 }} />
+                <Image src="https://is3.cloudhost.id/tokokartu/Production/toko-kartu-logo.png" alt="Toko Kartu Logo" w={{ base: 48, sm: 56 }} />
               </Link>
             </Group>
 

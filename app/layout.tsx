@@ -55,7 +55,7 @@ export const metadata: Metadata = {
 
     images: [
       {
-        url: "/toko-kartu-logo.png",
+        url: "https://is3.cloudhost.id/tokokartu/Production/toko-kartu-logo.png",
         width: 1200,
         height: 630,
         alt: "Toko Kartu",

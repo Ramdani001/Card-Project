@@ -37,7 +37,7 @@ async function main() {
 
       await prisma.imageCard.update({
         where: { id: img.id },
-        data: { path: fileData.path },
+        data: fileData,
       });
 
       console.log(`[${getTimestamp()}] Successful local migration to S3: ${img.id}`);

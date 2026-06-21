@@ -189,7 +189,7 @@ const ListTransaction = () => {
       label: "Invoice",
       sortable: true,
       render: (item) => (
-        <Text fw={600} size="sm">
+        <Text component="span" fw={600} size="sm">
           {item.invoice}
         </Text>
       ),
