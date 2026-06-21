@@ -88,6 +88,6 @@ export const deleteFile = async (pathName: string | null) => {
 };
 
 export const readLocalFileToBuffer = async (filePath: string): Promise<Buffer> => {
-  const absolutePath = path.join(process.cwd(), "public", filePath);
+  const absolutePath = path.join(process.cwd(), "public/uploads", filePath);
   return await fs.readFile(absolutePath);
 };
