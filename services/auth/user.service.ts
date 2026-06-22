@@ -178,7 +178,20 @@ export const updateUser = async (data: UpdateUserParams) => {
     });
 
     if (newAvatarPath && existingUser.avatar) {
-      const oldPath = existingUser.avatar.replace(/^\/uploads\//, "");
+      let oldPath = existingUser.avatar;
+
+      if (oldPath.startsWith("http")) {
+        try {
+          const urlObj = new URL(oldPath);
+
+          oldPath = urlObj.pathname.replace(/^\/tokokartu\//, "");
+        } catch (error) {
+          console.error("Failed to parse old avatar URL:", error);
+        }
+      } else {
+        oldPath = oldPath.replace(/^\/uploads\//, "");
+      }
+
       await deleteFile(oldPath).catch(console.error);
     }
 
