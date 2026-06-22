@@ -18,12 +18,11 @@ interface ListMemberFormProps {
 export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSuccess }: ListMemberFormProps) => {
   const [loading, setLoading] = useState(false);
 
-  // Form States
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState(""); // State baru
+  const [address, setAddress] = useState("");
   const [roleId, setRoleId] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [facebookUrl, setFacebookUrl] = useState("");
@@ -64,6 +63,25 @@ export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSucce
     setLoading(true);
     try {
       const formData = new FormData();
+
+      if (file) {
+        const MAX_FILE_SIZE = 2 * 1024 * 1024;
+
+        if (file.size > MAX_FILE_SIZE) {
+          return notifications.show({
+            message: "The image size is too large. Maximum 2MB.",
+            color: "red",
+          });
+        }
+
+        if (!file.type.startsWith("image/")) {
+          return notifications.show({
+            message: "Uploaded files must be images.",
+            color: "red",
+          });
+        }
+      }
+
       formData.append("name", name);
       formData.append("email", email);
       formData.append("phone", phone);
