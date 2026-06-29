@@ -197,7 +197,7 @@ const ListTransaction = () => {
     {
       key: "user",
       label: "Customer",
-      sortable: true,
+      sortable: false,
       render: (item) => (
         <Flex direction="column">
           <Text size="sm" fw={500}>

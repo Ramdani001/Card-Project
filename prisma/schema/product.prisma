@@ -58,7 +58,6 @@ model CardHistory {
   isActive       Boolean   @default(true)
   createdAt      DateTime  @default(now())
   card           Card      @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  user           User?     @relation(fields: [changedBy], references: [id], onDelete: SetNull)
   discount       Discount? @relation(fields: [discountId], references: [id])
 }
 
