@@ -6,7 +6,7 @@ export const CONSTANT = {
 };
 
 export const ALLOWED_NEXT_STATUS: Record<string, string[]> = {
-  PENDING: [TransactionStatus.PAID, TransactionStatus.CANCELLED, TransactionStatus.FAILED],
+  PENDING: [TransactionStatus.PAID, TransactionStatus.CANCELLED, TransactionStatus.FAILED, TransactionStatus.EXPIRED],
   PAID: [TransactionStatus.PROCESSED, TransactionStatus.REFUNDED, TransactionStatus.SHIPPED],
   PROCESSED: [TransactionStatus.SHIPPED, TransactionStatus.REFUNDED],
   SHIPPED: [TransactionStatus.COMPLETED, TransactionStatus.REFUNDED],
