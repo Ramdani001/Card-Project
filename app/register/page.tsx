@@ -77,6 +77,13 @@ export default function RegisterPage() {
   }, [form.values.file]);
 
   const handleSubmit = async (values: typeof form.values) => {
+    const file = values.file;
+    if (file && file.size > 2 * 1024 * 1024) {
+      setError("Maximum file size 2MB.");
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError("");
 
