@@ -233,7 +233,7 @@ export const MainProfile = () => {
   }, [file]);
 
   const handleUpdate = async () => {
-    if (file && file.size > 2 * 1024 * 1024) {
+    if (file && file.size > 1 * 1024 * 1024) {
       return notifications.show({
         title: "File Too Large",
         message: "Maximum file size 2MB",

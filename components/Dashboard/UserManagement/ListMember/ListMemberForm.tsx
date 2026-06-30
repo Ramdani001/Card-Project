@@ -65,7 +65,7 @@ export const ListMemberForm = ({ opened, onClose, rolesList, userToEdit, onSucce
       const formData = new FormData();
 
       if (file) {
-        const MAX_FILE_SIZE = 2 * 1024 * 1024;
+        const MAX_FILE_SIZE = 1 * 1024 * 1024;
 
         if (file.size > MAX_FILE_SIZE) {
           return notifications.show({

@@ -19,11 +19,12 @@ export const createPaymentToken = async (params: PaymentTokenParams) => {
     quantity: item.quantity,
     name: item.name.substring(0, 50),
   }));
+  const calculatedGrossAmount = itemDetails.reduce((total, item) => total + item.price * item.quantity, 0);
 
   const parameter = {
     transaction_details: {
       order_id: params.id,
-      gross_amount: Math.floor(params.totalPrice),
+      gross_amount: calculatedGrossAmount,
     },
     customer_details: {
       first_name: params.customerName || "Customer",
@@ -38,9 +39,10 @@ export const createPaymentToken = async (params: PaymentTokenParams) => {
   try {
     const token = await snap.createTransaction(parameter);
     return token;
-  } catch (error) {
-    logError("PaymentService.createPaymentToken", error);
-    throw new Error("Failed to create payment token");
+  } catch (error: any) {
+    const detail = error.ApiResponse ? JSON.stringify(error.ApiResponse) : error.message;
+    logError("PaymentService.createPaymentToken", detail);
+    throw new Error(`Failed to create payment token: ${detail}`);
   }
 };
 

@@ -65,14 +65,12 @@ export const checkout = async (params: CreateTransactionParams) => {
   }
 
   let subTotal = 0;
-
   const prismaItemsPayload: Prisma.TransactionItemCreateWithoutTransactionInput[] = [];
   const midtransItemsPayload: any[] = [];
-
   const voucherCreatePayload: Prisma.TransactionVoucherCreateWithoutTransactionInput[] = [];
 
   for (const item of cart.items) {
-    const price = Number(item.card!.price);
+    const price = Math.floor(Number(item.card!.price));
     const itemTotal = price * item.quantity;
 
     subTotal += itemTotal;
@@ -80,7 +78,7 @@ export const checkout = async (params: CreateTransactionParams) => {
     prismaItemsPayload.push({
       card: { connect: { id: item.card!.id } },
       productName: item.card!.name,
-      productPrice: item.card!.price,
+      productPrice: price,
       quantity: item.quantity,
       subTotal: new Prisma.Decimal(itemTotal),
       skuSnapshot: item.card!.sku,
@@ -97,6 +95,8 @@ export const checkout = async (params: CreateTransactionParams) => {
   const shippingCost = deliveryMethod === DeliveryMethod.SHIP ? Number(shippingFee || 0) : 0;
   let productDiscount = 0;
   let shippingDiscount = 0;
+
+  let finalShippingCostForMidtrans = 0;
 
   const result = await prisma.$transaction(async (tx) => {
     let finalTotal = subTotal;
@@ -117,7 +117,6 @@ export const checkout = async (params: CreateTransactionParams) => {
       if (!vouchers.length) throw new Error("Invalid voucher code.");
 
       const user = await tx.user.findUnique({ where: { id: userId } });
-
       const cartCardIds = cart.items.map((i) => i.cardId);
       const cartCategoryIds = cart.items.flatMap((i) => i.card!.categories.map((c) => c.categoryId));
 
@@ -138,7 +137,6 @@ export const checkout = async (params: CreateTransactionParams) => {
 
         if (voucher.voucherRoles.length > 0) {
           const allowed = voucher.voucherRoles.some((r) => r.roleId === user?.roleId);
-
           if (!allowed) {
             throw new Error("Voucher not allowed for your role.");
           }
@@ -149,7 +147,6 @@ export const checkout = async (params: CreateTransactionParams) => {
 
         if (hasProductLimit || hasCategoryLimit) {
           const allowedByProduct = voucher.voucherCards.some((v) => cartCardIds.includes(v.cardId));
-
           const allowedByCategory = voucher.voucherCardCategories.some((v) => cartCategoryIds.includes(v.cardCategoryId));
 
           if (!allowedByProduct && !allowedByCategory) {
@@ -161,21 +158,16 @@ export const checkout = async (params: CreateTransactionParams) => {
 
         if (voucher.usageCategory === VoucherUsageCategory.CARD) {
           productDiscount += rawDiscount;
-
           if (voucher.maxDiscount) {
             productDiscount = Math.min(productDiscount, Number(voucher.maxDiscount));
           }
-
           productDiscount = Math.min(productDiscount, subTotal);
-
           finalTotal = subTotal - productDiscount;
         } else {
           shippingDiscount += rawDiscount;
-
           if (voucher.maxDiscount) {
             shippingDiscount = Math.min(shippingDiscount, Number(voucher.maxDiscount));
           }
-
           shippingDiscount = Math.min(shippingDiscount, shippingCost);
         }
 
@@ -184,9 +176,7 @@ export const checkout = async (params: CreateTransactionParams) => {
           voucherAmount: rawDiscount,
           isActive: true,
           usageCategory: voucher.usageCategory,
-          voucher: {
-            connect: { id: voucher.id },
-          },
+          voucher: { connect: { id: voucher.id } },
         });
 
         await tx.voucher.update({
@@ -197,6 +187,7 @@ export const checkout = async (params: CreateTransactionParams) => {
     }
 
     const finalShippingCost = Math.max(0, shippingCost - shippingDiscount);
+    finalShippingCostForMidtrans = finalShippingCost; // Simpan untuk Midtrans
 
     finalTotal = finalTotal + finalShippingCost;
 
@@ -304,9 +295,7 @@ export const checkout = async (params: CreateTransactionParams) => {
         await tx.transactionVoucher.create({
           data: {
             ...v,
-            transaction: {
-              connect: { id: newTransaction.id },
-            },
+            transaction: { connect: { id: newTransaction.id } },
           },
         });
       }
@@ -319,12 +308,12 @@ export const checkout = async (params: CreateTransactionParams) => {
   });
 
   try {
-    if (shippingCost > 0) {
+    if (finalShippingCostForMidtrans > 0) {
       midtransItemsPayload.push({
         id: "SHIPPING",
-        price: shippingCost,
+        price: Math.floor(finalShippingCostForMidtrans),
         quantity: 1,
-        name: `Shipping: ${courierCode}`,
+        name: `Shipping: ${courierCode || "Courier"}`,
       });
     }
 
