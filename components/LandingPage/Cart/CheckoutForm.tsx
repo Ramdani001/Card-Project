@@ -22,12 +22,13 @@ import {
   rem,
 } from "@mantine/core";
 import { IconMapPin, IconTicket, IconTruckDelivery } from "@tabler/icons-react";
-import { Dispatch, SetStateAction } from "react";
 
 interface CheckoutFormProps {
+  subtotal: number;
+  discountAmount: number;
   totalAmount: number;
   voucherCodes: string[];
-  setVoucherCodes: Dispatch<SetStateAction<string[]>>;
+  onVoucherChange: (val: string[]) => void;
   deliveryMethod: DeliveryMethod;
   setDeliveryMethod: (method: DeliveryMethod) => void;
   address: string;
@@ -68,9 +69,10 @@ interface CheckoutFormProps {
 }
 
 export const CheckoutForm = ({
+  subtotal,
+  discountAmount,
   totalAmount,
   voucherCodes,
-  setVoucherCodes,
   deliveryMethod,
   setDeliveryMethod,
   address,
@@ -102,6 +104,7 @@ export const CheckoutForm = ({
   selectedCourierCode,
   setSelectedCourierCode,
   shippingFee,
+  onVoucherChange,
 }: CheckoutFormProps) => {
   const isShipping = deliveryMethod === DeliveryMethod.SHIP;
 
@@ -113,7 +116,18 @@ export const CheckoutForm = ({
         <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="xs" style={{ letterSpacing: "0.06em" }}>
           Order Summary
         </Text>
-        <Stack gap={4}>
+        <Stack gap={6}>
+          {/* Subtotal */}
+          <Group justify="space-between">
+            <Text size="sm" c="dimmed">
+              Subtotal
+            </Text>
+            <Text size="sm" fw={600}>
+              {formatRupiah(subtotal)}
+            </Text>
+          </Group>
+
+          {/* Shipping Fee */}
           {shippingFee > 0 && (
             <Group justify="space-between">
               <Text size="sm" c="dimmed">
@@ -124,8 +138,24 @@ export const CheckoutForm = ({
               </Text>
             </Group>
           )}
+
+          {/* Discount Voucher */}
+          {discountAmount > 0 && (
+            <Group justify="space-between">
+              <Text size="sm" c="green.6" fw={600}>
+                Discount
+              </Text>
+              <Text size="sm" c="green.6" fw={700}>
+                - {formatRupiah(discountAmount)}
+              </Text>
+            </Group>
+          )}
+
+          <Divider my={4} variant="dashed" />
+
+          {/* Total */}
           <Group justify="space-between" align="center">
-            <Text size="sm" c="dimmed">
+            <Text size="sm" fw={700} c="dark">
               Total
             </Text>
             <Text fw={900} size="xl" c="dark">
@@ -148,9 +178,9 @@ export const CheckoutForm = ({
               placeholder="Enter voucher codes (press enter)"
               leftSection={<IconTicket size={16} stroke={1.5} />}
               value={voucherCodes}
-              onChange={setVoucherCodes}
               radius="md"
               size="md"
+              onChange={onVoucherChange}
               splitChars={[",", " "]}
               clearable
             />

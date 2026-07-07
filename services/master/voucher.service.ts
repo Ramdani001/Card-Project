@@ -1,6 +1,8 @@
 import prisma from "@/lib/prisma";
 import { Prisma } from "@/prisma/generated/prisma/client";
+import { CartItemDto } from "@/types/dtos/CartItemDto";
 import { CreateVoucherParams, UpdateVoucherParams } from "@/types/params/voucherParams";
+import { getCardPrice } from "@/utils";
 
 export const getVouchers = async (options: Prisma.VoucherFindManyArgs) => {
   const finalOptions: Prisma.VoucherFindManyArgs = {
@@ -200,4 +202,97 @@ export const deleteVoucher = async (id: string) => {
     where: { id },
     data: { isActive: false },
   });
+};
+
+export const validateVoucherForCheckout = async (code: string, cartItems: CartItemDto[], userId: string) => {
+  const voucher = await prisma.voucher.findFirst({
+    where: {
+      code,
+      isActive: true,
+    },
+    include: {
+      voucherRoles: true,
+      voucherCards: true,
+      voucherCardCategories: true,
+    },
+  });
+
+  if (!voucher) {
+    return { success: false, message: "Invalid Voucher Code." };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+
+  if (!user) {
+    return { success: false, message: "User not found." };
+  }
+
+  const now = new Date();
+  const subtotal = cartItems.reduce((acc, item) => acc + getCardPrice(item) * item.quantity, 0);
+
+  if (now < voucher.startDate || now > voucher.endDate) {
+    return { success: false, message: "Voucher is not active." };
+  }
+
+  if (voucher.stock !== null && voucher.usedCount >= voucher.stock) {
+    return { success: false, message: "Voucher out of stock." };
+  }
+
+  if (voucher.minPurchase && subtotal < Number(voucher.minPurchase)) {
+    return { success: false, message: `Min purchase Rp ${Number(voucher.minPurchase).toLocaleString()}` };
+  }
+
+  if (voucher.voucherRoles.length > 0) {
+    const allowed = voucher.voucherRoles.some((r) => r.roleId === user.roleId);
+    if (!allowed) {
+      return { success: false, message: "Voucher not allowed for your role." };
+    }
+  }
+
+  const hasProductLimit = voucher.voucherCards.length > 0;
+  const hasCategoryLimit = voucher.voucherCardCategories.length > 0;
+
+  if (hasProductLimit || hasCategoryLimit) {
+    const cartCardIds = cartItems.map((item) => item.cardId);
+    const cartCategoryIds = cartItems.flatMap((item) => item.card?.categories?.map((category) => category.category.id) || []);
+    const allowedByProduct = voucher.voucherCards.some((v) => cartCardIds.includes(v.cardId));
+    const allowedByCategory = voucher.voucherCardCategories.some((v) => cartCategoryIds.includes(v.cardCategoryId));
+
+    if (!allowedByProduct && !allowedByCategory) {
+      return { success: false, message: "Voucher not applicable to cart items." };
+    }
+  }
+
+  let discountAmount = 0;
+  const voucherValue = Number(voucher.value);
+
+  if (voucher.type === "PERCENTAGE") {
+    discountAmount = subtotal * (voucherValue / 100);
+
+    if (voucher.maxDiscount) {
+      const maxDiscountAmount = Number(voucher.maxDiscount);
+      if (discountAmount > maxDiscountAmount) {
+        discountAmount = maxDiscountAmount;
+      }
+    }
+  } else if (voucher.type === "NOMINAL") {
+    discountAmount = voucherValue;
+  }
+
+  if (discountAmount > subtotal) {
+    discountAmount = subtotal;
+  }
+
+  return {
+    success: true,
+    message: "Voucher successfully applied.",
+    data: {
+      discountAmount,
+      code: voucher.code,
+    },
+  };
 };

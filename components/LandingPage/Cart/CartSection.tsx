@@ -43,6 +43,7 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>(DeliveryMethod.SHIP);
   const [selectedShop, setSelectedShop] = useState<ShopDto | null>(null);
   const [listShop, setListShop] = useState<ShopDto[]>([]);
+  const [discountAmount, setDiscountAmount] = useState<number>(0);
 
   const [countries, setCountries] = useState<Option[]>([]);
   const [provinces, setProvinces] = useState<Option[]>([]);
@@ -63,7 +64,47 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
   const selectedCourierData = couriers.find((c) => c.courier_code === selectedCourierCode);
   const shippingFee = selectedCourierData ? selectedCourierData.price : 0;
 
-  const totalAmount = cartItems.reduce((acc, item) => acc + getCardPrice(item) * item.quantity, 0) + shippingFee;
+  const subtotal = cartItems.reduce((acc, item) => acc + getCardPrice(item) * item.quantity, 0);
+  const totalAmount = subtotal + shippingFee - discountAmount;
+
+  const handleApplyVoucher = async (code: string) => {
+    try {
+      const res = await fetch("/api/vouchers/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, cartItems }),
+      });
+      const json = await res.json();
+
+      if (json.success) {
+        setDiscountAmount(json.data.discountAmount);
+        return true;
+      } else {
+        notifications.show({ title: "Voucher Invalid", message: json.message, color: "red" });
+        return false;
+      }
+    } catch (error) {
+      console.error(error);
+      notifications.show({ title: "Error", message: "Gagal memvalidasi voucher", color: "red" });
+      return false;
+    }
+  };
+
+  const handleVoucherChange = async (newVouchers: string[]) => {
+    if (newVouchers.length > voucherCodes.length) {
+      const addedVoucher = newVouchers[newVouchers.length - 1];
+      const isValid = await handleApplyVoucher(addedVoucher);
+
+      if (isValid) {
+        setVoucherCodes(newVouchers);
+      }
+    } else {
+      setVoucherCodes(newVouchers);
+      if (newVouchers.length === 0) {
+        setDiscountAmount(0);
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -323,6 +364,9 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
     setVillageCode,
     postalCode,
     setPostalCode,
+    subtotal,
+    discountAmount,
+    onVoucherChange: handleVoucherChange,
   };
 
   return (

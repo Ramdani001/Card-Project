@@ -123,6 +123,10 @@ export const checkout = async (params: CreateTransactionParams) => {
       for (const voucher of vouchers) {
         const now = new Date();
 
+        if (deliveryMethod === DeliveryMethod.PICKUP && voucher.usageCategory !== VoucherUsageCategory.CARD) {
+          throw new Error("Free shipping vouchers cannot be used for pickup orders..");
+        }
+        
         if (now < voucher.startDate || now > voucher.endDate) {
           throw new Error("Voucher not active.");
         }
