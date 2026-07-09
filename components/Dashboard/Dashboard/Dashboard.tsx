@@ -1,13 +1,12 @@
 "use client";
 
 import { formatRupiah } from "@/utils";
-import { Badge, Center, Container, Grid, Group, Loader, Paper, SimpleGrid, Stack, Table, Text } from "@mantine/core";
+import { Badge, Box, Center, Container, Grid, Group, Loader, Paper, Progress, SimpleGrid, Stack, Table, Text } from "@mantine/core";
 import { IconAlertTriangle, IconCoin, IconReceipt2, IconUsers } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Cell, Legend, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { KPICard } from "./KPICard";
 import { StatusBadge } from "./StatusBadge";
-import { ValueType, NameType, Formatter } from "recharts/types/component/DefaultTooltipContent";
 
 interface SummaryData {
   revenue: number;
@@ -85,6 +84,8 @@ const Dashboard = () => {
     );
   }
 
+  const maxSold = Math.max(...topProducts.map((p) => p.sold), 1);
+
   return (
     <Container fluid py="xl" style={{ minHeight: "100vh" }}>
       <Stack gap="lg">
@@ -149,29 +150,38 @@ const Dashboard = () => {
         </Grid>
 
         <Grid>
-          <Grid.Col span={{ base: 12, md: 6 }}>
+          <Grid.Col span={{ base: 12, md: 12 }}>
             <Paper shadow="sm" radius="md" p="md">
-              <Text fw={600} mb="md">
+              <Text fw={600} mb="lg">
                 Top 5 Best Selling Products
               </Text>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart layout="vertical" data={topProducts} margin={{ left: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                  <XAxis type="number" hide />
-                  <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 12 }} />
-                  <Tooltip />
 
-                  <Bar dataKey="sold" radius={[0, 4, 4, 0]}>
-                    {topProducts.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <Stack gap="md">
+                {topProducts.map((product, index) => {
+                  const percentage = (product.sold / maxSold) * 100;
+
+                  return (
+                    <Box key={index}>
+                      <Group justify="space-between" mb={8} wrap="nowrap">
+                        <Text size="sm" fw={500} lineClamp={1} title={product.name} style={{ flex: 1 }}>
+                          {product.name}
+                        </Text>
+                        <Text size="sm" fw={700} c="dimmed" style={{ whiteSpace: "nowrap" }}>
+                          {product.sold} sold
+                        </Text>
+                      </Group>
+
+                      <Progress value={percentage} color={COLORS[index % COLORS.length]} size="md" radius={"xs"} h={30} />
+                    </Box>
+                  );
+                })}
+              </Stack>
             </Paper>
           </Grid.Col>
+        </Grid>
 
-          <Grid.Col span={{ base: 12, md: 6 }}>
+        <Grid>
+          <Grid.Col span={{ base: 12, md: 12 }}>
             <Paper shadow="sm" radius="md" p="md" h="100%">
               <Group justify="space-between" mb="md">
                 <Text fw={600}>Recent Transactions</Text>
