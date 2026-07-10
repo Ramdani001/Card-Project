@@ -391,7 +391,15 @@ export const HeaderSection = ({ cartItems, loadingCart, setCartItems }: HeaderSe
                 onChange={(e) => setSearch(e.currentTarget.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && search.trim()) {
-                    router.push(`/Catalog?search=${encodeURIComponent(search)}`);
+                    const targetUrl = `/Catalog?search=${encodeURIComponent(search)}`;
+                    const currentUrl = window.location.pathname + window.location.search;
+
+                    if (currentUrl === targetUrl) {
+                      router.refresh();
+                      window.location.reload();
+                    } else {
+                      router.push(targetUrl);
+                    }
                   }
                 }}
                 rightSection={
