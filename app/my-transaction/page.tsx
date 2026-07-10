@@ -5,10 +5,9 @@ import { FooterSection } from "@/components/LandingPage/FooterSection";
 import { HeaderSection } from "@/components/LandingPage/HeaderSection";
 import { StatusBadge } from "@/components/layout/StatusBadge";
 import { MyTransactionDetailModal } from "@/components/MyTransaction/MyTransactionDetailModal";
-import { MyTransactionHistoryModal } from "@/components/MyTransaction/MyTransactionHistoryModal";
+import { TransactionStatus } from "@/prisma/generated/prisma/enums";
 import { TransactionDto } from "@/types/dtos/TransactionDto";
 import {
-  ActionIcon,
   Box,
   Button,
   Center,
@@ -18,6 +17,7 @@ import {
   Grid,
   Group,
   Loader,
+  Modal,
   Paper,
   Select,
   SimpleGrid,
@@ -29,7 +29,7 @@ import {
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
-import { IconCalendar, IconCreditCard, IconEye, IconFilter, IconHistory, IconPackage, IconPlus, IconSearchOff } from "@tabler/icons-react";
+import { IconCalendar, IconCreditCard, IconEye, IconFilter, IconPackage, IconPlus, IconSearchOff } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 
@@ -39,6 +39,10 @@ const MyTransaction = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [cancelConfirmOpened, setCancelConfirmOpened] = useState(false);
+  const [trxToCancel, setTrxToCancel] = useState<string | null>(null);
+
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([null, null]);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [searchInvoice, setSearchInvoice] = useState("");
@@ -46,7 +50,6 @@ const MyTransaction = () => {
 
   const [selectedTrx, setSelectedTrx] = useState<TransactionDto | null>(null);
   const [detailOpened, setDetailOpened] = useState(false);
-  const [historyOpened, setHistoryOpened] = useState(false);
 
   const { cartItems, setCartItems, loadingCart } = useCart();
 
@@ -99,6 +102,39 @@ const MyTransaction = () => {
     const nextPage = activePage + 1;
     setActivePage(nextPage);
     fetchTransactions(nextPage, false);
+  };
+
+  const executeCancelTransaction = async () => {
+    if (!trxToCancel) return;
+
+    const transactionId = trxToCancel;
+    setCancelConfirmOpened(false);
+    setTrxToCancel(null);
+    setCancellingId(transactionId);
+
+    try {
+      const res = await fetch(`/api/transactions/${transactionId}/status`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: TransactionStatus.CANCELLED }),
+      });
+
+      const json = await res.json();
+
+      if (res.ok && json.success) {
+        notifications.show({ message: "Order cancelled successfully", color: "green" });
+        setTransactions((prev) => prev.map((trx) => (trx.id === transactionId ? { ...trx, status: TransactionStatus.CANCELLED } : trx)));
+      } else {
+        notifications.show({ message: json.message || "Failed to cancel order", color: "red" });
+      }
+    } catch (error) {
+      console.error(error);
+      notifications.show({ title: "Error", message: "An error occurred while cancelling", color: "red" });
+    } finally {
+      setCancellingId(null);
+    }
   };
 
   useEffect(() => {
@@ -232,14 +268,14 @@ const MyTransaction = () => {
                       <Divider mb="md" variant="dashed" />
 
                       <Stack gap="sm" mb="lg">
-                        <Group gap="sm" wrap="nowrap">
+                        <Group gap="sm" wrap="nowrap" style={{ overflow: "hidden" }}>
                           <ThemeIconIconWrapper icon={<IconPackage size={16} />} color="blue" />
-                          <Box style={{ flex: 1 }}>
+                          <Box style={{ flex: 1, minWidth: 0 }}>
                             <Text size="sm" fw={700} truncate>
                               {item.items?.[0]?.productName || "Product"}
                             </Text>
                             {item.items.length > 1 && (
-                              <Text size="xs" c="dimmed">
+                              <Text size="xs" c="dimmed" truncate>
                                 +{item.items.length - 1} other products
                               </Text>
                             )}
@@ -291,22 +327,29 @@ const MyTransaction = () => {
                         >
                           View Detail
                         </Button>
-                        <ActionIcon
-                          variant="light"
-                          color="gray"
-                          size={36}
-                          radius="md"
-                          onClick={() => {
-                            setSelectedTrx(item);
-                            setHistoryOpened(true);
-                          }}
-                        >
-                          <IconHistory size={18} />
-                        </ActionIcon>
-                        {item.status === "PENDING" && item.snapRedirect && (
-                          <Button id="PAY" color="orange" radius="md" size="sm" onClick={() => window.open(item.snapRedirect!, "_blank")}>
-                            Pay Now
-                          </Button>
+
+                        {item.status === "PENDING" && (
+                          <>
+                            <Button
+                              variant="light"
+                              color="red"
+                              radius="md"
+                              size="sm"
+                              loading={cancellingId === item.id}
+                              onClick={() => {
+                                setTrxToCancel(item.id);
+                                setCancelConfirmOpened(true);
+                              }}
+                            >
+                              Cancel
+                            </Button>
+
+                            {item.snapRedirect && (
+                              <Button id="PAY" color="orange" radius="md" size="sm" onClick={() => window.open(item.snapRedirect!, "_blank")}>
+                                Pay Now
+                              </Button>
+                            )}
+                          </>
                         )}
                       </Group>
                     </Paper>
@@ -343,20 +386,32 @@ const MyTransaction = () => {
       </Container>
 
       <MyTransactionDetailModal opened={detailOpened} onClose={() => setDetailOpened(false)} transaction={selectedTrx} />
-      <MyTransactionHistoryModal
-        opened={historyOpened}
-        onClose={() => setHistoryOpened(false)}
-        statusLogs={selectedTrx?.statusLogs}
-        invoice={selectedTrx?.invoice || ""}
-        transactionId={selectedTrx?.id}
-      />
+
+      <Modal
+        opened={cancelConfirmOpened}
+        onClose={() => setCancelConfirmOpened(false)}
+        title={<Text fw={700}>Cancel Order</Text>}
+        centered
+        radius="md"
+      >
+        <Text size="sm" mb="xl" c="dimmed">
+          Are you sure you want to cancel this order? This action cannot be undone.
+        </Text>
+        <Group justify="flex-end">
+          <Button variant="default" radius="md" onClick={() => setCancelConfirmOpened(false)}>
+            No, keep it
+          </Button>
+          <Button color="red" radius="md" onClick={executeCancelTransaction}>
+            Yes, Cancel Order
+          </Button>
+        </Group>
+      </Modal>
 
       <FooterSection />
     </Box>
   );
 };
 
-// Helper Component untuk icon yang lebih konsisten
 const ThemeIconIconWrapper = ({ icon, color }: { icon: React.ReactNode; color: string }) => (
   <Center
     style={{
