@@ -90,7 +90,7 @@ export default function MainCatalog() {
       }
       if (selectedCategoryIds.length > 0) params.append("categories", selectedCategoryIds.join(","));
       if (selectedFilterStock) params.append("stock", selectedFilterStock);
-      if (nameParams) params.append("name", nameParams);
+      if (nameParams && !debouncedSearch) params.append("name", nameParams);
 
       const res = await fetch(`/api/cards?${params.toString()}`);
       const json = await res.json();
