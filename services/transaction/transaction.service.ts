@@ -23,6 +23,7 @@ export const checkout = async (params: CreateTransactionParams) => {
     villageCode,
     postalCode,
     courierCode,
+    courierName,
     shippingFee,
   } = params;
 
@@ -126,7 +127,7 @@ export const checkout = async (params: CreateTransactionParams) => {
         if (deliveryMethod === DeliveryMethod.PICKUP && voucher.usageCategory !== VoucherUsageCategory.CARD) {
           throw new Error("Free shipping vouchers cannot be used for pickup orders..");
         }
-        
+
         if (now < voucher.startDate || now > voucher.endDate) {
           throw new Error("Voucher not active.");
         }
@@ -204,7 +205,9 @@ export const checkout = async (params: CreateTransactionParams) => {
         voucherAmount: new Prisma.Decimal(productDiscount),
         shippingVoucherAmount: new Prisma.Decimal(shippingDiscount),
         shippingCost: new Prisma.Decimal(finalShippingCost),
-        expedition: courierCode || null,
+        expedition: courierName || null,
+        courierCode: courierCode || null,
+        courierName: courierName || null,
         totalPrice: new Prisma.Decimal(Math.max(0, finalTotal)),
         status: TransactionStatus.PENDING,
         customerName,
@@ -390,6 +393,8 @@ export const updateTransactionStatus = async (
 
       updateData.resi = shippingData.resi;
       updateData.expedition = shippingData.expedition;
+      updateData.courierCode = shippingData.courierCode;
+      updateData.courierName = shippingData.expedition;
       updateData.shippingCost = new Prisma.Decimal(newShippingCost);
       updateData.totalPrice = new Prisma.Decimal(newTotalPrice);
     }

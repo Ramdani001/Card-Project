@@ -226,8 +226,8 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
         const res = await fetch(`/api/shipping-cost?origin=${mainShop.villageCode}&destination=${villageCode}&weight=${totalWeight}`);
         const json = await res.json();
 
-        if (json.success && json.data?.couriers) {
-          setCouriers(json.data.couriers);
+        if (json.success && json.data) {
+          setCouriers(json.data);
         } else {
           setCouriers([]);
         }
@@ -265,7 +265,8 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
         postalCode: isShipping ? postalCode : null,
         address: isShipping ? address.trim() : null,
         shopId: deliveryMethod === DeliveryMethod.PICKUP ? selectedShop?.id : null,
-        courierCode: isShipping ? selectedCourierCode : null,
+        courierCode: isShipping ? selectedCourierData?.courier_code : null,
+        courierName: isShipping ? selectedCourierData?.courier_name : null,
         shippingFee: isShipping ? shippingFee : null,
       };
 

@@ -33,6 +33,7 @@ export const POST = async (req: NextRequest) => {
       villageCode,
       postalCode,
       courierCode,
+      courierName,
       shippingFee,
     } = body;
 
@@ -75,6 +76,7 @@ export const POST = async (req: NextRequest) => {
       villageCode: deliveryMethod === DeliveryMethod.SHIP ? villageCode : null,
       postalCode: deliveryMethod === DeliveryMethod.SHIP ? postalCode : null,
       courierCode: deliveryMethod === DeliveryMethod.SHIP ? courierCode : null,
+      courierName: deliveryMethod === DeliveryMethod.SHIP ? courierName : null,
       shippingFee: deliveryMethod === DeliveryMethod.SHIP ? Number(shippingFee) : 0,
 
       shopId: deliveryMethod === DeliveryMethod.PICKUP ? shopId : null,

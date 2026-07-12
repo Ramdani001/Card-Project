@@ -19,6 +19,8 @@ model Transaction {
   updatedAt                  DateTime                     @updatedAt
   voucherId                  String?
   expedition                 String?
+  courierName                String?
+  courierCode                String?
   resi                       String?
   shippingCost               Decimal                      @default(0) @db.Decimal(15, 2)
   shop                       Shop?                        @relation(fields: [shopId], references: [id])
@@ -115,6 +117,17 @@ model PaymentLog {
 
   @@index([orderId])
   @@index([createdAt])
+}
+
+model Courier {
+  id          String   @id @default(uuid())
+  courierCode String
+  status      Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([courierCode, isActive])
 }
 
 model Cart {

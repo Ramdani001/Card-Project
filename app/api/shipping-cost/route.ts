@@ -1,3 +1,4 @@
+import { getCouriersActive } from "@/services/master/courier.service";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (req: NextRequest) => {
@@ -39,7 +40,14 @@ export const GET = async (req: NextRequest) => {
     }
 
     const json = await response.json();
-    return NextResponse.json({ success: true, data: json.data });
+    const result = json.data;
+
+    const activeCourier = await getCouriersActive();
+    const activeCourierCodes = activeCourier.map((e) => e.courierCode);
+
+    const filteredResult = result.couriers.filter((item: any) => activeCourierCodes.includes(item.courier_code));
+
+    return NextResponse.json({ success: true, data: filteredResult });
   } catch (error: any) {
     console.error("Catch Block Error:", error.message);
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });

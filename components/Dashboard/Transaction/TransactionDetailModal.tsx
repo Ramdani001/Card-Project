@@ -144,8 +144,8 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
       const res = await fetch(`/api/shipping-cost?origin=${mainShop.villageCode}&destination=${destinationVillageCode}&weight=${totalWeight}`);
       const json = await res.json();
 
-      if (json.success && json.data?.couriers) {
-        setCouriers(json.data.couriers);
+      if (json.success && json.data) {
+        setCouriers(json.data);
       } else {
         setCouriers([]);
         notifications.show({ message: "No couriers available for this route.", color: "orange" });
@@ -183,7 +183,16 @@ export const TransactionDetailModal = ({ opened, onClose, transaction, onUpdateS
       const res = await fetch(`/api/transactions/${transaction.id}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, resi, expedition, shippingCost: Number(shippingCost), reason, deliveryMethod: transaction.deliveryMethod }),
+        body: JSON.stringify({
+          status,
+          resi,
+          expedition,
+          courierCode: selectedCourierCode,
+          courierName: expedition,
+          shippingCost: Number(shippingCost),
+          reason,
+          deliveryMethod: transaction.deliveryMethod,
+        }),
       });
 
       const json = await res.json();

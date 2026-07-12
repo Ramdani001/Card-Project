@@ -52,9 +52,6 @@ export const FooterSection = () => {
           </Grid.Col>
 
           <Grid.Col span={{ base: 12, md: 4 }}>
-            <Title order={5} c="gray.6" mb="lg" tt="uppercase" lts={1} fw={700}>
-              FOOTER MENU
-            </Title>
             <Stack gap="sm">
               {[
                 { label: "Shipping Policy", href: "/shipping-policy" },

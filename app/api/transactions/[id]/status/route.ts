@@ -20,7 +20,7 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
     const userId = session.user.id;
 
     const body = await req.json();
-    const { status, resi, expedition, shippingCost, reason, deliveryMethod } = body;
+    const { status, resi, expedition, courierCode, shippingCost, reason, deliveryMethod } = body;
 
     if (status === "SHIPPED" && deliveryMethod === "SHIP") {
       if (!resi || !expedition) {
@@ -40,6 +40,7 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
           ? {
               resi,
               expedition,
+              courierCode,
               shippingCost,
             }
           : undefined,

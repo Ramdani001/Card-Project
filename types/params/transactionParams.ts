@@ -17,6 +17,7 @@ export interface CreateTransactionParams {
   postalCode?: string;
   paymentMethod?: string;
   courierCode?: string | null;
+  courierName?: string | null;
   shippingFee?: number | null;
 }
 
@@ -30,5 +31,6 @@ export interface GetTransactionParams {
 export interface ShipTransactionParams {
   resi: string;
   expedition: string;
+  courierCode: string;
   shippingCost?: number;
 }

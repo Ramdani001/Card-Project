@@ -17,6 +17,7 @@ import {
   IconReceipt2,
   IconSettings,
   IconTicket,
+  IconTruckDelivery,
   IconUsers,
   IconUsersGroup,
   IconUserShield,
@@ -41,6 +42,7 @@ import ListMember from "@/components/Dashboard/UserManagement/ListMember/ListMem
 import ListRole from "@/components/Dashboard/UserManagement/ListRole/ListRole";
 import ListSubDistrict from "@/components/Dashboard/Collection/SubDistrict/ListSubDistrict";
 import ListVillage from "../components/Dashboard/Collection/Village/ListVillage";
+import ListCourier from "@/components/Dashboard/Collection/Courier/ListCourier";
 
 export const ICON_MAP: Record<string, any> = {
   IconLayoutDashboard: IconLayoutDashboard,
@@ -65,6 +67,7 @@ export const ICON_MAP: Record<string, any> = {
   IconBuilding: IconBuilding,
   IconMapPin: IconMapPin,
   IconMapCode: IconMapCode,
+  IconTruckDelivery: IconTruckDelivery,
 };
 
 export const COMPONENT_MAP: Record<string, React.ReactNode> = {
@@ -86,4 +89,5 @@ export const COMPONENT_MAP: Record<string, React.ReactNode> = {
   "/cities": <ListCity />,
   "/sub-districts": <ListSubDistrict />,
   "/villages": <ListVillage />,
+  "/couriers": <ListCourier />,
 };
