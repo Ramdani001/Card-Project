@@ -31,11 +31,12 @@ export const PATCH = async (req: NextRequest, { params }: RouteParams) => {
     const { id } = await params;
     const body = await req.json();
 
-    const { courierCode, status } = body;
+    const { courierCode, status, description } = body;
 
     const updatedCourier = await updateCourier({
       id,
       courierCode: courierCode ?? undefined,
+      description: description ?? undefined,
       status: status,
     });
 

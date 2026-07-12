@@ -28,11 +28,12 @@ export const POST = async (req: NextRequest) => {
   try {
     const body = await req.json();
 
-    const { courierCode, status } = body;
+    const { courierCode, status, description } = body;
 
     const newCourier = await createCourier({
       courierCode,
       status,
+      description,
     });
 
     return sendResponse({

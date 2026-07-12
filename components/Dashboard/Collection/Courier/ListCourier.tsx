@@ -155,8 +155,20 @@ const ListCourier = () => {
       ),
     },
     {
+      key: "description",
+      label: "Description",
+      sortable: true,
+      filterable: true,
+      render: (item) => (
+        <Text fw={500} size="sm" style={{ lineHeight: 1.2 }}>
+          {item.description}
+        </Text>
+      ),
+    },
+    {
       key: "status",
       label: "Status",
+      width: 100,
       render: (item) => (
         <Badge color={item.status ? "green" : "red"} variant="light">
           {item.status ? "Active" : "Inactive"}

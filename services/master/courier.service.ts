@@ -38,6 +38,7 @@ export const createCourier = async (params: CreateCourierParams) => {
     return await prisma.courier.create({
       data: {
         courierCode: params.courierCode,
+        ...(params.description && { description: params.description }),
         status: params.status,
         isActive: true,
       },
@@ -62,6 +63,7 @@ export const updateCourier = async (params: UpdateCourierParams) => {
       where: { id: params.id },
       data: {
         ...(params.courierCode && { courierCode: params.courierCode }),
+        ...(params.description && { description: params.description }),
         status: params.status,
         isActive: true,
       },

@@ -122,6 +122,7 @@ model PaymentLog {
 model Courier {
   id          String   @id @default(uuid())
   courierCode String
+  description String?
   status      Boolean  @default(false)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())

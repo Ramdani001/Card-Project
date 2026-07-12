@@ -1,7 +1,7 @@
 "use client";
 
 import { CourierDto } from "@/types/dtos/CourierDto";
-import { Button, Flex, Modal, Switch, TextInput } from "@mantine/core";
+import { Button, Flex, Modal, Switch, Textarea, TextInput } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
@@ -15,6 +15,7 @@ interface CourierFormProps {
 
 interface CourierFormState {
   courierCode: string;
+  description: string;
   status: boolean;
 }
 
@@ -23,6 +24,7 @@ export const CourierForm = ({ opened, onClose, courierToEdit, onSuccess }: Couri
 
   const [form, setForm] = useState<CourierFormState>({
     courierCode: "",
+    description: "",
     status: false,
   });
 
@@ -32,11 +34,13 @@ export const CourierForm = ({ opened, onClose, courierToEdit, onSuccess }: Couri
     if (courierToEdit && opened) {
       setForm({
         courierCode: courierToEdit.courierCode,
+        description: courierToEdit.description || "",
         status: courierToEdit.status || false,
       });
     } else if (!opened) {
       setForm({
         courierCode: "",
+        description: "",
         status: false,
       });
     }
@@ -72,6 +76,7 @@ export const CourierForm = ({ opened, onClose, courierToEdit, onSuccess }: Couri
         body: JSON.stringify({
           courierCode: form.courierCode.trim(),
           status: form.status,
+          description: form.description,
         }),
       });
 
@@ -110,6 +115,16 @@ export const CourierForm = ({ opened, onClose, courierToEdit, onSuccess }: Couri
           onChange={(e) => handleChange("courierCode", e.target.value)}
           withAsterisk
           data-autofocus
+        />
+
+        <Textarea
+          label="Description"
+          placeholder="Description"
+          value={form.description}
+          onChange={(e) => handleChange("description", e.target.value)}
+          autosize
+          minRows={5}
+          maxRows={15}
         />
 
         <Switch label="Status" checked={form.status} onChange={(e) => handleChange("status", e.currentTarget.checked)} mt="xs" />
