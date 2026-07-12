@@ -54,7 +54,7 @@ export default function MainCatalog() {
   const [search, setSearch] = useState(searchNameParams || "");
   const [debouncedSearch] = useDebouncedValue(search, 500);
   const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>(categoryParams ? categoryParams.split(";") : []);
-  const [selectedFilterStock, setSelectedFilterStock] = useState<string | null>(null);
+  const [selectedFilterStock, setSelectedFilterStock] = useState<string | null>("on");
   const [sortValue, setSortValue] = useState<string | null>(sortParams ? sortParams : "createdAt|desc");
   const [activePage, setActivePage] = useState(1);
 
@@ -128,7 +128,7 @@ export default function MainCatalog() {
 
   const handleClearFilter = () => {
     setSelectedCategoryIds([]);
-    setSelectedFilterStock(null);
+    setSelectedFilterStock("on");
   };
 
   const breadcumsItem = [
