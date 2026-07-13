@@ -1,12 +1,12 @@
+import { CONSTANT } from "@/constants";
+import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
-import { NotificationType, Prisma } from "@/prisma/generated/prisma/client";
+import { deleteFile, saveFile } from "@/lib/storage";
+import { DiscountType, NotificationType, Prisma } from "@/prisma/generated/prisma/client";
+import { CreateCardParams, UpdateCardParams } from "@/types/params/cardParams";
 import { generateSlug } from "@/utils";
 import ExcelJS from "exceljs";
 import { createNotificationByCode } from "../transaction/notification.service";
-import { CONSTANT } from "@/constants";
-import { logError } from "@/lib/logger";
-import { CreateCardParams, UpdateCardParams } from "@/types/params/cardParams";
-import { deleteFile, saveFile } from "@/lib/storage";
 
 export const getCards = async (options: Prisma.CardFindManyArgs, userId?: string) => {
   const defaultInclude: Prisma.CardInclude = {
@@ -488,10 +488,18 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
   const buffer = await file.arrayBuffer();
   await workbook.xlsx.load(buffer);
 
-  const worksheet = workbook.getWorksheet(1);
+  const worksheet = workbook.getWorksheet(2);
   if (!worksheet) throw new Error("Worksheet tidak ditemukan");
 
   const allCategories = await prisma.category.findMany();
+  const allDiscounts = await prisma.discount.findMany();
+
+  const discountMap = new Map<string, string>();
+  for (const discount of allDiscounts) {
+    const discountValue = discount.type === "PERCENTAGE" ? `${discount.value}%` : discount.value;
+    const excelLabel = `${discount.name} (${discountValue})`;
+    discountMap.set(excelLabel, discount.id);
+  }
 
   try {
     return await prisma.$transaction(
@@ -501,11 +509,20 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
 
         for (let i = 2; i <= worksheet.rowCount; i++) {
           const row = worksheet.getRow(i);
+
           const name = row.getCell(1).value?.toString()?.trim();
           const priceRaw = row.getCell(2).value;
+          const stockRaw = row.getCell(3).value;
+          const sku = row.getCell(4).value?.toString()?.trim();
           const categoryNamesRaw = row.getCell(5).value?.toString() || "";
+          const minQtyRaw = row.getCell(6).value;
+          const maxQtyRaw = row.getCell(7).value;
+          const discountRaw = row.getCell(8).value?.toString()?.trim() || "";
+          const description = row.getCell(9).value?.toString();
+          const imageCell = row.getCell(10);
 
           if (!name && !priceRaw) continue;
+          if (!name || priceRaw === null) throw new Error(`Baris ${i}: Nama & Harga wajib diisi.`);
 
           const selectedCategoryNames = categoryNamesRaw
             .split(",")
@@ -528,16 +545,17 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
             throw new Error(`Baris ${i}: Kategori tidak ditemukan: [${invalidCategories.join(", ")}]. Pastikan kategori sudah terdaftar di sistem.`);
           }
 
-          const stockRaw = row.getCell(3).value;
-          const sku = row.getCell(4).value?.toString()?.trim();
-          const description = row.getCell(6).value?.toString();
-          const imageCell = row.getCell(7);
-
-          if (!name || priceRaw === null) throw new Error(`Baris ${i}: Nama & Harga wajib.`);
+          let discountId = null;
+          if (discountRaw) {
+            discountId = discountMap.get(discountRaw);
+            if (!discountId) {
+              throw new Error(`Baris ${i}: Diskon tidak valid: "${discountRaw}". Pastikan memilih dari opsi dropdown yang tersedia.`);
+            }
+          }
 
           const slug = generateSlug(name);
-
           let imageUrl = "";
+
           if (imageCell.value && typeof imageCell.value === "object") {
             imageUrl = (imageCell.value as any).text || (imageCell.value as any).hyperlink || "";
           } else {
@@ -548,7 +566,7 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
 
           if (imageUrl) {
             const response = await fetch(imageUrl);
-            if (!response.ok) throw new Error(`Failed to download: ${response.statusText}`);
+            if (!response.ok) throw new Error(`Baris ${i}: Gagal mengunduh gambar (${response.statusText})`);
 
             const buffer = Buffer.from(await response.arrayBuffer());
             const mimeType = response.headers.get("content-type") || "image/jpeg";
@@ -560,19 +578,22 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
             fileData = await saveFile(file, "cards");
           }
 
+          const commonData = {
+            name,
+            price: new Prisma.Decimal(Number(priceRaw) || 0),
+            stock: Number(stockRaw) || 0,
+            sku: sku || null,
+            description,
+            minQtyPurchase: minQtyRaw !== null && minQtyRaw !== undefined ? Number(minQtyRaw) : 1,
+            maxQtyPurchase: maxQtyRaw !== null && maxQtyRaw !== undefined ? Number(maxQtyRaw) : null,
+            discountId: discountId,
+          };
+
           const existingCard = await tx.card.findFirst({
             where: {
               OR: [...(sku ? [{ sku }] : []), { slug }],
             },
           });
-
-          const commonData = {
-            name,
-            price: new Prisma.Decimal(Number(priceRaw) || 0),
-            stock: Number(stockRaw) || 0,
-            description,
-            sku: sku || null,
-          };
 
           if (existingCard) {
             await tx.card.update({
@@ -621,7 +642,10 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
           }
         }
 
-        return { success: true, message: `Berhasil import ${successCount} data baru dan ${updatedCount} diperbarui.` };
+        return {
+          success: true,
+          message: `Berhasil import ${successCount} data baru dan ${updatedCount} diperbarui.`,
+        };
       },
       { timeout: 300000 }
     );
@@ -633,12 +657,31 @@ export const importCardsFromExcel = async (file: File, userId: string) => {
 
 export const exportCardsToExcel = async () => {
   const cards = await prisma.card.findMany({
-    include: {
-      categories: { include: { category: true } },
-      images: true,
-    },
     where: { isActive: true },
     orderBy: { createdAt: "desc" },
+    select: {
+      name: true,
+      price: true,
+      stock: true,
+      sku: true,
+      minQtyPurchase: true,
+      maxQtyPurchase: true,
+      description: true,
+      categories: {
+        select: {
+          category: {
+            select: { name: true },
+          },
+        },
+      },
+      discount: {
+        select: {
+          type: true,
+          value: true,
+          name: true,
+        },
+      },
+    },
   });
 
   const workbook = new ExcelJS.Workbook();
@@ -650,6 +693,9 @@ export const exportCardsToExcel = async () => {
     { header: "Stock", key: "stock", width: 10 },
     { header: "SKU", key: "sku", width: 20 },
     { header: "Category", key: "categories", width: 20 },
+    { header: "Min Purchase (QTY)", key: "minQtyPurchase", width: 20 },
+    { header: "Max Purchase (QTY)", key: "maxQtyPurchase", width: 20 },
+    { header: "Discount", key: "discount", width: 20 },
     { header: "Description", key: "description", width: 30 },
   ];
 
@@ -657,8 +703,13 @@ export const exportCardsToExcel = async () => {
   headerRow.font = { bold: true };
   headerRow.alignment = { horizontal: "center", vertical: "middle" };
 
-  for (let i = 0; i < cards.length; i++) {
-    const card = cards[i];
+  for (const card of cards) {
+    let discountMsg = "";
+
+    if (card.discount) {
+      const discountValue = card.discount.type === DiscountType.PERCENTAGE ? `${card.discount.value}%` : card.discount.value;
+      discountMsg = `${card.discount.name} (${discountValue})`;
+    }
 
     const row = worksheet.addRow({
       name: card.name,
@@ -666,6 +717,9 @@ export const exportCardsToExcel = async () => {
       price: Number(card.price),
       stock: card.stock,
       categories: card.categories.map((c) => c.category.name).join(", "),
+      minQtyPurchase: card.minQtyPurchase,
+      maxQtyPurchase: card.maxQtyPurchase,
+      discount: discountMsg,
       description: card.description,
     });
 
@@ -679,6 +733,24 @@ export const exportCardsToExcel = async () => {
 
 export const generateCardTemplate = async () => {
   const workbook = new ExcelJS.Workbook();
+
+  const discounts = await prisma.discount.findMany({
+    where: { isActive: true },
+  });
+
+  const discountOptions = discounts.map((discount) => {
+    const discountValue = discount.type === "PERCENTAGE" ? `${discount.value}%` : discount.value;
+    return `${discount.name} (${discountValue})`;
+  });
+
+  if (discountOptions.length > 0) {
+    const dataSheet = workbook.addWorksheet("SystemData");
+    dataSheet.state = "veryHidden";
+    discountOptions.forEach((opt, index) => {
+      dataSheet.getCell(`A${index + 1}`).value = opt;
+    });
+  }
+
   const worksheet = workbook.addWorksheet("Template Import");
 
   worksheet.columns = [
@@ -686,7 +758,10 @@ export const generateCardTemplate = async () => {
     { header: "Price*", key: "price", width: 15 },
     { header: "Stock", key: "stock", width: 10 },
     { header: "SKU", key: "sku", width: 20 },
-    { header: "Category", key: "category", width: 20 },
+    { header: "Category", key: "categories", width: 20 },
+    { header: "Min Purchase (QTY)", key: "minQtyPurchase", width: 20 },
+    { header: "Max Purchase (QTY)", key: "maxQtyPurchase", width: 20 },
+    { header: "Discount", key: "discount", width: 30 }, // Diperlebar sedikit untuk dropdown
     { header: "Description", key: "description", width: 30 },
     { header: "Image URL", key: "image", width: 25 },
   ];
@@ -694,6 +769,27 @@ export const generateCardTemplate = async () => {
   const headerRow = worksheet.getRow(1);
   headerRow.font = { bold: true, color: { argb: "FFFFFF" } };
   headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "E67E22" } };
+  headerRow.alignment = { horizontal: "center", vertical: "middle" };
+
+  worksheet.getColumn("price").numFmt = "#,##0";
+  worksheet.getColumn("stock").numFmt = "#,##0";
+  worksheet.getColumn("minQtyPurchase").numFmt = "#,##0";
+  worksheet.getColumn("maxQtyPurchase").numFmt = "#,##0";
+
+  worksheet.views = [{ state: "frozen", ySplit: 1 }];
+
+  if (discountOptions.length > 0) {
+    for (let i = 2; i <= 1000; i++) {
+      worksheet.getCell(`H${i}`).dataValidation = {
+        type: "list",
+        allowBlank: true,
+        formulae: [`SystemData!$A$1:$A$${discountOptions.length}`],
+        showErrorMessage: true,
+        errorTitle: "Diskon Tidak Valid",
+        error: "Please select a discount from the dropdown menu provided..",
+      };
+    }
+  }
 
   return await workbook.xlsx.writeBuffer();
 };
