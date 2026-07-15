@@ -69,11 +69,16 @@ export const CartSection = ({ isDrawerOpen, loadingCart, cartItems, setIsDrawerO
 
   const handleApplyVoucher = async (code: string) => {
     try {
-      const res = await fetch("/api/vouchers/validate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, cartItems }),
+      const params = new URLSearchParams({
+        code: code,
+        cartItems: JSON.stringify(cartItems),
       });
+
+      const res = await fetch(`/api/vouchers/validate?${params.toString()}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
       const json = await res.json();
 
       if (json.success) {

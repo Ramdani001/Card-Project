@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
 import { handleApiError, sendResponse } from "@/helpers/response.helper";
+import { authOptions } from "@/lib/auth";
 import { validateVoucherForCheckout } from "@/services/master/voucher.service";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { NextResponse } from "next/server";
 
-export async function POST(req: Request) {
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
 
@@ -16,10 +16,18 @@ export async function POST(req: Request) {
       });
     }
 
-    const body = await req.json();
-    const { code, cartItems } = body;
+    const { searchParams } = new URL(req.url);
+    const code = searchParams.get("code");
+    const cartItemsParam = searchParams.get("cartItems");
 
-    if (!code || !cartItems || cartItems.length === 0) {
+    let cartItems;
+    try {
+      cartItems = cartItemsParam ? JSON.parse(cartItemsParam) : null;
+    } catch {
+      return NextResponse.json({ success: false, message: "Invalid cart items format." }, { status: 400 });
+    }
+
+    if (!code || !cartItems || !Array.isArray(cartItems) || cartItems.length === 0) {
       return NextResponse.json({ success: false, message: "Voucher code and cart items must be submitted." }, { status: 400 });
     }
 
