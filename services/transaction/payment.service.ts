@@ -37,11 +37,10 @@ export const createPaymentToken = async (params: PaymentTokenParams) => {
   };
 
   try {
-    const token = await snap.createTransaction(parameter);
-    return token;
+    return await snap.createTransaction(parameter);
   } catch (error: any) {
     const detail = error.ApiResponse ? JSON.stringify(error.ApiResponse) : error.message;
-    logError("PaymentService.createPaymentToken", detail);
+    await logError("PaymentService.createPaymentToken", detail);
     throw new Error(`Failed to create payment token: ${detail}`);
   }
 };
@@ -67,7 +66,7 @@ export const savePaymentLog = async (payload: any) => {
       },
     });
   } catch (error) {
-    logError("PaymentService.savePaymentLog", error);
+    await logError("PaymentService.savePaymentLog", error);
   }
 };
 
@@ -118,6 +117,6 @@ export const sendPaymentNotification = async (orderId: string, status: "PAID" | 
       },
     });
   } catch (error) {
-    logError("PaymentService.sendPaymentNotification", error);
+    await logError("PaymentService.sendPaymentNotification", error);
   }
 };

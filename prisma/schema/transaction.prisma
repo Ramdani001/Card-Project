@@ -9,6 +9,7 @@ model Transaction {
   status                     TransactionStatus            @default(PENDING)
   paymentMethod              String?
   snapToken                  String?
+  paymentExpiryTime          DateTime?
   snapRedirect               String?
   customerName               String?
   customerEmail              String?

@@ -20,13 +20,14 @@ export const POST = async (req: NextRequest) => {
     });
 
     if (!isValidSignature) {
-      logError("Midtrans Webhook Route [POST]", `Invalid Signature for Order: ${body.order_id}`);
+      await logError("Midtrans Webhook Route [POST]", `Invalid Signature for Order: ${body.order_id}`);
       return NextResponse.json({ message: "Invalid Signature" }, { status: 403 });
     }
 
     const newStatus = mapMidtransStatus(body.transaction_status, body.fraud_status);
 
     let paymentType = body.payment_type?.toUpperCase().replace("_", " ") || "UNKNOWN";
+    const expiryTime = body?.expiry_time;
 
     if (body.payment_type === "bank_transfer" && body.va_numbers) {
       const bank = body.va_numbers[0]?.bank?.toUpperCase();
@@ -51,6 +52,7 @@ export const POST = async (req: NextRequest) => {
       note: midtransNote,
       paymentMethod: paymentType,
       userId: "MIDTRANS_WEBHOOK",
+      expiryTime,
     });
 
     if (transaction) {
@@ -69,7 +71,7 @@ export const POST = async (req: NextRequest) => {
 
     return NextResponse.json({ received: true });
   } catch (error) {
-    logError("Midtrans Webhook Route [POST]", error);
+    await logError("Midtrans Webhook Route [POST]", error);
     return NextResponse.json({ message: "Internal Server Error" }, { status: 500 });
   }
 };

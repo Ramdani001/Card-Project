@@ -70,11 +70,11 @@ export const sendTransactionReceipt = async (transaction: TransactionWithDetails
         },
       });
 
-      logError("sendTransactionReceipt", sendError);
+      await logError("sendTransactionReceipt", sendError);
       return { success: false, message: "Failed to send email." };
     }
   } catch (error) {
-    logError("sendTransactionReceipt", error);
+    await logError("sendTransactionReceipt", error);
     return { success: false, message: "Internal server error." };
   }
 };
@@ -127,11 +127,11 @@ export const sendOtpEmail = async (email: string, otpCode: string, name?: string
         },
       });
 
-      logError("sendOtpEmail.SMTP", sendError);
+      await logError("sendOtpEmail.SMTP", sendError);
       return { success: false, message: "Failed to send OTP email." };
     }
   } catch (error) {
-    logError("sendOtpEmail.Internal", error);
+    await logError("sendOtpEmail.Internal", error);
     return { success: false, message: "Internal server error on OTP service." };
   }
 };

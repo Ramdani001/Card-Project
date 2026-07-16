@@ -68,6 +68,7 @@ export interface TransactionDto {
   shippingCost: string | number;
   deliveryMethod: DeliveryMethod;
   shopId: string | null;
+  paymentExpiryTime: Date | null;
   transactionShipmentAddress: TransactionShipmentAddressDto[];
   shop: ShopDto;
   note: string;

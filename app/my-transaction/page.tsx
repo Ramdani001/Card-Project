@@ -29,9 +29,18 @@ import {
 } from "@mantine/core";
 import { DatePickerInput } from "@mantine/dates";
 import { notifications } from "@mantine/notifications";
-import { IconCalendar, IconCreditCard, IconEye, IconFilter, IconPackage, IconPlus, IconSearchOff } from "@tabler/icons-react";
+import {
+  IconCalendar,
+  IconCreditCard,
+  IconEye,
+  IconFilter,
+  IconPackage,
+  IconPlus,
+  IconSearchOff,
+} from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import { CountdownTimer } from "@/components/layout/CountdownTimer";
 
 const MyTransaction = () => {
   const [transactions, setTransactions] = useState<TransactionDto[]>([]);
@@ -125,7 +134,10 @@ const MyTransaction = () => {
 
       if (res.ok && json.success) {
         notifications.show({ message: "Order cancelled successfully", color: "green" });
-        setTransactions((prev) => prev.map((trx) => (trx.id === transactionId ? { ...trx, status: TransactionStatus.CANCELLED } : trx)));
+        setTransactions((prev) => prev.map((trx) => (trx.id === transactionId ? {
+          ...trx,
+          status: TransactionStatus.CANCELLED,
+        } : trx)));
       } else {
         notifications.show({ message: json.message || "Failed to cancel order", color: "red" });
       }
@@ -199,7 +211,8 @@ const MyTransaction = () => {
                   />
 
                   <Stack gap="xs" mt="md">
-                    <Button fullWidth radius="md" color="dark" onClick={handleApplyFilter} loading={loading && activePage === 1}>
+                    <Button fullWidth radius="md" color="dark" onClick={handleApplyFilter}
+                            loading={loading && activePage === 1}>
                       Apply Filter
                     </Button>
                     <Button fullWidth variant="subtle" color="gray" radius="md" size="sm" onClick={handleResetFilter}>
@@ -250,20 +263,25 @@ const MyTransaction = () => {
                       className="transaction-card"
                       style={{
                         transition: "all 0.2s ease",
-                        cursor: "default",
                       }}
                     >
-                      <Group justify="space-between" mb="md" align="flex-start">
+                      <Group justify="space-between" align="flex-start" mb="sm">
                         <Stack gap={2}>
                           <Text size="xs" c="dimmed" fw={700} lts={0.5} tt="uppercase">
-                            Invoice Number
+                            Invoice
                           </Text>
-                          <Text fw={800} size="md" c="blue.8">
+                          <Text fw={800} size="md" c="dark.8">
                             {item.invoice}
                           </Text>
                         </Stack>
                         <StatusBadge status={item.status} />
                       </Group>
+
+                      {item.status === TransactionStatus.PENDING && item.paymentExpiryTime && (
+                        <Box mb="sm">
+                          <CountdownTimer expiryTime={item.paymentExpiryTime} />
+                        </Box>
+                      )}
 
                       <Divider mb="md" variant="dashed" />
 
@@ -300,7 +318,7 @@ const MyTransaction = () => {
                       <Paper withBorder p="sm" radius="md" bg="gray.0" mb="md">
                         <Flex justify="space-between" align="center">
                           <Text size="xs" fw={800} c="dimmed">
-                            TOTAL PAID
+                            {item.status === "PAID" ? "TOTAL DIBAYAR" : "TOTAL TAGIHAN"}
                           </Text>
                           <Text fw={900} size="lg" c="dark">
                             {new Intl.NumberFormat("id-ID", {
@@ -312,11 +330,9 @@ const MyTransaction = () => {
                         </Flex>
                       </Paper>
 
-                      <Group gap="sm">
+                      <Group gap="sm" grow>
                         <Button
-                          variant="outline"
-                          color="dark"
-                          flex={1}
+                          variant="default"
                           radius="md"
                           size="sm"
                           leftSection={<IconEye size={16} />}
@@ -325,7 +341,7 @@ const MyTransaction = () => {
                             setDetailOpened(true);
                           }}
                         >
-                          View Detail
+                          Detail
                         </Button>
 
                         {item.status === "PENDING" && (
@@ -345,7 +361,12 @@ const MyTransaction = () => {
                             </Button>
 
                             {item.snapRedirect && (
-                              <Button id="PAY" color="orange" radius="md" size="sm" onClick={() => window.open(item.snapRedirect!, "_blank")}>
+                              <Button
+                                color="orange"
+                                radius="md"
+                                size="sm"
+                                onClick={() => window.open(item.snapRedirect!, "_blank")}
+                              >
                                 Pay Now
                               </Button>
                             )}
@@ -361,7 +382,7 @@ const MyTransaction = () => {
                     <Button
                       variant="outline"
                       color="dark"
-                      radius="xs"
+                      radius="md"
                       px={40}
                       size="md"
                       loading={loadingMore}
@@ -374,7 +395,7 @@ const MyTransaction = () => {
                     <Stack gap={4} align="center">
                       <Divider w={100} color="gray.3" />
                       <Text size="xs" c="dimmed" fs="italic">
-                        All {transactions.length} transactions loaded
+                        All transactions have been displayed
                       </Text>
                     </Stack>
                   )}
@@ -385,7 +406,8 @@ const MyTransaction = () => {
         </Grid>
       </Container>
 
-      <MyTransactionDetailModal opened={detailOpened} onClose={() => setDetailOpened(false)} transaction={selectedTrx} />
+      <MyTransactionDetailModal opened={detailOpened} onClose={() => setDetailOpened(false)}
+                                transaction={selectedTrx} />
 
       <Modal
         opened={cancelConfirmOpened}

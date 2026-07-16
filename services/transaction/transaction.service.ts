@@ -1,7 +1,14 @@
 import { ALLOWED_NEXT_STATUS, FAILED_STATUSES } from "@/constants";
 import { logError } from "@/lib/logger";
 import prisma from "@/lib/prisma";
-import { DeliveryMethod, DiscountType, NotificationType, Prisma, TransactionStatus, VoucherUsageCategory } from "@/prisma/generated/prisma/client";
+import {
+  DeliveryMethod,
+  DiscountType,
+  NotificationType,
+  Prisma,
+  TransactionStatus,
+  VoucherUsageCategory,
+} from "@/prisma/generated/prisma/client";
 import { CreateTransactionParams, GetTransactionParams, ShipTransactionParams } from "@/types/params/transactionParams";
 import { sendTransactionReceipt } from "../system/email.service";
 import { createNotificationByCode } from "./notification.service";
@@ -357,7 +364,7 @@ export const checkout = async (params: CreateTransactionParams) => {
       include: { items: true },
     });
   } catch (error) {
-    logError("TransactionService.checkout", error);
+    await logError("TransactionService.checkout", error);
     return result.transaction;
   }
 };
@@ -370,9 +377,10 @@ export const updateTransactionStatus = async (
     paymentMethod?: string;
     shippingData?: ShipTransactionParams;
     userId?: string;
-  }
+    expiryTime?: Date;
+  },
 ) => {
-  const { note, paymentMethod, shippingData, userId = "SYSTEM" } = options || {};
+  const { note, paymentMethod, shippingData, userId = "SYSTEM", expiryTime } = options || {};
 
   const result = await prisma.$transaction(async (tx) => {
     const oldTransaction = await tx.transaction.findUnique({
@@ -397,6 +405,7 @@ export const updateTransactionStatus = async (
       updateData.courierName = shippingData.expedition;
       updateData.shippingCost = new Prisma.Decimal(newShippingCost);
       updateData.totalPrice = new Prisma.Decimal(newTotalPrice);
+      updateData.paymentExpiryTime = expiryTime;
     }
 
     const updatedTransaction = await tx.transaction.update({
@@ -475,7 +484,7 @@ export const updateTransactionStatus = async (
     return updatedTransaction;
   });
 
-  sendTransactionReceipt(result);
+  await sendTransactionReceipt(result);
 
   await createNotificationByCode({
     notificationCode: "TRANSACTION_NOTIF",
@@ -556,7 +565,7 @@ export const getHistoryTransactions = async (
     take?: number;
     orderBy?: Prisma.TransactionStatusLogOrderByWithRelationInput;
     where?: Prisma.TransactionStatusLogWhereInput;
-  }
+  },
 ) => {
   const { skip, take, orderBy, where } = params;
 
@@ -578,9 +587,7 @@ export const getHistoryTransactions = async (
   const userIds = logs
     .map((log) => log.createdBy)
     .filter((id): id is string => {
-      if (!id) return false;
-
-      return true;
+      return !(id === null || id === undefined || id === "");
     });
 
   const uniqueUserIds = Array.from(new Set(userIds));
@@ -635,7 +642,7 @@ export const batchCancelTransactions = async (
   options?: {
     note?: string;
     userId?: string;
-  }
+  },
 ) => {
   const { note, userId = "SYSTEM" } = options || {};
 
@@ -738,11 +745,11 @@ export const batchCancelTransactions = async (
 
       return processedTransactions;
     },
-    { timeout: 60000 }
+    { timeout: 60000 },
   );
 
   for (const tx of result) {
-    sendTransactionReceipt(tx);
+    await sendTransactionReceipt(tx);
 
     await createNotificationByCode({
       notificationCode: "TRANSACTION_NOTIF",
