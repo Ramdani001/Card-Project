@@ -318,7 +318,7 @@ const MyTransaction = () => {
                       <Paper withBorder p="sm" radius="md" bg="gray.0" mb="md">
                         <Flex justify="space-between" align="center">
                           <Text size="xs" fw={800} c="dimmed">
-                            {item.status === "PAID" ? "TOTAL DIBAYAR" : "TOTAL TAGIHAN"}
+                            TOTAL
                           </Text>
                           <Text fw={900} size="lg" c="dark">
                             {new Intl.NumberFormat("id-ID", {
