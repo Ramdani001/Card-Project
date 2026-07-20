@@ -70,27 +70,35 @@ const RecursiveMenuItem = ({ item, allMenus, router, isRoot = false }: Recursive
       trigger="hover"
       openDelay={50}
       closeDelay={150}
-      withinPortal={isRoot}
+      withinPortal
       position={isRoot ? "bottom-start" : "right-start"}
       width={200}
     >
       <Menu.Target>{MenuTarget}</Menu.Target>
+
       <Menu.Dropdown
         styles={{
           dropdown: isRoot
             ? {
                 borderRadius: "0 0 8px 8px",
                 borderTop: "2px solid var(--mantine-color-blue-6)",
-                boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
               }
             : {
                 borderRadius: "8px",
-                boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
+                maxHeight: "min(400px, calc(100vh - 80px))",
+                overflowY: "auto",
+                overflowX: "hidden",
               },
         }}
       >
         {children.map((sub) => (
-          <RecursiveMenuItem key={sub.id} item={sub} allMenus={allMenus} router={router} isRoot={false} />
+          <RecursiveMenuItem
+            key={sub.id}
+            item={sub}
+            allMenus={allMenus}
+            router={router}
+            isRoot={false}
+          />
         ))}
       </Menu.Dropdown>
     </Menu>

@@ -28,7 +28,7 @@ export const FooterSection = () => {
               <Group gap="md">
                 {[
                   { icon: IconBrandFacebook, link: "https://www.facebook.com/profile.php?id=61589769803425" },
-                  { icon: IconBrandInstagram, link: "https://www.facebook.com/profile.php?id=61589769803425" },
+                  { icon: IconBrandInstagram, link: "https://www.instagram.com/toko.kartu?igsh=cncwOG9ucnExOHE1" },
                   { icon: IconBrandTwitter, link: "https://www.facebook.com/profile.php?id=61589769803425" },
                   { icon: IconBrandTiktok, link: "https://www.facebook.com/profile.php?id=61589769803425" },
                   { icon: IconBrandYoutube, link: "https://www.facebook.com/profile.php?id=61589769803425" },
@@ -57,6 +57,7 @@ export const FooterSection = () => {
                 { label: "Shipping Policy", href: "/shipping-policy" },
                 { label: "Term of Service", href: "/terms" },
                 { label: "Contact US", href: "/contact" },
+                { label: "About US", href: "/about" },
               ].map((link) => (
                 <Anchor
                   component={Link}
