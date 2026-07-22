@@ -29,8 +29,8 @@ const ListMember = () => {
   const [queryParams, setQueryParams] = useState({
     page: 1,
     limit: 10,
-    sortBy: "createdAt",
-    sortOrder: "desc" as "asc" | "desc",
+    sortBy: "name",
+    sortOrder: "asc" as "asc" | "desc",
     filters: {} as Record<string, string>,
   });
 
@@ -146,6 +146,7 @@ const ListMember = () => {
       key: "name",
       label: "User",
       sortable: true,
+      filterable: true,
       render: (item) => (
         <Group gap="sm">
           <Avatar src={item.avatar} radius="xl" color="blue" />
@@ -164,6 +165,7 @@ const ListMember = () => {
       key: "phone",
       label: "Phone",
       sortable: true,
+      filterable: true,
       render: (item) => (
         <Group gap={4}>
           <IconPhone size={14} style={{ opacity: 0.5 }} />
@@ -172,9 +174,10 @@ const ListMember = () => {
       ),
     },
     {
-      key: "role",
+      key: "role.name",
       label: "Role",
-      sortable: false,
+      sortable: true,
+      filterable: true,
       render: (item) =>
         item.role ? (
           <Badge color="blue" variant="light">
@@ -190,6 +193,7 @@ const ListMember = () => {
       key: "isVerified",
       label: "Status",
       sortable: true,
+      filterable: true,
       render: (item) => {
         return item.isVerified ? (
           <Badge color="green" variant="light" radius="xs" leftSection={<IconCheck size={10} />}>
@@ -206,6 +210,7 @@ const ListMember = () => {
       key: "createdAt",
       label: "Joined",
       sortable: true,
+      filterable: true,
       render: (item) => (
         <Text size="xs" c="dimmed">
           {new Date(item.createdAt).toLocaleDateString("id-ID", {

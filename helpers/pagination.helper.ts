@@ -6,108 +6,138 @@ export const getQueryPaginationOptions = (req: NextRequest) => {
   const pageParam = searchParams.get("page");
   const limitParam = searchParams.get("limit");
   const sortBy = searchParams.get("sortBy");
-  const sortOrder = searchParams.get("sortOrder") || "desc";
+  const sortOrder = searchParams.get("sortOrder")?.toLowerCase() === "asc" ? "asc" : "desc";
 
   const options: any = {
     where: {},
   };
 
   if (sortBy) {
-    if (sortBy.includes(".")) {
-      const [relation, field] = sortBy.split(".");
-
-      options.orderBy = {
-        [relation]: {
-          [field]: ["asc", "desc"].includes(sortOrder) ? sortOrder : "desc",
-        },
-      };
-    } else {
-      options.orderBy = {
-        [sortBy]: ["asc", "desc"].includes(sortOrder) ? sortOrder : "desc",
-      };
-    }
+    const keys = sortBy.split(".");
+    options.orderBy = keys.reduceRight((acc, key) => ({ [key]: acc }), sortOrder as any);
   }
 
   const page = parseInt(pageParam || "");
   const limit = parseInt(limitParam || "");
 
-  if (!isNaN(page) && !isNaN(limit)) {
+  if (!isNaN(page) && !isNaN(limit) && page > 0 && limit > 0) {
     options.skip = (page - 1) * limit;
     options.take = limit;
   }
 
-  const reservedParams = ["page", "limit", "sortBy", "sortOrder"];
+  const parseValue = (val: string, key: string): any => {
+    const lowerVal = val.toLowerCase().trim();
 
+    if (lowerVal === "null") return null;
+
+    if (key === "stock") {
+      if (["on", "true", "yes", "1"].includes(lowerVal)) return { gt: 0 };
+      if (["off", "false", "no", "0"].includes(lowerVal)) return 0;
+    }
+
+    if (lowerVal === "true" || lowerVal === "yes" || lowerVal === "1" || lowerVal === "on") return true;
+    if (lowerVal === "false" || lowerVal === "no" || lowerVal === "0" || lowerVal === "off") return false;
+
+    if (key.startsWith("is")) {
+      const expectedTrueValue = key.slice(2).toLowerCase();
+      if (lowerVal === expectedTrueValue) return true;
+      if (lowerVal === `un${expectedTrueValue}` || lowerVal === `in${expectedTrueValue}`) return false;
+    }
+
+    const isDateColumn = key.endsWith("At") || key.endsWith("Date") || key === "date";
+    const isDatePattern = /^\d{4}-\d{2}-\d{2}/.test(val);
+
+    if (isDateColumn || isDatePattern) {
+      const parsedDate = new Date(val);
+
+      if (!isNaN(parsedDate.getTime())) {
+        if (val.length <= 12) {
+          const startOfDay = new Date(parsedDate);
+          startOfDay.setHours(0, 0, 0, 0);
+
+          const endOfDay = new Date(parsedDate);
+          endOfDay.setHours(23, 59, 59, 999);
+
+          return {
+            gte: startOfDay,
+            lte: endOfDay,
+          };
+        }
+        return parsedDate;
+      } else if (isDateColumn) {
+        return undefined;
+      }
+    }
+
+    const isNumeric = !isNaN(Number(val)) && val.trim() !== "";
+    const isPhoneOrZipCode = val.startsWith("0") && val.length > 1 && !val.includes(".");
+
+    if (isNumeric && !isPhoneOrZipCode) {
+      return Number(val);
+    }
+
+    return {
+      contains: val,
+      mode: "insensitive",
+    };
+  };
+
+  const buildWhereObject = (dottedKey: string, parsedVal: any) => {
+    const keys = dottedKey.split(".");
+    const obj: any = {};
+    let current = obj;
+
+    keys.forEach((k, index) => {
+      if (index === keys.length - 1) {
+        current[k] = parsedVal;
+      } else {
+        current[k] = { is: {} };
+        current = current[k].is;
+      }
+    });
+    return obj;
+  };
+
+  const reservedParams = ["page", "limit", "sortBy", "sortOrder"];
   const uniqueKeys = Array.from(new Set(searchParams.keys()));
+
+  options.where.AND = [];
 
   uniqueKeys.forEach((key) => {
     if (reservedParams.includes(key)) return;
 
-    const values = searchParams.getAll(key).filter(Boolean);
-    if (values.length === 0) return;
+    const rawValues = searchParams.getAll(key).filter((v) => v !== "");
+    if (rawValues.length === 0) return;
 
-    const parseValue = (val: string) => {
-      const isBoolean = val.toLowerCase() === "true" || val.toLowerCase() === "false";
-      const isBooleanLabel = val.toLowerCase() === "yes" || val.toLowerCase() === "no";
-      const isNumber = !isNaN(Number(val)) && val.trim() !== "";
-
-      if (isBoolean) return val.toLowerCase() === "true";
-      if (isBooleanLabel) return val.toLowerCase() === "yes";
-      if (isNumber && key !== "name") return String(val);
-      return {
-        contains: val,
-        mode: "insensitive",
-      };
-    };
-
-    const buildWhereObject = (dottedKey: string, parsedVal: any) => {
-      const keys = dottedKey.split(".");
-      const obj: any = {};
-      let current = obj;
-
-      keys.forEach((k, index) => {
-        if (index === keys.length - 1) {
-          current[k] = parsedVal;
-        } else {
-          current[k] = { is: {} };
-          current = current[k].is;
-        }
-      });
-      return obj;
-    };
+    const values = rawValues.flatMap((v) => v.split(","));
 
     if (values.length > 1) {
-      if (!options.where.AND) {
-        options.where.AND = [];
-      }
+      const parsedValues = values.map((v) => parseValue(v, key)).filter((v) => v !== undefined);
+      if (parsedValues.length === 0) return;
 
-      values.forEach((value) => {
-        const parsedValue = parseValue(value);
-        const condition = key.includes(".") ? buildWhereObject(key, parsedValue) : { [key]: parsedValue };
+      const firstVal = parsedValues[0];
+      const isComplexObject = typeof firstVal === "object" && firstVal !== null && !(firstVal instanceof Date);
 
-        options.where.AND.push(condition);
-      });
+      const condition = isComplexObject
+        ? { OR: parsedValues.map((pv) => (key.includes(".") ? buildWhereObject(key, pv) : { [key]: pv })) }
+        : key.includes(".")
+          ? buildWhereObject(key, { in: parsedValues })
+          : { [key]: { in: parsedValues } };
+
+      options.where.AND.push(condition);
     } else {
-      const parsedValue = parseValue(values[0]);
+      const parsedValue = parseValue(values[0], key);
+      if (parsedValue === undefined) return;
 
-      if (key.includes(".")) {
-        const keys = key.split(".");
-        let current = options.where;
+      const condition = key.includes(".") ? buildWhereObject(key, parsedValue) : { [key]: parsedValue };
 
-        keys.forEach((k, index) => {
-          const isLast = index === keys.length - 1;
-          if (isLast) {
-            current[k] = parsedValue;
-          } else {
-            current[k] = current[k] || { is: {} };
-            current = current[k].is;
-          }
-        });
-      } else {
-        options.where[key] = parsedValue;
-      }
+      options.where.AND.push(condition);
     }
   });
 
-  return { options, page, limit };
+  if (options.where.AND.length === 0) {
+    delete options.where.AND;
+  }
+
+  return { options, page: isNaN(page) ? 1 : page, limit: isNaN(limit) ? 10 : limit };
 };
