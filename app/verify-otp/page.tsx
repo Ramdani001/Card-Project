@@ -60,7 +60,7 @@ function VerifyOtpContent() {
       if (!res.ok) throw new Error(data.message || "Invalid verification code.");
 
       setSuccess("Account verified successfully! Redirecting...");
-      setTimeout(() => router.replace("/login?verified=true"), 2000);
+      setTimeout(() => router.replace("/RegisterSuccessPage?verified=true"), 2000);
     } catch (err: any) {
       setError(err.message);
       setOtp("");
